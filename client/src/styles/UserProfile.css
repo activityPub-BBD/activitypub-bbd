@@ -1,0 +1,179 @@
+.user-profile-container {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 20px;
+  background-color: #f5f8fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.user-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.user-profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 8px rgba(0,123,255,0.3);
+}
+
+.user-profile-info {
+  flex: 1;
+}
+
+.user-profile-name {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f1419;
+}
+
+.user-profile-bio {
+  color: #536471;
+  font-size: 16px;
+  margin-top: 8px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.button-edit {
+  margin-top: 16px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 20px;
+  border: 1.5px solid #1d9bf0;
+  background-color: white;
+  color: #1d9bf0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.button-edit:hover {
+  background-color: #e8f5fd;
+}
+
+.input-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #536471;
+  display: block;
+}
+
+.input-field,
+.textarea-field {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.textarea-field {
+  resize: vertical;
+}
+
+.edit-buttons {
+  margin-top: 24px;
+}
+
+.button-save {
+  padding: 10px 20px;
+  background-color: #1d9bf0;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.button-cancel {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  color: #536471;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.divider {
+  border-color: #e6ecf0;
+  margin-bottom: 20px;
+}
+
+.posts-header {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f1419;
+  margin-bottom: 12px;
+}
+
+.posts-container {
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  padding: 16px;
+}
+
+.no-posts {
+  color: #536471;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.post-item {
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e6ecf0;
+  padding-bottom: 12px;
+}
+
+.post-content {
+  margin: 0;
+  color: #0f1419;
+  font-size: 16px;
+}
+
+.post-date {
+  color: #536471;
+  font-size: 12px;
+}
+
+.username-back-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.button-back {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1.5px solid #1d9bf0;
+  background-color: white;
+  color: #1d9bf0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0; /* prevent shrinking */
+}
+
+.button-back:hover {
+  background-color: #e8f5fd;
+}
+

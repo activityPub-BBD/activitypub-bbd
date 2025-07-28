@@ -1,0 +1,11 @@
+.home-layout {
+  display: flex;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .home-layout {
+    flex-direction: column;
+  }
+}

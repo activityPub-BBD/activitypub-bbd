@@ -1,0 +1,47 @@
+.feed {
+  flex: 1;                   
+  overflow-y: auto;            
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  min-height: 100vh;           
+  box-sizing: border-box;
+}
+
+/* Feed title */
+.feed-title {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+  margin-left: 0.5rem;
+  position: sticky;    
+  top: 0;
+  background: #f9f9f9;
+  padding-bottom: 1rem;
+  z-index: 10;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Post list */
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Each post */
+.post {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  word-wrap: break-word;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .feed {
+    min-height: calc(100vh - 3rem);
+    padding: 1rem 1rem 1rem 3.5rem; /* extra left padding for hamburger */
+  }
+}
