@@ -9,12 +9,18 @@ const federation = createFederation({
   queue: new InProcessMessageQueue(),
 });
 
-federation.setActorDispatcher("/users/{identifier}", async (ctx, identifier) => {
-  return new Person({
-    id: ctx.getActorUri(identifier),
-    preferredUsername: identifier,
-    name: identifier,
-  });
-});
+federation.setActorDispatcher(
+  "/users/{identifier}",
+  async (ctx, identifier) => {
+    if (identifier !== "me") return null; // Other than "me" is not found.
+    return new Person({
+      id: ctx.getActorUri(identifier),
+      name: "Me", // Display name
+      summary: "This is me!", // Bio
+      preferredUsername: identifier, // Bare handle
+      url: new URL("/", ctx.url),
+    });
+  }
+);
 
 export default federation;
