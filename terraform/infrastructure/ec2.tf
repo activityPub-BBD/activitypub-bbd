@@ -1,5 +1,5 @@
 # EC2 Instance
-resource "aws_instance" "case_supplier_ec2_instance" {   
+resource "aws_instance" "group_5_mastodon_ec2_instance" {   
   ami                         = "ami-0722f955ef0cb4675"
   instance_type               = "t3.micro"
   key_name                    = "group-5-mastodon-key"
@@ -37,13 +37,13 @@ resource "aws_instance" "case_supplier_ec2_instance" {
 }
 
 # Create an Elastic IP
-resource "aws_eip" "case_supplier_ec2_eip" {
-  instance = aws_instance.case_supplier_ec2_instance.id
+resource "aws_eip" "group_5_mastodon_ec2_eip" {
+  instance = aws_instance.group_5_mastodon_ec2_instance.id
   domain   = "vpc"
 }
 
 output "ec2_ip" {
-  value       = aws_eip.case_supplier_ec2_eip.public_ip
+  value       = aws_eip.group_5_mastodon_ec2_eip.public_ip
   description = "Public IP of EC2 API server"
 }
 
