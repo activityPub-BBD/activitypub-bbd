@@ -10,10 +10,7 @@ data "aws_s3_bucket" "selected-bucket" {
   bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.bucket
 }
 
-resource "aws_s3_bucket_acl" "bucket-acl" {
-  bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id
-  acl    = "private"
-}
+
 
 resource "aws_s3_bucket_versioning" "versioning_example" {
   bucket = data.aws_s3_bucket.selected-bucket.id
