@@ -49,7 +49,7 @@ jobs:
       # === Upload to S3 ===
       - name: Upload to S3
         run: |
-          aws s3 sync ./dist/ s3://case-supplier-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
+          aws s3 sync ./dist/ s3://group-5-mastodon-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
 
       - name: Invalidate CloudFront cache
         run: |
