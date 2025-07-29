@@ -49,10 +49,16 @@ jobs:
       # === Upload to S3 ===
       - name: Upload to S3
         run: |
-          aws s3 sync ./dist/ s3://case-supplier-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
+          aws s3 sync ./dist/ s3://group-5-mastodon-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
+
+      # - name: Invalidate CloudFront cache
+      #   run: |
+      #     # Get CloudFront distribution ID for frontend
+      #     DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='case-supplier.projects.bbdgrad.com'].Id" --output text)
+      #     aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
       - name: Invalidate CloudFront cache
         run: |
           # Get CloudFront distribution ID for frontend
-          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='case-supplier.projects.bbdgrad.com'].Id" --output text)
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='group-5-mastodon-s3-cloudfront-distribution-bucket.s3.af-south-1.amazonaws.com'].Id" --output text)
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
