@@ -4,14 +4,30 @@ resource "aws_default_vpc" "default_vpc" {
   }
 }
 
-data "aws_availability_zones" "available_zones" { }
+data "aws_availability_zones" "available_zones" {}
 
-resource "aws_default_subnet" "subnet_az1" {
-  availability_zone = data.aws_availability_zones.available_zones.names[0]
+data "aws_subnet" "default_subnet_az1" {
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [data.aws_availability_zones.available_zones.names[0]]
+  }
 }
 
-resource "aws_default_subnet" "subnet_az2" {
-  availability_zone = data.aws_availability_zones.available_zones.names[1]
+data "aws_subnet" "default_subnet_az2" {
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
+
+  filter {
+    name   = "availability-zone"
+    values = [data.aws_availability_zones.available_zones.names[1]]
+  }
 }
 
 # Security Group for EC2
