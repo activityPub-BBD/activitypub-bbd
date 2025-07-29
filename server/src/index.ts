@@ -1,16 +1,13 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import routes from './routes';
+import { serve } from "@hono/node-server";
+import { behindProxy } from "x-forwarded-fetch";
+import app from "./app.tsx";
+import "./logging.ts";
 
-dotenv.config();
-
-const app = express();
-
-app.use(express.json());
-app.use('/', routes);
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+serve(
+  {
+    port: 8000,
+    fetch: behindProxy(app.fetch.bind(app)),
+  },
+  (info) =>
+    console.log("Server started at http://" + info.address + ":" + info.port)
+);
