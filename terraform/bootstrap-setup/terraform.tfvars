@@ -1,0 +1,6 @@
+aws_region      = "af-south-1"
+bucket_name     = "case-supplier-bucket-tf-state"
+github_repository = "miniconomy2025/Case-Closed-Inc"
+github_actions_role_name      = "github-actions-terraform"
+terraform_policy_name         = "github-actions-terraform-state-policy"
+infrastructure_policy_name    = "github-actions-infrastructure-policy"
