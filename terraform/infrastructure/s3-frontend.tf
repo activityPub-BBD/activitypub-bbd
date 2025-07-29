@@ -1,4 +1,4 @@
-resource "aws_s3_bucket" "case_supplier_s3_bucket_instance" {
+resource "aws_s3_bucket" "group_5_mastodon_s3_bucket_instance" {
   bucket = "group-5-mastodon-s3-cloudfront-distribution-bucket"
   
   tags = {
@@ -7,11 +7,11 @@ resource "aws_s3_bucket" "case_supplier_s3_bucket_instance" {
 }
 
 data "aws_s3_bucket" "selected-bucket" {
-  bucket = aws_s3_bucket.case_supplier_s3_bucket_instance.bucket
+  bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.bucket
 }
 
 resource "aws_s3_bucket_acl" "bucket-acl" {
-  bucket = aws_s3_bucket.case_supplier_s3_bucket_instance.id
+  bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id
   acl    = "private"
 }
 
@@ -24,7 +24,7 @@ resource "aws_s3_bucket_versioning" "versioning_example" {
 }
 
 resource "aws_s3_bucket_website_configuration" "client_website" {
-  bucket = aws_s3_bucket.case_supplier_s3_bucket_instance.id
+  bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id
 
   index_document {
     suffix = "index.html"
@@ -36,7 +36,7 @@ resource "aws_s3_bucket_website_configuration" "client_website" {
 }
 
 resource "aws_s3_bucket_public_access_block" "client_bucket_pab" {
-  bucket = aws_s3_bucket.case_supplier_s3_bucket_instance.id
+  bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -58,8 +58,8 @@ resource "aws_cloudfront_distribution" "frontend" {
   #  aliases = ["group-5-mastodon.projects.bbdgrad.com"]
   # S3 Origin for static website
   origin {
-    domain_name              = aws_s3_bucket.case_supplier_s3_bucket_instance.bucket_regional_domain_name
-    origin_id                = "S3-${aws_s3_bucket.case_supplier_s3_bucket_instance.id}"
+    domain_name              = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.bucket_regional_domain_name
+    origin_id                = "S3-${aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id}"
     origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
   }
 
@@ -72,7 +72,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.case_supplier_s3_bucket_instance.id}"
+    target_origin_id = "S3-${aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id}"
 
     forwarded_values {
       query_string = false
@@ -123,7 +123,7 @@ resource "aws_cloudfront_distribution" "frontend" {
 
 # S3 bucket policy to allow CloudFront OAC
 resource "aws_s3_bucket_policy" "client_bucket_policy" {
-  bucket = aws_s3_bucket.case_supplier_s3_bucket_instance.id
+  bucket = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -135,7 +135,7 @@ resource "aws_s3_bucket_policy" "client_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.case_supplier_s3_bucket_instance.arn}/*"
+        Resource = "${aws_s3_bucket.group_5_mastodon_s3_bucket_instance.arn}/*"
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.frontend.arn
@@ -151,7 +151,7 @@ resource "aws_s3_bucket_policy" "client_bucket_policy" {
 
 # Outputs
 output "s3_bucket_name" {
-  value = aws_s3_bucket.case_supplier_s3_bucket_instance.bucket
+  value = aws_s3_bucket.group_5_mastodon_s3_bucket_instance.bucket
 }
 
 output "cloudfront_distribution_id" {
