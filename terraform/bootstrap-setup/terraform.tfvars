@@ -1,0 +1,6 @@
+aws_region      = "af-south-1"
+bucket_name     = "group-5-bbd-bucket-tf-state"
+github_repository = "miniconomy2025/group-5-mastodon"
+github_actions_role_name      = "github-actions-terraform"
+terraform_policy_name         = "github-actions-terraform-state-policy"
+infrastructure_policy_name    = "github-actions-infrastructure-policy"
