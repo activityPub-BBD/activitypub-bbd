@@ -1,13 +1,16 @@
-import { Hono } from "hono";
-import { federation } from "@fedify/fedify/x/hono";
+import express from "express";
+import { integrateFederation } from "@fedify/express";
 import { getLogger } from "@logtape/logtape";
-import fedi from "./federation.ts";
+import federation from "./federation.ts";
 
-const logger = getLogger("backend");
+const logger = getLogger("activitypub");
 
-const app = new Hono();
-app.use(federation(fedi, () => undefined))
+export const app = express();
 
-app.get("/", (c) => c.text("Hello, Fedify!"));
+app.set("trust proxy", true);
+
+app.use(integrateFederation(federation, (req: express.Request) => undefined));
+
+app.get("/", (req, res) => res.send("Hello, Fedify!"));
 
 export default app;

@@ -3,12 +3,11 @@
   "dependencies": {
     "@deno/kv": "^0.10.0",
     "@dotenvx/dotenvx": "^1.14.1",
+    "@fedify/express": "^0.2.1",
     "@fedify/fedify": "^1.7.7",
-    "@hono/node-server": "^1.12.0",
     "@logtape/logtape": "^0.8.2",
     "async-mutex": "^0.5.0",
     "express": "^5.1.0",
-    "hono": "^4.5.0",
     "mongodb": "^6.18.0",
     "mongoose": "^8.16.5",
     "tsx": "^4.17.0",
