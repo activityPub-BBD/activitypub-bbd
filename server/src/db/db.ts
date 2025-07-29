@@ -1,7 +1,7 @@
 // mongo.ts
 import mongoose from "mongoose";
-import { config } from "@config/index";
-import { Mutex } from "@utils/index";
+import { config } from "@config/index.ts";
+import { Mutex } from "@utils/index.ts";
 
 const mongo = mongoose.createConnection(config.dbUrl);
 const isConnectedMutex = new Mutex(false);
