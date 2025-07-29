@@ -1,0 +1,58 @@
+name: Deployment Pipeline - Frontend
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  deploy-frontend:
+    name: Deploy frontend to S3
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+
+    steps:
+      # === Code Checkout ===
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # === Setup Node.js ===
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: './client/package-lock.json'
+
+      # === Configure AWS credentials ===
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # === Install Dependencies ===
+      - name: Install Dependencies
+        run: npm install
+
+      # === Build Frontend ===
+      - name: Build Frontend
+        run: npm run build
+
+      # === Upload to S3 ===
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./dist/ s3://case-supplier-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
+
+      - name: Invalidate CloudFront cache
+        run: |
+          # Get CloudFront distribution ID for frontend
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='case-supplier.projects.bbdgrad.com'].Id" --output text)
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
