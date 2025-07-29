@@ -2,8 +2,8 @@
 import { Routes, Route } from 'react-router-dom';
 //import { useAuthContext } from '../context/AuthContext';
 import Home from '../pages/Home';
-import Login from '../pages/Login';
 import Profile from '../pages/Profile';
+import LandingPage from '../pages/LandingPage';
 // import type { JSX } from 'react';
 
 // const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -13,7 +13,7 @@ import Profile from '../pages/Profile';
 
 export const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Login />} />
+    <Route path="/" element={<LandingPage />} />
     <Route path="/home" element={<Home/>} />
     <Route path="/profile" element={<Profile/>} />
   </Routes>
