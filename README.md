@@ -6,10 +6,11 @@ Chirp uses MongoDB with Mongoose to manage users, posts, and ActivityPub actor d
 
 ## 📌 Overview
 
-| Collection | Purpose                                 |
-|------------|------------------------------------------|
-| `users`    | Stores user profile and Fediverse actor info |
-| `posts`    | Stores text, image, or video posts from users |
+| Collection | Purpose                                         |
+|------------|-------------------------------------------------|
+| `users`    | Stores user profile and Fediverse actor info    |
+| `posts`    | Stores text, image, or video posts from users   |
+| `follows`  | Stores relationships between users (follows)    |
 
 ---
 
