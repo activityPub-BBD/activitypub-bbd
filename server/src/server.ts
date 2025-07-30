@@ -7,6 +7,7 @@ register(
       "@db/*": ["db/*"],
       "@config/*": ["config/*"],
       "@controllers/*": ["controllers/*"],
+      "@federation/*": ["federation/*"],
       "@middleware/*": ["middleware/*"],
       "@models/*": ["models/*"],
       "@routes/*": ["routes/*"],
