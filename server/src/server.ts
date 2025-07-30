@@ -1,6 +1,28 @@
-import app from "./app.ts";
+import { register } from 'tsconfig-paths';
+register(
+  { 
+    baseUrl: './src', 
+    paths: {
+      "@app/*": ["app/*"],
+      "@db/*": ["db/*"],
+      "@config/*": ["config/*"],
+      "@controllers/*": ["controllers/*"],
+      "@middleware/*": ["middleware/*"],
+      "@models/*": ["models/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"]
+    } 
+  }
+);
+
 import "./logging.ts";
 
-app.listen(8000, () => {
-  console.log("Server started at http://localhost:8000");
+import { app } from '@app/index.ts';
+import { config } from '@config/index.ts';
+import { connectToMongo } from '@db/index.ts';
+
+//connectToMongo();
+
+app.listen(config.port, () => {
+  console.log(`Server running on port🚀 ${config.port}`);
 });
