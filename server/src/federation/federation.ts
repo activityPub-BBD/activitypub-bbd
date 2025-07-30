@@ -48,4 +48,4 @@ federation
     console.debug(follower);
   });
 
-export default federation;
+export {federation};

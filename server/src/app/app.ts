@@ -1,9 +1,9 @@
 import express from "express";
 import { integrateFederation } from "@fedify/express";
-import { getLogger } from "@logtape/logtape";
-import federation from "./federation.ts";
+//import { getLogger } from "@logtape/logtape";
+import {federation} from "@federation/index.ts";
 
-const logger = getLogger("activitypub");
+//const logger = getLogger("activitypub");
 
 export const app = express();
 

@@ -21,7 +21,7 @@ import { app } from '@app/index.ts';
 import { config } from '@config/index.ts';
 import { connectToMongo } from '@db/index.ts';
 
-//connectToMongo();
+connectToMongo();
 
 app.listen(config.port, () => {
   console.log(`Server running on port🚀 ${config.port}`);
