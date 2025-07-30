@@ -1,4 +1,4 @@
-import { Mutex as AsyncMutex } from 'async-mutex';
+import { Mutex as AsyncMutex } from "async-mutex";
 
 export class Mutex<T> {
   private mutex = new AsyncMutex();

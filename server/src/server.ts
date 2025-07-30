@@ -1,7 +1,7 @@
-import { register } from 'tsconfig-paths';
+import { register } from "tsconfig-paths";
 register(
   { 
-    baseUrl: './src', 
+    baseUrl: "./src", 
     paths: {
       "@app/*": ["app/*"],
       "@db/*": ["db/*"],
@@ -16,11 +16,11 @@ register(
   }
 );
 
-import "./logging.ts";
+import "@utils/logging.ts";
 
-import { app } from '@app/index.ts';
-import { config } from '@config/index.ts';
-import { connectToMongo } from '@db/index.ts';
+import { app } from "@app/index.ts";
+import { config } from "@config/index.ts";
+import { connectToMongo } from "@db/index.ts";
 
 connectToMongo();
 
