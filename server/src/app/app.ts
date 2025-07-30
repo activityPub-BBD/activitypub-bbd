@@ -1,7 +1,16 @@
-import express from 'express';
+import express from "express";
+import { integrateFederation } from "@fedify/express";
+//import { getLogger } from "@logtape/logtape";
+import {federation} from "@federation/index.ts";
 
-const app = express();
+//const logger = getLogger("activitypub");
 
-app.use(express.json());
+export const app = express();
 
-export { app };
+app.set("trust proxy", true);
+
+app.use(integrateFederation(federation, (req: express.Request) => undefined));
+
+app.get("/", (req, res) => res.send("Hello, Fedify!"));
+
+export default app;

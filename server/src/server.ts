@@ -15,11 +15,13 @@ register(
   }
 );
 
-import { app } from '@app/index';
-import { config } from '@config/index';
-import { connectToMongo } from '@db/index';
+import "./logging.ts";
 
-//connectToMongo();
+import { app } from '@app/index.ts';
+import { config } from '@config/index.ts';
+import { connectToMongo } from '@db/index.ts';
+
+connectToMongo();
 
 app.listen(config.port, () => {
   console.log(`Server running on port🚀 ${config.port}`);

@@ -1,34 +1,26 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
-    "lint": "eslint 'src/**/*.ts'"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "@types/express": "^5.0.3",
-    "@types/node": "^24.1.0",
-    "dotenv": "^17.2.1",
-    "eslint": "^9.32.0",
-    "express": "^5.1.0",
-    "install": "^0.13.0",
-    "nodemon": "^3.1.10",
-    "npm": "^11.5.1",
-    "prettier": "^3.6.2",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
-  },
+  "type": "module",
   "dependencies": {
+    "@deno/kv": "^0.10.0",
+    "@dotenvx/dotenvx": "^1.14.1",
+    "@fedify/express": "^0.2.1",
+    "@fedify/fedify": "^1.7.7",
+    "@logtape/logtape": "^0.8.2",
     "async-mutex": "^0.5.0",
+    "express": "^5.1.0",
     "mongodb": "^6.18.0",
-    "mongoose": "^8.16.5"
+    "mongoose": "^8.16.5",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.17.0",
+    "x-forwarded-fetch": "^0.2.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@types/express": "^5.0.3"
+  },
+  "scripts": {
+    "dev": "dotenvx run -- tsx watch ./src/server.ts",
+    "prod": "dotenvx run -- node --import tsx ./src/server.ts",
+    "tunnel": "npx @fedify/cli tunnel 8000"
   }
 }
