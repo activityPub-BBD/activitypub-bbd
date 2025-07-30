@@ -10,6 +10,7 @@ register(
       "@middleware/*": ["middleware/*"],
       "@models/*": ["models/*"],
       "@routes/*": ["routes/*"],
+      "@services/*": ["services/*"],
       "@utils/*": ["utils/*"]
     } 
   }
@@ -19,7 +20,7 @@ import { app } from '@app/index';
 import { config } from '@config/index';
 import { connectToMongo } from '@db/index';
 
-//connectToMongo();
+connectToMongo();
 
 app.listen(config.port, () => {
   console.log(`Server running on port🚀 ${config.port}`);
