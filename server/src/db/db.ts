@@ -8,11 +8,12 @@ const isConnectedMutex = new Mutex(false);
 
 const connectionPromise = new Promise<void>((resolve, reject) => {
   mongo.once("connected", () => {
+    console.log("Connected to MongoDB");
     isConnectedMutex.with((isConnected) => {
-      console.log("Connected to MongoDB");
       isConnected = true;
       return isConnected;
     });
+    resolve();
   });
 
   mongo.once("error", (err) => {
