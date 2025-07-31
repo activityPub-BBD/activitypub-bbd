@@ -10,23 +10,11 @@ interface Config {
   dbConnectionRetryCount: number;
 }
 
-function getDbName(): string {
-  const environment = process.env.NODE_ENV || "development";
-
-  switch (environment) {
-    case 'production':
-      return process.env.PROD_DB_NAME || "prod";
-    case 'development':
-    default:
-      return process.env.DEV_DB_NAME || "";
-  }
-}
-
 const config: Config = {
   port: Number(process.env.PORT) || 3000,
   nodeEnv: process.env.NODE_ENV || "development",
-  dbUrl: process.env.DB_URL || "",
-  dbName: getDbName(),
+  dbUrl: process.env.DB_URL || "mongodb+srv://chirp-admins:Tp8zV7mwJu2qFVrc@chirp-cluster-1.lftjwo3.mongodb.net/",
+  dbName: process.env.DB_NAME || "",
   dbConnectionRetryCount: Number(process.env.DB_CONNECTION_RETRY_COUNT) || 5
 };
 
