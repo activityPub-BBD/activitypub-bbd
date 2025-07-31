@@ -225,7 +225,7 @@ federation.setFollowingDispatcher("/users/{identifier}/following", async (ctx, i
 });
 
 // Posts
-federation.setObjectDispatcher(Note, "/users/{identifier}/posts/{id}", (ctx, values) => {
+federation.setObjectDispatcher(Note, "/posts/{id}", (ctx, values) => {
     //TODO: return post by identifier
     const post = {
   _id: new ObjectId("64e4f1f28f1c2b5c1f8d1234"),
