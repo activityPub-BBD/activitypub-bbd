@@ -6,11 +6,6 @@ resource "aws_s3_bucket" "media_bucket" {
   }
 }
 
-resource "aws_s3_bucket_acl" "media_bucket_acl" {
-  bucket = aws_s3_bucket.media_bucket.id
-  acl    = "public-read"
-}
-
 resource "aws_s3_bucket_public_access_block" "media_bucket_public_access" {
   bucket = aws_s3_bucket.media_bucket.id
 
@@ -38,6 +33,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "media_lifecycle" {
   rule {
     id     = "abort-incomplete-multipart-upload"
     status = "Enabled"
+    
+    filter {
+      prefix = ""
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
