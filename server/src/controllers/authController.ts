@@ -73,9 +73,10 @@ export async function getGoogleJwt(req: Request, res: Response) {
     res.status(HTTP_STATUS.OK).json({ 
       jwt,
       userExists: !!existingUser,
-      needsUsername: !existingUser,
+      needsUsername: !existingUser?.username, 
       user: existingUser ? {
-        id: existingUser._id
+        id: existingUser._id,
+        username: existingUser.username
       } : null
     });
 	} catch (err) {
@@ -84,4 +85,71 @@ export async function getGoogleJwt(req: Request, res: Response) {
 			error: `Google OAuth failed: ${err}`,
 		});
 	}
+}
+
+export async function setupUsername(req: Request, res: Response) {
+  try {
+    const { username, jwt } = req.body;
+
+    if (!username || !jwt) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+        error: "Username and JWT are required" 
+      });
+    }
+
+    // Validate username format (optional - add your own rules)
+    if (username.length < 3 || username.length > 50) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+        error: "Username must be between 3 and 50 characters" 
+      });
+    }
+
+    // Verify the JWT is valid
+    const payload = await verifyGoogleJwt(jwt);
+    const { sub } = payload;
+
+    if (!sub) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ 
+        error: "Invalid JWT" 
+      });
+    }
+
+     // Check if username is already taken
+    const existingUsername = await User.findOne({ username: username.toLowerCase() });
+    if (existingUsername) {
+      return res.status(HTTP_STATUS.CONFLICT).json({ 
+        error: "Username already taken" 
+      });
+    }
+
+    // Find user first to verify they exist
+    const existingUser = await User.findOne({ google_sub: sub });
+
+    if (!existingUser) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ 
+        error: "User not found" 
+      });
+    }
+
+    // Update the user
+    await User.findOneAndUpdate(
+      { google_sub: sub },
+      { username: username.toLowerCase() }
+    );
+
+    // Return the updated data
+    res.status(HTTP_STATUS.OK).json({ 
+      message: "Username setup completed",
+      user: {
+        id: existingUser._id,
+        username: username.toLowerCase()
+      }
+    });
+
+  } catch (err) {
+    console.error("Username setup failed:", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      error: `Username setup failed: ${err}`,
+    });
+  }
 }

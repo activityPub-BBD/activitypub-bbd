@@ -4,10 +4,18 @@ import { retrieveDb } from "@db/db.ts";
 
 export interface IUser extends Document {
   google_sub: string;
+  username?: string;
 }
 
 const userSchema = new Schema<IUser>({
-  google_sub: { type: String, required: true, unique: true }}, 
+  google_sub: { type: String, required: true, unique: true },
+  username: {
+    type: String,
+    unique: true,
+    sparse: true, 
+    lowercase: true
+  },
+}, 
  { collection: 'users'}
 );
 
@@ -37,5 +45,10 @@ export const User = {
     const UserModel = await getUserModel();
     const user = new UserModel(userData);
     return user.save();
+  },
+  async findOneAndUpdate(query: any, update: any, options: any = {}) {
+    const UserModel = await getUserModel();
+    return UserModel.findOneAndUpdate(query, update, options);
   }
+
 };
