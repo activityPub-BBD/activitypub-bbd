@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { verifyGoogleJwt } from "../services/authService.ts";
 import { User } from "../models/user.ts";
 import { HTTP_STATUS } from "../utils/httpStatus.ts";

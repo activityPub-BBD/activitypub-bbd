@@ -1,12 +1,10 @@
 import express from "express";
 import { integrateFederation } from "@fedify/express";
-//import { getLogger } from "@logtape/logtape";
-import {federation} from "@federation/index.ts";
-import dotenv from 'dotenv';
+import { getLogger } from "@logtape/logtape";
+import { federation }  from "@federation/index.ts";
 import { authRouter } from "@routes/authRouter.ts";
+//const logger = getLogger("backend");
 
-//const logger = getLogger("activitypub");
-dotenv.config();
 export const app = express();
 
 app.set("trust proxy", true);

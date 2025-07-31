@@ -1,4 +1,4 @@
-import app from "./app.ts";
+import { app } from "@app/index.ts";
 import "@utils/logging.ts";
 
 app.listen(8000, () => {
