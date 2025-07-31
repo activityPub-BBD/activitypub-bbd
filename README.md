@@ -4,6 +4,18 @@ Chirp uses MongoDB with Mongoose to manage users, posts, and ActivityPub actor d
 
 ---
 
+## 📌 Test fedify
+
+```bash
+npm i
+npm run dev
+```
+Open new terminal and it should return the dummy user
+```bash
+fedify lookup http://localhost:8000/users/cindi
+```
+
+
 ## 📌 Overview
 
 | Collection | Purpose                                         |
