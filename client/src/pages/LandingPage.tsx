@@ -1,25 +1,141 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../context/AuthContext";
 import "../styles/LandingPage.css";
 
 export default function ChirpLanding() {
   const [showUsernameForm, setShowUsernameForm] = useState(false);
   const [username, setUsername] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const { setUser, setJwt, setNeedsUsername, user, jwt } = useAuthContext();
+  const navigate = useNavigate();
 
-  const handleGoogleAuth = () => {
-    // Handle Google OAuth login
-    console.log("Initiating Google Auth...");
-    setTimeout(() => {
-      setShowUsernameForm(true);
-    }, 1000);
+  // Redirect if user is already authenticated and has username
+  useEffect(() => {
+    if (user && user.username) {
+      navigate('/home');
+    }
+  }, [user, navigate]);
+
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+      const scope = 'openid email profile';
+      
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(scope)}`;
+
+      window.location.href = googleAuthUrl;
+      
+    } catch (error) {
+      console.error('Google auth initiation failed:', error);
+      setError('Failed to start Google authentication');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUsernameSubmit = () => {
+  // Handle the callback from Google OAuth
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const error = urlParams.get('error');
+      
+      if (error) {
+        setError(`Google OAuth error: ${error}`);
+        return;
+      }
+      
+      if (code) {
+        setIsLoading(true);
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/auth`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            setJwt(data.jwt);
+            
+            if (data.needsUsername) {
+              setNeedsUsername(true);
+              setShowUsernameForm(true);
+            } else {
+              setUser(data.user);
+              navigate('/home');
+            }
+          } else {
+            setError(data.error || 'Authentication failed');
+          }
+        } catch (error) {
+          console.error('Auth callback failed:', error);
+          setError('Authentication failed');
+        } finally {
+          setIsLoading(false);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    };
+
+    handleGoogleCallback();
+  }, [setJwt, setUser, setNeedsUsername, navigate]);
+
+  const handleUsernameSubmit = async () => {
     if (!username.trim()) {
-      alert("Please enter a username");
+      setError("Please enter a username");
       return;
     }
-    console.log("Account setup with username:", username);
-    // Complete account setup
+
+    if (username.length < 3 || username.length > 20) {
+      setError("Username must be between 3 and 20 characters");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/setup-username`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          username: username.trim(), 
+          jwt 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+        setNeedsUsername(false);
+        navigate('/home');
+      } else {
+        setError(data.error || 'Username setup failed');
+      }
+    } catch (error) {
+      console.error('Username setup failed:', error);
+      setError('Username setup failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -32,6 +148,7 @@ export default function ChirpLanding() {
           className="landing-logo"
         />
       </div>
+      
       {/* Auth Section */}
       <div className="auth-section">
         <div className="auth-container">
@@ -42,9 +159,12 @@ export default function ChirpLanding() {
               </div>
 
               <div className="auth-form-container">
+                {error && <div className="error-message">{error}</div>}
+                
                 <button
                   onClick={handleGoogleAuth}
                   className="google-auth-button"
+                  disabled={isLoading}
                 >
                   <svg
                     className="google-icon"
@@ -69,7 +189,7 @@ export default function ChirpLanding() {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Sign in with Google
+                  {isLoading ? 'Signing in...' : 'Sign in with Google'}
                 </button>
               </div>
             </>
@@ -81,24 +201,32 @@ export default function ChirpLanding() {
 
               <div className="auth-form-container">
                 <p className="username-prompt">Choose your username</p>
+                
+                {error && <div className="error-message">{error}</div>}
+                
                 <input
                   type="text"
                   placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="username-input"
+                  disabled={isLoading}
+                  maxLength={20}
                 />
+                
                 <button
                   onClick={handleUsernameSubmit}
                   className="complete-button"
+                  disabled={isLoading || !username.trim()}
                 >
-                  Complete Setup
+                  {isLoading ? 'Setting up...' : 'Complete Setup'}
                 </button>
               </div>
             </>
           )}
         </div>
       </div>
+      
       <div
         style={{
           position: "absolute",
