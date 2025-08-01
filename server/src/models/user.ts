@@ -18,7 +18,7 @@ export interface IUser extends Document {
   createdAt: Date;
 }
 
-const userSchema = new Schema<IUser>({
+export const userSchema = new Schema<IUser>({
   googleId: {
     type: String,
     required: true,
@@ -74,38 +74,6 @@ const userSchema = new Schema<IUser>({
   }
 });
 
-export const User = mongoose.model<IUser>('User', userSchema);
-
 export function getUserModel(conn: mongoose.Connection): Model<IUser> {
   return conn.model<IUser>("User", userSchema);
 }
-// export async function getUserModel() {
-//   if (!userModel) {
-//     const db = await retrieveDb(config.dbName);
-//     userModel = db.model<IUser>('User', userSchema, 'users');
-//   }
-//   return userModel;
-// }
-
-// export const User = {
-//   async findOne(query: any) {
-//     const UserModel = await getUserModel();
-//     return UserModel.findOne(query);
-//   },
-//   async find(query: any = {}) {
-//     const UserModel = await getUserModel();
-//     return UserModel.find(query);
-//   },
-//   async create(userData: {
-//     google_sub: string;
-//   }) {
-//     const UserModel = await getUserModel();
-//     const user = new UserModel(userData);
-//     return user.save();
-//   },
-//   async findOneAndUpdate(query: any, update: any, options: any = {}) {
-//     const UserModel = await getUserModel();
-//     return UserModel.findOneAndUpdate(query, update, options);
-//   }
-
-// };

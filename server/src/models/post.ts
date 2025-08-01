@@ -1,9 +1,9 @@
 import { Document, Model, Schema, Types } from 'mongoose';
 import mongoose from "mongoose";
 
-export interface IPost extends Document {
+export interface IPost<TAuthor = Types.ObjectId> extends Document {
   _id: Types.ObjectId;
-  author: Types.ObjectId;
+  author: TAuthor;
   caption: string;
   mediaUrl?: string;
   mediaType?: string;
@@ -13,7 +13,7 @@ export interface IPost extends Document {
   createdAt: Date;
 }
 
-const postSchema = new Schema<IPost>({
+export const postSchema = new Schema<IPost>({
   author: {
     type: Schema.Types.ObjectId,
     ref: 'User',
@@ -52,8 +52,6 @@ const postSchema = new Schema<IPost>({
     required: true
   }
 });
-
-export const Post = mongoose.model<IPost>('Post', postSchema);
 
 export function getPostModel(conn: mongoose.Connection): Model<IPost> {
   return conn.model<IPost>("Post", postSchema);

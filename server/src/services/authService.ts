@@ -1,18 +1,14 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
-import { getUserModel, User } from "../models/user.ts";
 import { HTTP_STATUS } from "../utils/httpStatus.ts";
 import { retrieveDb } from '@db/db.ts';
-import { getPostModel } from '@models/index.ts';
 import { config } from '@config/config.ts';
 import type { IGoogleIdTokenPayload } from 'types/auth.ts';
+import { UserService } from './userService.ts';
 
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
-const db = await retrieveDb(config.dbName);         
-const UserModel = getUserModel(db);  
-
-
+        
 function generateUniqueUsername(firstName: string, lastName: string) {
   const base = (firstName + lastName)
       .toLowerCase()
@@ -88,26 +84,16 @@ export async function getGoogleJwt(req: Request, res: Response) {
     let existingUser = null;
 
     try {  
-      existingUser =  await UserModel.findOne({ googleId: sub });      
+      existingUser =  await UserService.getUserByGoogleId(sub);      
       // If user doesn't exist, try to create them (but don't block if it fails)
       if (!existingUser) {
         try {
-          const protocol = config.domain.includes('localhost') ? 'http' : 'https';
-          const baseURL = `${protocol}://${config.domain}`;
-          existingUser = await UserModel.create({ 
+          existingUser = await UserService.createUser({
             googleId: sub,
-            username: username,
-            domain: config.domain,
-            actorId: `${baseURL}/users/${username}`,
+            username,
             displayName: `${given_name} ${family_name}`,
-            avatarUrl: picture ?? '', 
-            inboxUrl: `${baseURL}/users/${username}/inbox`,
-            outboxUrl: `${baseURL}/users/${username}/outbox`,
-            followersUrl: `${baseURL}/users/${username}/followers`,
-            followingUrl: `${baseURL}/users/${username}/following`,
-            isLocal: true,
-            createdAt: Date.now()
-          });
+            avatarUrl: picture ?? ''
+          })
         } catch (createError) {
           res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
             error: `User creation failed`,
@@ -144,43 +130,36 @@ export async function getGoogleJwt(req: Request, res: Response) {
   }
 }
 
-export async function updateDisplayName(req: Request, res: Response) {
+export async function updateUsername(req: Request, res: Response) {
   try {
-    const { username, jwt } = req.body;
+    const { newUsername } = req.body;
 
-    if (!username || !jwt) {
+    if (!newUsername) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
-        error: "Username and JWT are required" 
+        error: "New username required" 
       });
     }
 
     // Validate username format (optional - add your own rules)
-    if (username.length < 3 || username.length > 50) {
+    if (newUsername.length < 3 || newUsername.length > 50) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
         error: "Username must be between 3 and 50 characters" 
       });
     }
+  
 
-    // Verify the JWT is valid
-    const payload = await verifyGoogleJwt(jwt);
-    const { sub } = payload;
-
-    if (!sub) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ 
-        error: "Invalid JWT" 
-      });
-    }
-
-     // Check if display name is already taken
-    const existingDisplayName = await UserModel.findOne({ displayName: username.toLowerCase() });
-    if (existingDisplayName) {
+     // Check if username is already taken
+    const isAvailableUserName = await UserService.isUsernameAvailable(newUsername.toLowerCase());
+    
+    
+    if (!isAvailableUserName) {
       return res.status(HTTP_STATUS.CONFLICT).json({ 
-        error: "Display name already taken" 
+        error: "Username already taken" 
       });
     }
 
     // Find user first to verify they exist
-    const existingUser = await UserModel.findOne({ googleId: sub });
+    const existingUser = await UserService.getUserByGoogleId(req.user!.googleId);
 
     if (!existingUser) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ 
@@ -189,24 +168,24 @@ export async function updateDisplayName(req: Request, res: Response) {
     }
 
     // Update the user
-    await UserModel.findOneAndUpdate(
-      { googleId: sub },
-      { displayName: username.toLowerCase() }
+    await UserService.updateUser(
+      existingUser.id,
+      { username: newUsername.toLowerCase() }
     );
 
     // Return the updated data
     res.status(HTTP_STATUS.OK).json({ 
-      message: "Display name setup completed",
+      message: "Username setup completed",
       user: {
         id: existingUser._id,
-        displayName: username.toLowerCase()
+        username: newUsername.toLowerCase()
       }
     });
 
   } catch (err) {
-    console.error("Display name setup failed:", err);
+    console.error("Username setup failed:", err);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      error: `Display name setup failed: ${err}`,
+      error: `Username setup failed: ${err}`,
     });
   }
 }
