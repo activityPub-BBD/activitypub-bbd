@@ -5,6 +5,44 @@ import { Router } from 'express';
 import multer from 'multer';
 import { PostService } from 'services/postService.ts';
 import type { IPostResponse } from 'types/post.ts';
+import { getUserModel } from "@models/user.ts";
+import { retrieveDb } from "@db/db.ts";
+import { config } from "@config/config.ts";
+
+const db = await retrieveDb(config.dbName);
+const UserModel = getUserModel(db);
+
+// Function to get or create a dummy user for posts without authentication
+async function getDummyUser(): Promise<IUser> {
+  const dummyGoogleId = "dummy-user-123";
+
+  let user = await UserModel.findOne({ googleId: dummyGoogleId });
+
+  if (!user) {
+    const protocol = config.domain.includes("localhost") ? "http" : "https";
+    const baseURL = `${protocol}://${config.domain}`;
+
+    user = new UserModel({
+      googleId: dummyGoogleId,
+      username: "testuser",
+      domain: config.domain,
+      actorId: `${baseURL}/users/testuser`,
+      displayName: "Test User",
+      bio: "Test user for development",
+      avatarUrl: "https://i.pravatar.cc/150?img=1",
+      inboxUrl: `${baseURL}/users/testuser/inbox`,
+      outboxUrl: `${baseURL}/users/testuser/outbox`,
+      followersUrl: `${baseURL}/users/testuser/followers`,
+      followingUrl: `${baseURL}/users/testuser/following`,
+      isLocal: true,
+      createdAt: new Date(),
+    });
+
+    await user.save();
+  }
+
+  return user;
+}
 
 export const postRoutes = Router();
 
@@ -13,12 +51,22 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024, 
   },
-  fileFilter: (req: any, file: any, cb: any ) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  fileFilter: (req: any, file: any, cb: any) => {
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "video/mp4",
+      "video/webm",
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+      cb(
+        new Error(
+          "Invalid file type. Only JPEG, PNG, WebP images and MP4, WebM videos are allowed."
+        )
+      );
     }
   },
 });
@@ -50,12 +98,13 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
       req.file.mimetype,
       req.user!.id
     );
+    mediaType = req.file.mimetype;
 
     const post = await PostService.createPost({
       authorId: req.user!.id,
       caption,
       mediaUrl,
-      mediaType: req.file.mimetype,
+      mediaType,
     });
 
 
@@ -70,9 +119,9 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
     const response: IPostResponse = {
       id: populatedPost._id.toString(),
       author: {
-        id: populatedPost.author._id.toString(),
-        displayName: populatedPost.author.displayName,
-        avatarUrl: populatedPost.author.avatarUrl,
+        id: (populatedPost.author as any)._id.toString(),
+        displayName: (populatedPost.author as any).displayName,
+        avatarUrl: (populatedPost.author as any).avatarUrl,
       },
       caption: populatedPost.caption,
       mediaUrl: populatedPost.mediaUrl,

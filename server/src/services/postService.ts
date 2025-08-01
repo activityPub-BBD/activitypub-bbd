@@ -1,8 +1,11 @@
 import mongoose from 'mongoose';
-import { getPostModel, getUserModel, registerModels, type IPost } from '../models/index.ts';
+import { type IPost } from '../models/post.ts';
 import type { ICreatePostData } from 'types/post.ts';
 import { config } from '@config/config.ts';
-import { retrieveDb } from '@db/db.ts';
+import { uploadImageToS3 } from "./s3Service.ts";
+import { retrieveDb } from "@db/db.ts";
+import { registerModels } from "@models/index.ts";
+
 
 const db = await retrieveDb(config.dbName);         
 const {Post: PostModel} = registerModels(db);
@@ -73,17 +76,17 @@ const getPostById = async (id: string): Promise<any | null> => {
     return true;
 }
 
- const uploadImage = async(file: Buffer, mimeType: string, userId: string): Promise<string> => {
-    //TODO: Validate image type and image size -> do in s3 service
-    //TODO: Upload using s3 service
-    return 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png'
-}
-
-export const PostService = {
-  createPost,
-  getPostById,
-  getUserPosts,
-  getFeedPosts,
-  deletePost,
-  uploadImage,
+export const uploadImage = async (
+  file: Buffer,
+  mimeType: string,
+  userId: string
+): Promise<string> => {
+  try {
+    const dummyURL = 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png';
+    const mediaUrl = await uploadImageToS3(file, mimeType, userId);
+    return mediaUrl;
+  } catch (error) {
+    console.error("Upload image error:", error);
+    throw new Error("Failed to upload image");
+  }
 };

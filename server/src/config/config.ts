@@ -8,7 +8,11 @@ interface Config {
   dbUrl: string;
   dbName: string;
   dbConnectionRetryCount: number;
-  domain: string
+  domain: string;
+  aws: {
+    region: string;
+    s3MediaBucket: string;
+  };
 }
 
 const config: Config = {
@@ -17,7 +21,12 @@ const config: Config = {
   dbUrl: process.env.DB_URL || "mongodb+srv://chirp-admins:Tp8zV7mwJu2qFVrc@chirp-cluster-1.lftjwo3.mongodb.net/",
   dbName: process.env.DB_NAME || "cindi",
   dbConnectionRetryCount: Number(process.env.DB_CONNECTION_RETRY_COUNT) || 5,
-  domain: process.env.DOMAIN || 'localhost:8000'
+  domain: process.env.DOMAIN || "localhost:8000",
+  aws: {
+    region: process.env.AWS_REGION || "af-south-1",
+    s3MediaBucket:
+      process.env.S3_MEDIA_BUCKET || "group-5-mastodon-media-bucket",
+  },
 };
 
 export {config};
