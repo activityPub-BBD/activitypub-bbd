@@ -16,6 +16,7 @@ export interface IUser extends Document {
   followingUrl: string;
   isLocal: boolean;
   createdAt: Date;
+  location?: string; 
 }
 
 export const userSchema = new Schema<IUser>({
@@ -71,6 +72,10 @@ export const userSchema = new Schema<IUser>({
   createdAt: {
     type: Date,
     required: true
+  },
+  location: {
+    type: String,
+    default: ''  
   }
 });
 

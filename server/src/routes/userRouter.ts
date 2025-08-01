@@ -83,6 +83,10 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
       updates.avatarUrl = req.body.avatarUrl;
     }
 
+    if (typeof req.body.location === 'string' || req.body.location === null) {
+      updates.location = req.body.location;
+    }
+
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No valid fields provided for update' });
     }
@@ -100,6 +104,7 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
     // Include only the fields that were updated
     if ('displayName' in updates) responseUser.displayName = updated.displayName;
     if ('bio' in updates) responseUser.bio = updated.bio;
+    if ('location' in updates) responseUser.location = updated.location;
     if ('avatarUrl' in updates) responseUser.avatarUrl = updated.avatarUrl;
 
     res.status(HTTP_STATUS.OK).json({

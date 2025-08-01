@@ -6,6 +6,7 @@ interface User {
   avatarUrl?: string;
   username: string;
   bio?: string;
+  location: string;
 }
 
 interface AuthContextType {
