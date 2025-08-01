@@ -5,16 +5,34 @@ import { HTTP_STATUS } from "../utils/httpStatus.ts";
 import { retrieveDb } from '@db/db.ts';
 import { getPostModel } from '@models/index.ts';
 import { config } from '@config/config.ts';
+import type { IGoogleIdTokenPayload } from 'types/auth.ts';
 
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
 const db = await retrieveDb(config.dbName);         
 const UserModel = getUserModel(db);  
 
-export async function verifyGoogleJwt(jwt: string) {
+
+function generateUniqueUsername(firstName: string, lastName: string) {
+  const base = (firstName + lastName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+  let username = base;
+  let suffix = 0;
+  //TODO: Check db for username then add numbers for uniqueness
+  // while (await isUsernameTaken(username)) {
+  //   suffix++;
+  //   const trimmedBase = base.slice(0, 15 - suffix.toString().length); // keep total ≤ 15
+  //   username = `${trimmedBase}${suffix}`;
+  // }
+  return username;
+}
+
+export async function verifyGoogleJwt(jwt: string): Promise<IGoogleIdTokenPayload> {
   try {
     // verify jwt's signature and validate claims
-    const { payload } = await jwtVerify(jwt, JWKS, {
+    const { payload } = await jwtVerify<IGoogleIdTokenPayload>(jwt, JWKS, {
       issuer: 'https://accounts.google.com',
       audience: process.env.GOOGLE_CLIENT_ID,
     });
@@ -58,8 +76,8 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const { id_token: jwt } = await response.json();
     const payload = await verifyGoogleJwt(jwt);
-    const { sub, email } = payload;
-    const username = email?.split('@')[0];
+    const { sub, given_name='', family_name=''  } = payload;
+    const username = generateUniqueUsername(given_name, family_name);
     
     if (!sub) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -82,7 +100,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
             username: username,
             domain: config.domain,
             actorId: `${baseURL}/users/${username}`,
-            displayName: username,
+            displayName: `${given_name} ${family_name}`,
             inboxUrl: `${baseURL}/users/${username}/inbox`,
             outboxUrl: `${baseURL}/users/${username}/outbox`,
             followersUrl: `${baseURL}/users/${username}/followers`,
@@ -110,7 +128,6 @@ export async function getGoogleJwt(req: Request, res: Response) {
     res.status(HTTP_STATUS.OK).json({ 
       jwt,
       userExists: !!existingUser,
-      needsUsername: true,
       user: existingUser ? {
         id: existingUser._id,
         displayName: existingUser.displayName,
@@ -126,7 +143,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
   }
 }
 
-export async function setupDisplayName(req: Request, res: Response) {
+export async function updateDisplayName(req: Request, res: Response) {
   try {
     const { username, jwt } = req.body;
 

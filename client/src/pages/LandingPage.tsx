@@ -4,17 +4,15 @@ import { useAuthContext } from "../context/AuthContext";
 import "../styles/LandingPage.css";
 
 export default function ChirpLanding() {
-  const [showUsernameForm, setShowUsernameForm] = useState(false);
-  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const { setUser, setJwt, setNeedsUsername, user, jwt } = useAuthContext();
+  const { setUser, setJwt, user } = useAuthContext();
   const navigate = useNavigate();
 
   // Redirect if user is already authenticated and has username
   useEffect(() => {
-    if (user && user.displayName) {
+    if (user && user.username) {
       navigate('/home');
     }
   }, [user, navigate]);
@@ -71,16 +69,9 @@ export default function ChirpLanding() {
 
           if (response.ok) {
             setJwt(data.jwt);
-            console.log(data.user);
-            console.log(data.jwt);
+            setUser(data.user);
+            navigate('/home');
             
-            if (data.needsUsername) {
-              setNeedsUsername(true);
-              setShowUsernameForm(true);
-            } else {
-              setUser(data.user);
-              navigate('/home');
-            }
           } else {
             setError(data.error || 'Authentication failed');
           }
@@ -95,50 +86,7 @@ export default function ChirpLanding() {
     };
 
     handleGoogleCallback();
-  }, [setJwt, setUser, setNeedsUsername, navigate]);
-
-  const handleUsernameSubmit = async () => {
-    if (!username.trim()) {
-      setError("Please enter a username");
-      return;
-    }
-
-    if (username.length < 3 || username.length > 20) {
-      setError("Username must be between 3 and 20 characters");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/setup-displayName`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          username: username.trim(), 
-          jwt 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setUser(data.user);
-        setNeedsUsername(false);
-        navigate('/home');
-      } else {
-        setError(data.error || 'Username setup failed');
-      }
-    } catch (error) {
-      console.error('Username setup failed:', error);
-      setError('Username setup failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [setJwt, setUser, navigate]);
 
   return (
     <div className="landing-container">
@@ -154,7 +102,6 @@ export default function ChirpLanding() {
       {/* Auth Section */}
       <div className="auth-section">
         <div className="auth-container">
-          {!showUsernameForm ? (
             <>
               <div className="logo-container">
                 <h1 className="auth-logo">Get Started</h1>
@@ -195,37 +142,6 @@ export default function ChirpLanding() {
                 </button>
               </div>
             </>
-          ) : (
-            <>
-              <div className="logo-container">
-                <h1 className="auth-logo">Chirp</h1>
-              </div>
-
-              <div className="auth-form-container">
-                <p className="username-prompt">Choose your username</p>
-                
-                {error && <div className="error-message">{error}</div>}
-                
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="username-input"
-                  disabled={isLoading}
-                  maxLength={20}
-                />
-                
-                <button
-                  onClick={handleUsernameSubmit}
-                  className="complete-button"
-                  disabled={isLoading || !username.trim()}
-                >
-                  {isLoading ? 'Setting up...' : 'Complete Setup'}
-                </button>
-              </div>
-            </>
-          )}
         </div>
       </div>
       
