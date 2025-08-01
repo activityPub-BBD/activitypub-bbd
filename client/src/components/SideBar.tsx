@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/SideBar.css';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../context/AuthContext';
 
 interface SidebarProps {
   username?: string;
@@ -12,7 +13,7 @@ interface SidebarProps {
 }
 
 const SideBar: React.FC<SidebarProps> = ({
-  username = 'Cindi',
+  username = 'User',
   avatarUrl = 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png',
   followers = 39,
   following = 2000,
@@ -20,6 +21,13 @@ const SideBar: React.FC<SidebarProps> = ({
   onToggle
 }) => {
   const navigate = useNavigate();
+  const { logout } = useAuthContext();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <>
       <button
@@ -49,7 +57,7 @@ const SideBar: React.FC<SidebarProps> = ({
             <nav className="nav-links">
                 <Link to="/profile">Profile</Link>
                 <Link to="/explore-communities">Explore Communities</Link>
-                <Link to="/">Logout</Link>
+                <button onClick={handleLogout} className="logout-button">Logout</button>
             </nav>
       </aside>
 
