@@ -76,7 +76,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const { id_token: jwt } = await response.json();
     const payload = await verifyGoogleJwt(jwt);
-    const { sub, given_name='', family_name=''  } = payload;
+    const { sub, given_name='', family_name='', picture=''  } = payload;
     const username = generateUniqueUsername(given_name, family_name);
     
     if (!sub) {
@@ -88,8 +88,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
     let existingUser = null;
 
     try {  
-      existingUser =  await UserModel.findOne({ googleId: sub });
-        
+      existingUser =  await UserModel.findOne({ googleId: sub });      
       // If user doesn't exist, try to create them (but don't block if it fails)
       if (!existingUser) {
         try {
@@ -101,6 +100,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
             domain: config.domain,
             actorId: `${baseURL}/users/${username}`,
             displayName: `${given_name} ${family_name}`,
+            avatarUrl: picture ?? '', 
             inboxUrl: `${baseURL}/users/${username}/inbox`,
             outboxUrl: `${baseURL}/users/${username}/outbox`,
             followersUrl: `${baseURL}/users/${username}/followers`,
@@ -131,6 +131,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
       user: existingUser ? {
         id: existingUser._id,
         displayName: existingUser.displayName,
+        avatarUrl: existingUser.avatarUrl,
         userName: existingUser.username
       } : null
     });

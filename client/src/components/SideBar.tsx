@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 
 interface SidebarProps {
-  username?: string;
+  displayName?: string;
   avatarUrl?: string;
   followers?: number;
   following?: number;
@@ -13,8 +13,8 @@ interface SidebarProps {
 }
 
 const SideBar: React.FC<SidebarProps> = ({
-  username = 'User',
-  avatarUrl = 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png',
+  displayName = 'User',
+  avatarUrl,
   followers = 39,
   following = 2000,
   isOpen,
@@ -44,8 +44,11 @@ const SideBar: React.FC<SidebarProps> = ({
             {/* User Profile Section */}
             <div className="sidebar-profile">
                 <div className="sidebar-user">
-                    <img className="sidebar-avatar" src={avatarUrl} onClick={() => navigate('/profile')} />
-                    <div className="sidebar-username">{username}</div>
+                    <img className="sidebar-avatar" src={avatarUrl} onClick={() => navigate('/profile', {state: {
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+      }})} />
+                    <div className="sidebar-username">{displayName}</div>
                 </div>
                 <div className="sidebar-stats">
                     <div><span className="count">{followers}</span>Followers</div>
