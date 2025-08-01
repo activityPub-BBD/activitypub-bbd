@@ -89,18 +89,21 @@ postRoutes.post('/', upload.single('image'), async (req, res) => {
     // Get dummy user for posts without authentication
     const dummyUser = await getDummyUser();
 
-    let mediaUrl: string | undefined;
-    let mediaType: string | undefined;
+    let mediaUrl: string;
+    let mediaType: string;
 
-    // Handle optional media upload
-    if (req.file) {
-      mediaUrl = await uploadImage(
-        req.file.buffer,
-        req.file.mimetype,
-        dummyUser._id.toString()
-      );
-      mediaType = req.file.mimetype;
+    // Media is required
+    if (!req.file) {
+      return res.status(400).json({ error: "Media file is required" });
     }
+
+    // Handle required media upload
+    mediaUrl = await uploadImage(
+      req.file.buffer,
+      req.file.mimetype,
+      dummyUser._id.toString()
+    );
+    mediaType = req.file.mimetype;
 
     const post = await createPost({
       authorId: dummyUser._id.toString(),
@@ -118,13 +121,13 @@ postRoutes.post('/', upload.single('image'), async (req, res) => {
     const response: IPostResponse = {
       id: populatedPost._id.toString(),
       author: {
-        id: populatedPost.author._id.toString(),
-        displayName: populatedPost.author.displayName,
-        avatarUrl: populatedPost.author.avatarUrl,
+        id: (populatedPost.author as any)._id.toString(),
+        displayName: (populatedPost.author as any).displayName,
+        avatarUrl: (populatedPost.author as any).avatarUrl,
       },
       caption: populatedPost.caption,
-      mediaUrl: populatedPost.mediaUrl,
-      mediaType: populatedPost.mediaType,
+      mediaUrl: populatedPost.mediaUrl!,
+      mediaType: populatedPost.mediaType!,
       activityPubURI: populatedPost.activityPubUri,
       likesCount: populatedPost.likesCount,
       isLiked: false,

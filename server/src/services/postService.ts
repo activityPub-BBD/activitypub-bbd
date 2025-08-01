@@ -7,6 +7,11 @@ import { retrieveDb } from "@db/db.ts";
 import { getUserModel } from "@models/user.ts";
 
 export const createPost = async (postData: ICreatePostData): Promise<IPost> => {
+  // Validate that media is required
+  if (!postData.mediaUrl || !postData.mediaType) {
+    throw new Error('Media is required for post creation');
+  }
+
   // Get the database connection and models
   const db = await retrieveDb(config.dbName);
   const PostModel = getPostModel(db);

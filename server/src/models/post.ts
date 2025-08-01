@@ -27,11 +27,11 @@ const postSchema = new Schema<IPost>({
   },
   mediaUrl: {
     type: String,
-    required: false,
+    required: true,
   },
   mediaType: {
     type: String,
-    required: false,
+    required: true,
     enum: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"],
   },
   activityPubUri: {

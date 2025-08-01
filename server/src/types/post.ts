@@ -1,8 +1,8 @@
 export interface ICreatePostData {
   authorId: string;
   caption: string;
-  mediaUrl?: string;
-  mediaType?: string;
+  mediaUrl: string;
+  mediaType: string;
 }
 
 export interface IPostResponse {
@@ -13,8 +13,8 @@ export interface IPostResponse {
     avatarUrl?: string;
   };
   caption: string;
-  mediaUrl?: string;
-  mediaType?: string;
+  mediaUrl: string;
+  mediaType: string;
   activityPubURI: string;
   likesCount: number;
   isLiked: boolean;
