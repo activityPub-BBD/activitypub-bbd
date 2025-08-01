@@ -14,7 +14,7 @@ export default function ChirpLanding() {
 
   // Redirect if user is already authenticated and has username
   useEffect(() => {
-    if (user && user.username) {
+    if (user && user.displayName) {
       navigate('/home');
     }
   }, [user, navigate]);

@@ -44,7 +44,7 @@ export const AppRoutes = () => {
       <Route 
         path="*" 
         element={
-          user && user.username ? <Navigate to="/home" /> : <Navigate to="/" />
+          user && user.displayName ? <Navigate to="/home" /> : <Navigate to="/" />
         } 
       />
     </Routes>

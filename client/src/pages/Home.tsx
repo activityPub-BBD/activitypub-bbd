@@ -18,7 +18,7 @@ const Home: React.FC = () => {
       <SideBar 
         isOpen={sidebarOpen} 
         onToggle={toggleSidebar}
-        username={user?.username || 'User'}
+        username={user?.displayName || 'User'}
       />
       <Feed />
     </div>
