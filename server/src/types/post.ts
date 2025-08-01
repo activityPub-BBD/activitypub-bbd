@@ -26,6 +26,6 @@ export interface IPostResponse {
   mediaType: string;
   activityPubUri: string;
   likesCount: number;
-  isLiked: boolean;
+  likes: Types.ObjectId[];
   createdAt: Date;
 }
