@@ -1,7 +1,9 @@
-import express from 'express';
-import { getGoogleJwt, setupUsername} from "../controllers/authController.ts";
+import { Router } from "express";
+import { getGoogleJwt, updateDisplayName} from "../services/authService.ts";
 
-export const authRouter = express.Router();
+export const authRoutes = Router();
 
-authRouter.post('/', getGoogleJwt); 
-authRouter.post('/setup-username', setupUsername);
+authRoutes.post('/', getGoogleJwt); 
+authRoutes.post('/displayName', updateDisplayName);
+
+export default authRoutes;

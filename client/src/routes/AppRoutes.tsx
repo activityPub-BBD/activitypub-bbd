@@ -8,7 +8,7 @@ import type { JSX } from 'react';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuthContext();
-  return user && user.username ? children : <Navigate to="/" />;
+  return user && user.displayName ? children : <Navigate to="/" />;
 };
 
 export const AppRoutes = () => {
@@ -18,7 +18,7 @@ export const AppRoutes = () => {
       <Route 
         path="/" 
         element={
-          user && user.username ? <Navigate to="/home" /> : <LandingPage />
+          user && user.displayName ? <Navigate to="/home" /> : <LandingPage />
         } 
       />
       <Route 
@@ -44,7 +44,7 @@ export const AppRoutes = () => {
       <Route 
         path="*" 
         element={
-          user && user.username ? <Navigate to="/home" /> : <Navigate to="/" />
+          user && user.displayName ? <Navigate to="/home" /> : <Navigate to="/" />
         } 
       />
     </Routes>

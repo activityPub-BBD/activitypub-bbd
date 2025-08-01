@@ -18,7 +18,8 @@ const Home: React.FC = () => {
       <SideBar 
         isOpen={sidebarOpen} 
         onToggle={toggleSidebar}
-        username={user?.username || 'User'}
+        displayName={user?.displayName || 'User'}
+        avatarUrl={user?.avatarUrl || 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png'}
       />
       <Feed />
     </div>
