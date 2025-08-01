@@ -5,8 +5,10 @@ import { config } from '@config/config.ts';
 
 export const createPost = async (postData: ICreatePostData): Promise<IPost> => {
     // mock createPost
+    const protocol = config.domain.includes('localhost') ? 'http' : 'https';
+    const baseURL = `${protocol}://${config.domain}`;
     const postId = new mongoose.Types.ObjectId();
-    const activityPubURI = `${config.baseURL}/posts/${postId}`;
+    const activityPubURI = `${baseURL}/posts/${postId}`;
     const post = new Post({
       _id: postId,
       author: postData.authorId,

@@ -1,10 +1,12 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import { Document, Model, Schema, Types } from 'mongoose';
+import mongoose from "mongoose";
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
   googleId: string;
-  domain: string; //@alice@example.com
+  domain: string; //example.com
   actorId: string;
+  username: string;
   displayName: string;
   bio?: string;
   avatarUrl?: string;
@@ -21,6 +23,10 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: true,
     unique: true
+  },
+  username: {
+    type: String,
+    required: true
   },
   domain: {
     type: String,
@@ -70,6 +76,9 @@ const userSchema = new Schema<IUser>({
 
 export const User = mongoose.model<IUser>('User', userSchema);
 
+export function getUserModel(conn: mongoose.Connection): Model<IUser> {
+  return conn.model<IUser>("User", userSchema);
+}
 // export async function getUserModel() {
 //   if (!userModel) {
 //     const db = await retrieveDb(config.dbName);

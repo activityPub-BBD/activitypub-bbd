@@ -71,6 +71,8 @@ export default function ChirpLanding() {
 
           if (response.ok) {
             setJwt(data.jwt);
+            console.log(data.user);
+            console.log(data.jwt);
             
             if (data.needsUsername) {
               setNeedsUsername(true);
@@ -110,7 +112,7 @@ export default function ChirpLanding() {
     setError("");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/setup-username`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/setup-displayName`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

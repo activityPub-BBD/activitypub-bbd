@@ -1,10 +1,15 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
-import { User } from "../models/user.ts";
+import { getUserModel, User } from "../models/user.ts";
 import { HTTP_STATUS } from "../utils/httpStatus.ts";
+import { retrieveDb } from '@db/db.ts';
+import { getPostModel } from '@models/index.ts';
+import { config } from '@config/config.ts';
 
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
+const db = await retrieveDb(config.dbName);         
+const UserModel = getUserModel(db);  
 
 export async function verifyGoogleJwt(jwt: string) {
   try {
@@ -24,7 +29,6 @@ export async function verifyGoogleJwt(jwt: string) {
 export async function getGoogleJwt(req: Request, res: Response) {
   try {
     let { code } = req.body;
-
     // Decode URL-encoded code
     code = decodeURIComponent(code);
 
@@ -54,8 +58,9 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const { id_token: jwt } = await response.json();
     const payload = await verifyGoogleJwt(jwt);
-    const { sub } = payload;
-
+    const { sub, email } = payload;
+    const username = email?.split('@')[0];
+    
     if (!sub) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
         error: "Invalid JWT: missing user ID" 
@@ -64,38 +69,55 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     let existingUser = null;
 
-    try {
-      const dbPromise = User.findOne({ googleId: sub });
-      const timeoutPromise = new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error('Database query timeout')), 3000);
-      });
-
-      existingUser = await Promise.race([dbPromise, timeoutPromise]);
-
+    try {  
+      existingUser =  await UserModel.findOne({ googleId: sub });
+        
       // If user doesn't exist, try to create them (but don't block if it fails)
       if (!existingUser) {
         try {
-          existingUser = await User.create({ googleId: sub });
+          const protocol = config.domain.includes('localhost') ? 'http' : 'https';
+          const baseURL = `${protocol}://${config.domain}`;
+          existingUser = await UserModel.create({ 
+            googleId: sub,
+            username: username,
+            domain: config.domain,
+            actorId: `${baseURL}/users/${username}`,
+            displayName: username,
+            inboxUrl: `${baseURL}/users/${username}/inbox`,
+            outboxUrl: `${baseURL}/users/${username}/outbox`,
+            followersUrl: `${baseURL}/users/${username}/followers`,
+            followingUrl: `${baseURL}/users/${username}/following`,
+            isLocal: true,
+            createdAt: Date.now()
+          });
         } catch (createError) {
-          // Continue even if creation fails
+          res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            error: `User creation failed`,
+          });
           console.error('Failed to create user:', createError);
+          return
         }
       }
 
     } catch (dbError) {
-      console.error('Database operation failed:', dbError);
-      User.create({ googleId: sub }).catch(() => {
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+            error: `Database operation failed`,
       });
+      console.error('Database operation failed:', dbError);
+      return
     }
 
     res.status(HTTP_STATUS.OK).json({ 
       jwt,
       userExists: !!existingUser,
+      needsUsername: true,
       user: existingUser ? {
         id: existingUser._id,
-        username: existingUser.displayName
+        displayName: existingUser.displayName,
+        userName: existingUser.username
       } : null
     });
+
   } catch (err) {
     console.error("Google OAuth failed:", err);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -104,7 +126,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
   }
 }
 
-export async function setupUsername(req: Request, res: Response) {
+export async function setupDisplayName(req: Request, res: Response) {
   try {
     const { username, jwt } = req.body;
 
@@ -131,16 +153,16 @@ export async function setupUsername(req: Request, res: Response) {
       });
     }
 
-     // Check if username is already taken
-    const existingUsername = await User.findOne({ username: username.toLowerCase() });
-    if (existingUsername) {
+     // Check if display name is already taken
+    const existingDisplayName = await UserModel.findOne({ displayName: username.toLowerCase() });
+    if (existingDisplayName) {
       return res.status(HTTP_STATUS.CONFLICT).json({ 
-        error: "Username already taken" 
+        error: "Display name already taken" 
       });
     }
 
     // Find user first to verify they exist
-    const existingUser = await User.findOne({ google_sub: sub });
+    const existingUser = await UserModel.findOne({ googleId: sub });
 
     if (!existingUser) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ 
@@ -149,24 +171,24 @@ export async function setupUsername(req: Request, res: Response) {
     }
 
     // Update the user
-    await User.findOneAndUpdate(
-      { google_sub: sub },
-      { username: username.toLowerCase() }
+    await UserModel.findOneAndUpdate(
+      { googleId: sub },
+      { displayName: username.toLowerCase() }
     );
 
     // Return the updated data
     res.status(HTTP_STATUS.OK).json({ 
-      message: "Username setup completed",
+      message: "Display name setup completed",
       user: {
         id: existingUser._id,
-        username: username.toLowerCase()
+        displayName: username.toLowerCase()
       }
     });
 
   } catch (err) {
-    console.error("Username setup failed:", err);
+    console.error("Display name setup failed:", err);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-      error: `Username setup failed: ${err}`,
+      error: `Display name setup failed: ${err}`,
     });
   }
 }

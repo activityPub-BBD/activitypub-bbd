@@ -20,7 +20,7 @@ app.use(cors({
 }));
 
 
-app.use(integrateFederation(federation, (req: express.Request) => undefined));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +29,17 @@ app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 
 //FEDIFY
-app.use(integrateFederation(federation, (req: express.Request) => undefined));
+app.use(integrateFederation(federation, (req: express.Request) => {
+  const isFedifyRequest = req.headers.accept?.includes('activity+json') ||
+                          req.path.startsWith('/users/') ||
+                          req.path.includes('/inbox') ||
+                          req.path.includes('/outbox');
+
+  if (!isFedifyRequest) return undefined; // Let other middleware handle it
+}));
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
 
 export default app;

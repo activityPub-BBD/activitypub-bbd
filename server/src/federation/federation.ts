@@ -5,7 +5,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { Types } from 'mongoose';
 import { ObjectId } from "mongodb";
 
-const logger = getLogger("backend");
+const logger = getLogger("server");
 
 export const federation = createFederation({
   kv: new MemoryKvStore(),

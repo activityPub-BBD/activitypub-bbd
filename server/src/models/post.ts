@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import { Document, Model, Schema, Types } from 'mongoose';
+import mongoose from "mongoose";
 
 export interface IPost extends Document {
   _id: Types.ObjectId;
@@ -53,3 +54,7 @@ const postSchema = new Schema<IPost>({
 });
 
 export const Post = mongoose.model<IPost>('Post', postSchema);
+
+export function getPostModel(conn: mongoose.Connection): Model<IPost> {
+  return conn.model<IPost>("Post", postSchema);
+}
