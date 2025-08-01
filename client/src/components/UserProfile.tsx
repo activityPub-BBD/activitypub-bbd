@@ -1,6 +1,6 @@
 import React, { useState, useRef, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuthContext } from '../context/AuthContext';
 import '../styles/UserProfile.css';
 
 interface Post {
@@ -23,15 +23,73 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   posts
 }) => {
   const navigate = useNavigate();
+  const { user, jwt, setUser, logout } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const handleSave = () => {
-    setIsEditing(false);
-  };
+ 
+  const handleSave = async () => {
+    if (!jwt) {
+      setError('Authentication required');
+      return;
+    }
 
+    setIsLoading(true);
+    setError('');
+
+  try {
+      // Update profile - send everything including base64 avatar if it's new
+      const updateResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({
+          displayName: username,
+          bio: bio,
+          avatarUrl: avatarUrl, // This will be base64 if user uploaded new image
+        }),
+      });
+
+      if (updateResponse.ok) {
+        const updatedData = await updateResponse.json();
+        
+        // Update user context
+        setUser(prev => prev ? {
+          ...prev,
+          displayName: username,
+          bio: bio,
+          avatarUrl: avatarUrl,
+        } : null);
+        
+        setIsEditing(false);
+        setError('');
+      } else {
+        const errorData = await updateResponse.json();
+        
+        // Handle token expiration
+        if (updateResponse.status === 401 && errorData.code === 'TOKEN_EXPIRED') {
+          setError('Your session has expired. Please sign in again.');
+          logout();
+          navigate('/');
+          return;
+        }
+        
+        setError(errorData.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      setError('Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
   const handleCancel = () => {
     setUsername(initialUsername);
     setBio(initialBio);
@@ -43,6 +101,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === 'string') {
@@ -69,15 +137,25 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             style={{ cursor: isEditing ? 'pointer' : 'default' }}
             onClick={isEditing ? triggerFileInput : undefined}
           />
-          {isEditing && (
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-          )}
+          <div className="avatar-container">
+  {isEditing && (
+    <div className="avatar-wrapper" style={{ position: 'relative' }}>
+      <input
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+      <div
+        className="avatar-overlay"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        Click to change
+      </div>
+    </div>
+  )}
+</div>
         </div>
 
         {!isEditing ? (
@@ -111,6 +189,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               </button>
             </div>
 
+             {error && (
+              <div className="error-message" style={{ marginBottom: '1rem' }}>
+                {error}
+              </div>
+            )}
+
+            <label className="input-label">
+              Display Name
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                className="input-field"
+                maxLength={50}
+                disabled={isLoading}
+              />
+            </label>
+
             <label className="input-label" style={{ marginTop: 16 }}>
               Bio
               <textarea
@@ -118,14 +214,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 onChange={e => setBio(e.target.value)}
                 rows={3}
                 className="textarea-field"
+                maxLength={100}
               />
             </label>
 
             <div className="edit-buttons">
-              <button onClick={handleSave} className="button-save">
-                Save
+              <button 
+                onClick={handleSave} 
+                className="button-save"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Saving...' : 'Save'}
               </button>
-              <button onClick={handleCancel} className="button-cancel">
+              <button 
+                onClick={handleCancel} 
+                className="button-cancel"
+                disabled={isLoading}
+              >
                 Cancel
               </button>
             </div>

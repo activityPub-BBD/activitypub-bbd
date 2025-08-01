@@ -1,17 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 
 interface User {
   id: string;
   displayName?: string;
   avatarUrl?: string;
   username: string;
+  bio?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   jwt: string | null;
   isLoading: boolean;
-  setUser: (user: User | null) => void;
+  setUser: Dispatch<SetStateAction<User | null>>;
   setJwt: (jwt: string | null) => void;
   logout: () => void;
 }
