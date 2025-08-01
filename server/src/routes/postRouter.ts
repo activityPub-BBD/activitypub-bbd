@@ -1,48 +1,9 @@
 import { requireAuth } from '@middleware/auth.ts';
-import type { IPost } from '@models/post.ts';
 import { HTTP_STATUS } from '@utils/httpStatus.ts';
 import { Router } from 'express';
 import multer from 'multer';
 import { PostService } from 'services/postService.ts';
 import type { IPostResponse } from 'types/post.ts';
-import { getUserModel } from "@models/user.ts";
-import { retrieveDb } from "@db/db.ts";
-import { config } from "@config/config.ts";
-
-const db = await retrieveDb(config.dbName);
-const UserModel = getUserModel(db);
-
-// Function to get or create a dummy user for posts without authentication
-async function getDummyUser(): Promise<IUser> {
-  const dummyGoogleId = "dummy-user-123";
-
-  let user = await UserModel.findOne({ googleId: dummyGoogleId });
-
-  if (!user) {
-    const protocol = config.domain.includes("localhost") ? "http" : "https";
-    const baseURL = `${protocol}://${config.domain}`;
-
-    user = new UserModel({
-      googleId: dummyGoogleId,
-      username: "testuser",
-      domain: config.domain,
-      actorId: `${baseURL}/users/testuser`,
-      displayName: "Test User",
-      bio: "Test user for development",
-      avatarUrl: "https://i.pravatar.cc/150?img=1",
-      inboxUrl: `${baseURL}/users/testuser/inbox`,
-      outboxUrl: `${baseURL}/users/testuser/outbox`,
-      followersUrl: `${baseURL}/users/testuser/followers`,
-      followingUrl: `${baseURL}/users/testuser/following`,
-      isLocal: true,
-      createdAt: new Date(),
-    });
-
-    await user.save();
-  }
-
-  return user;
-}
 
 export const postRoutes = Router();
 
@@ -85,20 +46,25 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption is required' });
     }
 
-    if (!req.file) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Image is required' });
-    }
+    // if (!req.file) {
+    //   return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Image is required' });
+    // }
 
     if (caption.length > 2200) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption must be 2200 characters or less' });
     }
 
-    const mediaUrl = await PostService.uploadImage(
-      req.file.buffer,
-      req.file.mimetype,
-      req.user!.id
-    );
-    mediaType = req.file.mimetype;
+    let mediaUrl = ''
+    let mediaType = ''
+    if (req.file) {
+      mediaUrl = await PostService.uploadImage(
+        req.file.buffer,
+        req.file.mimetype,
+        req.user!.id
+      );
+      mediaType = req.file.mimetype;
+    }
+    
 
     const post = await PostService.createPost({
       authorId: req.user!.id,
@@ -106,7 +72,6 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
       mediaUrl,
       mediaType,
     });
-
 
     const populatedPost = await PostService.getPostById(post.id);
     console.log('POST')
@@ -117,11 +82,11 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
     }
 
     const response: IPostResponse = {
-      id: populatedPost._id.toString(),
+      id: populatedPost.id,
       author: {
-        id: (populatedPost.author as any)._id.toString(),
-        displayName: (populatedPost.author as any).displayName,
-        avatarUrl: (populatedPost.author as any).avatarUrl,
+        id: populatedPost.author.id,
+        displayName: populatedPost.author.displayName,
+        avatarUrl: populatedPost.author.avatarUrl,
       },
       caption: populatedPost.caption,
       mediaUrl: populatedPost.mediaUrl,

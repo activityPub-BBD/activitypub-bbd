@@ -30,7 +30,6 @@ const createPost = async (postData: ICreatePostData): Promise<IPost> => {
 };
 
 const getPostById = async (id: string): Promise<any | null> => {
-  //replace the objectID in author with the actual User's values
   return await PostModel.findById(id).populate('author', 'username displayName avatarUrl');
 }
 
@@ -76,7 +75,7 @@ const getPostById = async (id: string): Promise<any | null> => {
     return true;
 }
 
-export const uploadImage = async (
+const uploadImage = async (
   file: Buffer,
   mimeType: string,
   userId: string
@@ -90,3 +89,12 @@ export const uploadImage = async (
     throw new Error("Failed to upload image");
   }
 };
+
+export const PostService = {
+  createPost,
+  getPostById,
+  getUserPosts,
+  getFeedPosts,
+  deletePost,
+  uploadImage
+}

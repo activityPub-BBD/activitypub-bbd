@@ -3,8 +3,8 @@ import type { Types } from "mongoose";
 export interface ICreatePostData {
   authorId: string;
   caption: string;
-  mediaUrl: string;
-  mediaType: string;
+  mediaUrl?: string;
+  mediaType?: string;
 }
 
 export interface IPostUser {
