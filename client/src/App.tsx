@@ -12,13 +12,13 @@ const App: React.FC = () => {
 export default App; */
 
 import React from 'react';
-import Notifications from './pages/Notifications';
+import UserSearch from './pages/UserSearch';
 
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <Notifications />
+      <UserSearch />
     </div>
   );
 };
