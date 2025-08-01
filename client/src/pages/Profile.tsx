@@ -14,7 +14,7 @@ const Profile = () => {
         <UserProfile
             initialUsername={displayName || 'User'}
             initialBio="Developer & designer"
-            initialAvatarUrl={avatarUrl ?? "https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png"}
+            initialAvatarUrl={avatarUrl ?? "/no-avatar.jpeg"}
             posts={samplePosts}
         />
     )

@@ -1,8 +1,17 @@
+import type { Types } from "mongoose";
+
 export interface ICreatePostData {
   authorId: string;
   caption: string;
   mediaUrl: string;
   mediaType: string;
+}
+
+export interface IPostUser {
+  _id: Types.ObjectId;
+  displayName: string;
+  avatarUrl?: string;
+  username: string;
 }
 
 export interface IPostResponse {
@@ -15,7 +24,7 @@ export interface IPostResponse {
   caption: string;
   mediaUrl: string;
   mediaType: string;
-  activityPubURI: string;
+  activityPubUri: string;
   likesCount: number;
   isLiked: boolean;
   createdAt: Date;

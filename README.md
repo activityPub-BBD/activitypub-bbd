@@ -15,6 +15,30 @@ Open new terminal and it should return the dummy user
 fedify lookup http://localhost:8000/users/cindi
 ```
 
+## API ROUTES
+
+### Users
+GET /users/:username — Get public profile by username
+
+GET /users/me — Get current authenticated user's profile
+
+PUT /users/me — Update current authenticated user's profile
+
+GET /users/:username/posts — Get posts by specific user
+
+GET /users/search?q=... — Search users by username/displayName
+
+### Posts
+POST /posts — Create a new post
+
+GET /posts/:id — Get a single post by ID
+
+DELETE /posts/:id — Delete a post (own posts only)
+
+GET /feed — Get main feed (posts from followed users, paginated)
+
+
+
 
 ## 📌 Overview
 

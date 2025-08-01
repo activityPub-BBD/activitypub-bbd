@@ -63,7 +63,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       <div className="user-profile-header">
         <div style={{ position: 'relative' }}>
           <img
-            src={avatarUrl || '/default-avatar.png'}
+            src={avatarUrl || '/no-avatar.jpg'}
             alt="Avatar"
             className="user-profile-avatar"
             style={{ cursor: isEditing ? 'pointer' : 'default' }}

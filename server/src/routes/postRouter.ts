@@ -1,9 +1,9 @@
+import { requireAuth } from '@middleware/auth.ts';
 import type { IPost } from '@models/post.ts';
-import type { IUser } from '@models/user.ts';
+import { HTTP_STATUS } from '@utils/httpStatus.ts';
 import { Router } from 'express';
-import { Types } from 'mongoose';
 import multer from 'multer';
-import { createPost, deletePost, getFeedPosts, getPostById, getUserPosts, uploadImage } from 'services/postService.ts';
+import { PostService } from 'services/postService.ts';
 import type { IPostResponse } from 'types/post.ts';
 
 export const postRoutes = Router();
@@ -24,41 +24,47 @@ const upload = multer({
 });
 
 
-// baseURL/posts/
-postRoutes.post('/', upload.single('image'), async (req, res) => {
+/**
+ * @route POST api/posts
+ * @description Create and upload a post
+ */
+postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
   
   try {
     const { caption } = req.body;
     
     if (!caption) {
-      return res.status(400).json({ error: 'Caption is required' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption is required' });
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: 'Image is required' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Image is required' });
     }
 
     if (caption.length > 2200) {
-      return res.status(400).json({ error: 'Caption must be 2200 characters or less' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption must be 2200 characters or less' });
     }
 
-    const mediaUrl = await uploadImage(
+    const mediaUrl = await PostService.uploadImage(
       req.file.buffer,
       req.file.mimetype,
-      req.user!._id!.toString()
+      req.user!.id
     );
 
-    const post = await createPost({
-      authorId: req.user!._id!.toString(),
+    const post = await PostService.createPost({
+      authorId: req.user!.id,
       caption,
       mediaUrl,
       mediaType: req.file.mimetype,
     });
 
-    const populatedPost = await getPostById(post._id.toString());
+
+    const populatedPost = await PostService.getPostById(post.id);
+    console.log('POST')
+    console.log(populatedPost)
     
     if (!populatedPost) {
-      return res.status(500).json({ error: 'Failed to retrieve created post' });
+      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to retrieve created post' });
     }
 
     const response: IPostResponse = {
@@ -71,88 +77,63 @@ postRoutes.post('/', upload.single('image'), async (req, res) => {
       caption: populatedPost.caption,
       mediaUrl: populatedPost.mediaUrl,
       mediaType: populatedPost.mediaType,
-      activityPubURI: populatedPost.activityPubURI,
+      activityPubUri: populatedPost.activityPubUri,
       likesCount: populatedPost.likesCount,
       isLiked: false,
       createdAt: populatedPost.createdAt,
     };
 
-    res.status(201).json(response);
+    res.status(HTTP_STATUS.CREATED).json(response);
   } catch (error) {
     console.error('Post creation error:', error);
-    res.status(500).json({ error: 'Failed to create post' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to create post' });
   }
 });
 
-// baseURL/posts/user/:username
-postRoutes.get('/user/:username', async (req, res) => {
+/**
+ * @route GET api/posts/feed
+ * @description Retrieve all posts (optionally paginated)
+ */
+postRoutes.get('/feed', requireAuth, async (req, res) => {
   try {
-    const { username } = req.params;
+    const  { ownFeed } = req.body;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
-    //TODO: Find username in user service
-    const user = null
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    //TODO: Find posts by user
-    //const posts = await getUserPosts(user._id.toString(), page, limit);
+    const posts = ownFeed ?
+      await PostService.getFeedPosts(req.user!.id, page, limit) :
+      await PostService.getFeedPosts('', page, limit);
 
     res.json({
-      posts: [],
-      page,
-      limit,
-      hasMore: [].length === limit,
-    });
-  } catch (error) {
-    console.error('Get user posts error:', error);
-    res.status(500).json({ error: 'Failed to fetch user posts' });
-  }
-});
-
-// Get feed
-// baseURL/posts/
-postRoutes.get('/', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
-
-    //get req.user from auth
-    // const posts = req.user ?
-    //   await getFeedPosts(req.user._id!.toString(), page, limit) :
-    //   await getFeedPosts('', page, limit);
-
-    res.json({
-      posts: [],
+      posts: posts,
       page,
       limit,
       hasMore: [].length === limit,
     });
   } catch (error) {
     console.error('Get feed error:', error);
-    res.status(500).json({ error: 'Failed to fetch feed' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch feed' });
   }
 });
 
-// Delete post
-// baseURL/posts/:id
-postRoutes.delete('/:id', async (req, res) => {
+/**
+ * @route DELETE api/posts/:id
+ * @description Delete a post by its ID (must be the author)
+ */
+postRoutes.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    //get req.user from auth
-    //const success = await deletePost(id, req.user!._id!.toString());
-    const success = false;
+    
+    const success = await PostService.deletePost(id, req.user!.id);
 
     if (!success) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Post not found' });
     }
 
     res.json({ success: true, message: 'Post deleted successfully' });
   } catch (error) {
     console.error('Delete post error:', error);
-    res.status(500).json({ error: 'Failed to delete post' });
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to delete post' });
   }
 });
 

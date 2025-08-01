@@ -1,66 +1,89 @@
-import mongoose, { Types } from 'mongoose';
-import { Post, type IPost } from '../models/post.ts';
+import mongoose from 'mongoose';
+import { getPostModel, getUserModel, registerModels, type IPost } from '../models/index.ts';
 import type { ICreatePostData } from 'types/post.ts';
 import { config } from '@config/config.ts';
+import { retrieveDb } from '@db/db.ts';
 
-export const createPost = async (postData: ICreatePostData): Promise<IPost> => {
-    // mock createPost
+const db = await retrieveDb(config.dbName);         
+const {Post: PostModel} = registerModels(db);
+
+const createPost = async (postData: ICreatePostData): Promise<IPost> => {
     const protocol = config.domain.includes('localhost') ? 'http' : 'https';
     const baseURL = `${protocol}://${config.domain}`;
     const postId = new mongoose.Types.ObjectId();
-    const activityPubURI = `${baseURL}/posts/${postId}`;
-    const post = new Post({
-      _id: postId,
-      author: postData.authorId,
-      caption: postData.caption,
-      mediaUrl: postData.mediaUrl,
-      mediaType: postData.mediaType,
-      activityPubURI,
-      likes: [],
-      likesCount: 0,
+    const activityPubUri = `${baseURL}/posts/${postId}`;
+    const savedPost = await PostModel.create({
+        _id: postId,
+        author: postData.authorId,
+        caption: postData.caption,
+        mediaUrl: postData.mediaUrl,
+        mediaType: postData.mediaType,
+        activityPubUri: activityPubUri,
+        likes: [],
+        likesCount: 0,
+        createdAt: Date.now()
     });
-    const savedPost = await post.save();
     return savedPost;
 };
 
-export const getPostById = async (id: string): Promise<IPost | null> => {
-    //replace the objectID in author with the actual User's values
-    return await Post.findById(id).populate('author', 'displayName avatarUrl');
+const getPostById = async (id: string): Promise<any | null> => {
+  //replace the objectID in author with the actual User's values
+  return await PostModel.findById(id).populate('author', 'username displayName avatarUrl');
 }
 
-export const getUserPosts = async (userId: string, page = 1, limit = 20): Promise<IPost[]> => {
+ const getUserPosts = async (userId: string, page = 1, limit = 20): Promise<IPost[]> => {
     //for pagination
     const skip = (page - 1) * limit;
-    return await Post.find({ author: userId })
+    return await PostModel.find({ author: userId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('author', 'displayName avatarUrl');
+      .populate('author', 'username displayName avatarUrl')
+      .lean();
 }
 
-export const getFeedPosts = async (userId: string, page = 1, limit = 20): Promise<IPost[]> => {
-    //TODO:  user specific feed
+ const getFeedPosts = async (userId: string, page = 1, limit = 20): Promise<IPost[]> => {
+    
     const skip = (page - 1) * limit;
-    return await Post.find()
+    
+    if (userId) {
+      return await PostModel.find({ author: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('author', 'username displayName avatarUrl');
+    }
+
+    return await PostModel.find()
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate('author', 'username displayName avatarUrl');
 }
 
-export const deletePost = async (postId: string, userId: string): Promise<boolean> => {
-    const post = await Post.findOne({ _id: postId, author: userId });
+ const deletePost = async (postId: string, userId: string): Promise<boolean> => {
+    const post = await PostModel.findOne({ _id: postId, author: userId });
     if (!post) {
       return false;
     }
+    await PostModel.deleteOne({ _id: postId, author: userId });
 
     //TODO: Remove media from s3 bucket using s3 service
     //TODO: Publish delete activity 
     return true;
 }
 
-export const uploadImage = async(file: Buffer, mimeType: string, userId: string): Promise<string> => {
+ const uploadImage = async(file: Buffer, mimeType: string, userId: string): Promise<string> => {
     //TODO: Validate image type and image size -> do in s3 service
     //TODO: Upload using s3 service
-    return ''
+    return 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png'
 }
+
+export const PostService = {
+  createPost,
+  getPostById,
+  getUserPosts,
+  getFeedPosts,
+  deletePost,
+  uploadImage,
+};
