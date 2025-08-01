@@ -24,7 +24,7 @@ const createPost = async (postData: ICreatePostData): Promise<IPost> => {
         activityPubUri: activityPubUri,
         likes: [],
         likesCount: 0,
-        createdAt: Date.now()
+        createdAt: new Date().toISOString()
     });
     return savedPost;
 };

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import "../styles/CreatePost.css";
+import { useAuthContext } from "../context/AuthContext";
 
 interface CreatePostProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onPostCreated }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { jwt } = useAuthContext();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -70,9 +72,12 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onPostCreated }) => {
         formData.append("image", selectedFile);
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/posts`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/posts`, {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${jwt}`
+        },
       });
 
       if (!response.ok) {
