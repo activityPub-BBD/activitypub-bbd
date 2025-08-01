@@ -5,8 +5,8 @@ export interface IPost extends Document {
   _id: Types.ObjectId;
   author: Types.ObjectId;
   caption: string;
-  mediaUrl: string;
-  mediaType: string;
+  mediaUrl?: string;
+  mediaType?: string;
   activityPubUri: string;
   likes: Types.ObjectId[];
   likesCount: number;
@@ -27,12 +27,12 @@ const postSchema = new Schema<IPost>({
   },
   mediaUrl: {
     type: String,
-    required: true
+    required: false,
   },
   mediaType: {
     type: String,
-    required: true,
-    enum: ['image/jpeg', 'image/png', 'image/webp']
+    required: false,
+    enum: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"],
   },
   activityPubUri: {
     type: String,
