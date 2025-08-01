@@ -46,10 +46,6 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption is required' });
     }
 
-    // if (!req.file) {
-    //   return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Image is required' });
-    // }
-
     if (caption.length > 2200) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption must be 2200 characters or less' });
     }
@@ -74,8 +70,7 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
     });
 
     const populatedPost = await PostService.getPostById(post.id);
-    console.log('POST')
-    console.log(populatedPost)
+
     
     if (!populatedPost) {
       return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to retrieve created post' });
@@ -93,7 +88,7 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
       mediaType: populatedPost.mediaType,
       activityPubUri: populatedPost.activityPubUri,
       likesCount: populatedPost.likesCount,
-      isLiked: false,
+      likes: [],
       createdAt: populatedPost.createdAt,
     };
 

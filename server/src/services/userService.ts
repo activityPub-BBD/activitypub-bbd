@@ -30,7 +30,7 @@ const createUser = async (userData: ICreateUserData): Promise<IUser> => {
         followersUrl: `${baseURL}/users/${userData.username}/followers`,
         followingUrl: `${baseURL}/users/${userData.username}/following`,
         isLocal: true,
-        createdAt: Date.now()
+        createdAt: new Date().toISOString()
     });
 }
 
