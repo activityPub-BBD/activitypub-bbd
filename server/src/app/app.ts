@@ -2,19 +2,21 @@ import express from "express";
 import { integrateFederation } from "@fedify/express";
 import { getLogger } from "@logtape/logtape";
 import { federation }  from "@federation/index.ts";
-import { authRouter } from "@routes/authRouter.ts";
-//const logger = getLogger("backend");
+import {authRoutes, postRoutes} from "@routes/index.ts"
+
+const logger = getLogger("server");
 
 export const app = express();
 
 app.set("trust proxy", true);
-
-app.use(integrateFederation(federation, (req: express.Request) => undefined));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => res.send("Hello, Fedify!"));
-app.use('/auth', authRouter);
+//ROUTES
+app.use('/auth', authRoutes);
+app.use('/posts', postRoutes);
+
+//FEDIFY
+app.use(integrateFederation(federation, (req: express.Request) => undefined));
 
 export default app;
