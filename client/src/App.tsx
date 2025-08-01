@@ -12,13 +12,13 @@ const App: React.FC = () => {
 export default App; */
 
 import React from 'react';
-import UserSearch from './pages/UserSearch';
+import CreatePost from './pages/CreatePost';
 
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <UserSearch />
+      <CreatePost />
     </div>
   );
 };
