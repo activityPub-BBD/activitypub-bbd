@@ -5,7 +5,7 @@ import { Mutex } from "@utils/index.ts";
 const neo4jDriverMutex = new Mutex<neo4j.Driver | undefined>(undefined);
 
 export async function connectToNeo4j() {
-    neo4jDriverMutex.with(async(neo4jDriver) => {
+    await neo4jDriverMutex.update((neo4jDriver) => {
         if(neo4jDriver){ 
             // do nothing as we already have a connection
         } else{
@@ -17,7 +17,7 @@ export async function connectToNeo4j() {
 }
 
 export async function disconnectFromNeo4j(){
-    neo4jDriverMutex.with(async(neo4jDriver) => {
+    await neo4jDriverMutex.update(async(neo4jDriver) => {
         await neo4jDriver?.close();
         neo4jDriver = undefined;
         return neo4jDriver;
