@@ -1,8 +1,3 @@
-import { Router } from "express";
-import { home } from "../controllers/index.ts";
-
-const router = Router();
-
-router.get("/", home);
-
-export default router;
+export * from "./authRouter.ts";
+export * from "./postRouter.ts";
+export * from "./userRouter.ts";

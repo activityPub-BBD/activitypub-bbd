@@ -1,7 +1,44 @@
-import express from 'express';
-import { getGoogleJwt, setupUsername} from "../controllers/authController.ts";
+import { Router } from "express";
+import { getGoogleJwt} from "@services/authService.ts";
+import { requireAuth } from "@middleware/auth.ts";
+import { HTTP_STATUS } from "@utils/httpStatus.ts";
 
-export const authRouter = express.Router();
+export const authRoutes = Router();
 
-authRouter.post('/', getGoogleJwt); 
-authRouter.post('/setup-username', setupUsername);
+/**
+ * @route POST /api/auth/google
+ * @description Sign in with Google and get JWT
+*/
+authRoutes.post('/google', getGoogleJwt); 
+
+/**
+ * @route POST /api/auth/logout
+ * @description Logs the user out (frontend should delete token)
+ */
+authRoutes.post('/logout', requireAuth,   async (req, res) => {
+  res.status(HTTP_STATUS.OK).json({ message: 'Logged out successfully' });
+});
+
+/**
+ * @route GET /api/auth/me
+ * @description Get current authenticated user's profile
+*/
+authRoutes.get('/me', requireAuth, async (req, res) => {
+    const user = res.locals.user;
+    if (!user) {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
+    }
+
+    res.status(HTTP_STATUS.OK).json({
+        id: user._id,
+        username: user.username,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        joinDate: user.createdAt,
+        activityPubId: user.actorId,
+    });
+});
+
+
+export default authRoutes;

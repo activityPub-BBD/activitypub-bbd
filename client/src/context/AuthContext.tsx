@@ -1,18 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 
 interface User {
   id: string;
-  username?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  username: string;
+  bio?: string;
+  location: string;
 }
 
 interface AuthContextType {
   user: User | null;
   jwt: string | null;
   isLoading: boolean;
-  needsUsername: boolean;
-  setUser: (user: User | null) => void;
+  setUser: Dispatch<SetStateAction<User | null>>;
   setJwt: (jwt: string | null) => void;
-  setNeedsUsername: (needs: boolean) => void;
   logout: () => void;
 }
 
@@ -22,14 +24,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [jwt, setJwt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [needsUsername, setNeedsUsername] = useState(false);
 
   const logout = () => {
     localStorage.removeItem('jwt');
     localStorage.removeItem('user');
     setJwt(null);
     setUser(null);
-    setNeedsUsername(false);
   };
   useEffect(() => {
     const savedJwt = localStorage.getItem('jwt');
@@ -60,10 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       jwt, 
       isLoading,
-      needsUsername,
       setUser, 
       setJwt,
-      setNeedsUsername,
       logout 
     }}>
       {children}

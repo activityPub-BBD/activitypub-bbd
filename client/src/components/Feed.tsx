@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import CreatePost from "./CreatePost";
 import '../styles/Feed.css';
 
 const createDummyPosts = (startId: number, count: number) =>
@@ -17,17 +18,18 @@ const createDummyPosts = (startId: number, count: number) =>
 const Feed: React.FC = () => {
   const [posts, setPosts] = useState(() => createDummyPosts(1, 20));
   const [loading, setLoading] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
 
   const toggleLike = (postId: number) => {
     setPosts(posts.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            isLiked: !post.isLiked,
+        post.id === postId
+          ? {
+              ...post,
+              isLiked: !post.isLiked,
             likes: post.isLiked ? post.likes - 1 : post.likes + 1
-          }
-        : post
+            }
+          : post
     ));
   };
 
@@ -62,6 +64,30 @@ const Feed: React.FC = () => {
     }, 1000);
   };
 
+  const handlePostCreated = (newPost: any) => {
+    // Ensure media is required - only create post if mediaUrl exists
+    if (!newPost.mediaUrl) {
+      console.warn('Post creation failed: Media is required');
+      return;
+    }
+
+    // Convert backend post format to frontend format
+    const frontendPost = {
+      id: newPost.id,
+      username: newPost.author.displayName,
+      userAvatar: newPost.author.avatarUrl || `https://i.pravatar.cc/150?img=1`,
+      postImage: newPost.mediaUrl, // Media is required
+      caption: newPost.caption,
+      likes: newPost.likesCount,
+      timeAgo: "now",
+      isLiked: false,
+      isSaved: false,
+    };
+
+    // Add new post to the beginning of the posts array
+    setPosts((prevPosts) => [frontendPost, ...prevPosts]);
+  };
+
   useEffect(() => {
     const feedEl = feedRef.current;
     if (!feedEl) return;
@@ -76,7 +102,18 @@ const Feed: React.FC = () => {
     <div className="feed-container">
       {/* Header */}
       <div className="feed-header">
-        <img src='chirp-landing-logo.png' className='logo' width={65} />
+        <img
+          src="chirp-landing-logo.png"
+          className="logo"
+          alt="Chirp Logo"
+          width={65}
+        />
+        <button
+          className="create-post-btn"
+          onClick={() => setShowCreatePost(true)}
+        >
+          + Create Post
+        </button>
       </div>
 
       {/* Main Feed */}
@@ -87,8 +124,8 @@ const Feed: React.FC = () => {
               {/* Post Header */}
               <div className="post-header">
                 <div className="post-user-info">
-                  <img 
-                    src={post.userAvatar} 
+                  <img
+                    src={post.userAvatar}
                     alt={post.username}
                     className="user-avatar"
                   />
@@ -98,18 +135,20 @@ const Feed: React.FC = () => {
               </div>
 
               {/* Post Image */}
-              <div className="post-image-container">
-                <img 
-                  src={post.postImage} 
-                  alt="Post content"
-                  className="post-image"
-                />
-              </div>
+              {post.postImage && (
+                <div className="post-image-container">
+                  <img
+                    src={post.postImage}
+                    alt="Post content"
+                    className="post-image"
+                  />
+                </div>
+              )}
 
               {/* Post Actions */}
               <div className="post-actions">
                 <div className="action-buttons">
-                  <button 
+                  <button
                     className={`action-btn like-btn ${post.isLiked ? 'liked' : ''}`}
                     onClick={() => toggleLike(post.id)}
                   >
@@ -118,7 +157,7 @@ const Feed: React.FC = () => {
                   <button className="action-btn">💬</button>
                   <button className="action-btn">📤</button>
                 </div>
-                <button 
+                <button
                   className={`save-btn ${post.isSaved ? 'saved' : ''}`}
                   onClick={() => toggleSave(post.id)}
                 >
@@ -143,6 +182,14 @@ const Feed: React.FC = () => {
           {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
         </div>
       </main>
+
+      {/* Create Post Modal */}
+      {showCreatePost && (
+        <CreatePost
+          onClose={() => setShowCreatePost(false)}
+          onPostCreated={handlePostCreated}
+        />
+      )}
     </div>
   );
 };

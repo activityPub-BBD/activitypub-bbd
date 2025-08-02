@@ -1,10 +1,10 @@
-import React from 'react';
-import '../styles/SideBar.css';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../context/AuthContext';
+import React from "react";
+import "../styles/SideBar.css";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuthContext } from "../context/AuthContext";
 
 interface SidebarProps {
-  username?: string;
+  displayName?: string;
   avatarUrl?: string;
   followers?: number;
   following?: number;
@@ -13,19 +13,19 @@ interface SidebarProps {
 }
 
 const SideBar: React.FC<SidebarProps> = ({
-  username = 'User',
-  avatarUrl = 'https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png',
+  displayName = "User",
+  avatarUrl,
   followers = 39,
   following = 2000,
   isOpen,
-  onToggle
+  onToggle,
 }) => {
   const navigate = useNavigate();
   const { logout } = useAuthContext();
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -39,19 +39,33 @@ const SideBar: React.FC<SidebarProps> = ({
         ☰
       </button>
 
-      <aside className={`sidebar ${isOpen ? 'open' : 'collapsed'}`}>
-        
-            {/* User Profile Section */}
-            <div className="sidebar-profile">
-                <div className="sidebar-user">
-                    <img className="sidebar-avatar" src={avatarUrl} onClick={() => navigate('/profile')} />
-                    <div className="sidebar-username">{username}</div>
-                </div>
-                <div className="sidebar-stats">
-                    <div><span className="count">{followers}</span>Followers</div>
-                    <div><span className="count">{following}</span>Following</div>
-                </div>
+      <aside className={`sidebar ${isOpen ? "open" : "collapsed"}`}>
+        {/* User Profile Section */}
+        <div className="sidebar-profile">
+          <div className="sidebar-user">
+            <img
+              className="sidebar-avatar"
+              src={avatarUrl}
+              onClick={() =>
+                navigate("/profile", {
+                  state: {
+                    displayName: displayName,
+                    avatarUrl: avatarUrl,
+                  },
+                })
+              }
+            />
+            <div className="sidebar-username">{displayName}</div>
+          </div>
+          <div className="sidebar-stats">
+            <div>
+              <span className="count">{followers}</span>Followers
             </div>
+            <div>
+              <span className="count">{following}</span>Following
+            </div>
+          </div>
+        </div>
 
             {/* Navigation */}
             <nav className="nav-links">

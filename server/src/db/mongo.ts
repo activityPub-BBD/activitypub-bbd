@@ -1,4 +1,3 @@
-// mongo.ts
 import mongoose from "mongoose";
 import { config } from "@config/index.ts";
 import { Mutex } from "@utils/index.ts";
