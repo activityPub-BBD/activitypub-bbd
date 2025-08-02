@@ -13,6 +13,13 @@ interface Config {
     region: string;
     s3MediaBucket: string;
   };
+  neo4j: {
+    uri: string;
+    user: string;
+    password: string;
+    auraInstanceId: string;
+    auraInstanceName: string;
+  };
 }
 
 const config: Config = {
@@ -26,6 +33,13 @@ const config: Config = {
     region: process.env.AWS_REGION || "af-south-1",
     s3MediaBucket:
       process.env.S3_MEDIA_BUCKET || "group-5-mastodon-media-bucket",
+  },
+  neo4j: {
+    uri: process.env.NEO4J_URI || "neo4j://localhost:7687",
+    user: process.env.NEO4J_USERNAME || "neo4j",
+    password: process.env.NEO4J_PASSWORD || "neo4j",
+    auraInstanceId: process.env.AURA_INSTANCE_ID || "neo4j",
+    auraInstanceName: process.env.AURA_INSTANCE_NAME || "neo4j",
   },
 };
 
