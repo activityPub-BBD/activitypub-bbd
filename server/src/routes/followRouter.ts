@@ -32,7 +32,7 @@ followRoutes.get("/follow-summary", requireAuth, async(req, res) => {
     }
 });
 
-followRoutes.post("/follow:oid", requireAuth, async(req, res) => {
+followRoutes.post("/follow/:oid", requireAuth, async(req, res) => {
     try{
         const { inboxUrl, accepted } = req.body;
         if(!res.locals.user){
@@ -75,7 +75,7 @@ followRoutes.delete("/unfollow/:oid", requireAuth, async(req, res) => {
     }
 })
 
-followRoutes.get("/following:oid", requireAuth, async(req, res) => {
+followRoutes.get("/following/:oid", requireAuth, async(req, res) => {
     try{
         const oid = req.params.oid;
         const following = await FollowService.retrieveFollowing(oid);
@@ -125,6 +125,17 @@ followRoutes.get("/followers", requireAuth, async(req, res) => {
         }
     } catch (error) {
         console.error('Error retrieving followers:', error);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    }
+});
+
+followRoutes.get("/suggested-mutuals/:oid", requireAuth, async(req, res) => {
+    try{
+        const oid = req.params.oid;
+        const suggestedMutuals = await FollowService.retrieveSuggestedMutuals(oid);
+        res.status(HTTP_STATUS.OK).json(suggestedMutuals);
+    } catch (error) {
+        console.error('Error retrieving suggested mutuals:', error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
     }
 });
