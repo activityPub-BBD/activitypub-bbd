@@ -4,9 +4,11 @@ import { useAuthContext } from '../context/AuthContext';
 import '../styles/UserProfile.css';
 
 interface Post {
-  id: number;
+  id: string;
   content: string;
   date: string;
+  mediaUrl?: string;
+  mediaType?: string;
 }
 
 interface UserProfileProps {
@@ -78,7 +80,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         const errorData = await updateResponse.json();
         
         // Handle token expiration
-        if (updateResponse.status === 401 && errorData.code === 'TOKEN_EXPIRED') {
+        if (updateResponse.status === 401) {
           setError('Your session has expired. Please sign in again.');
           logout();
           navigate('/');
@@ -274,12 +276,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       <h3 className="posts-header">Your Posts</h3>
       <div className="posts-container">
         {posts.length === 0 ? (
-          <p className="no-posts">No posts yet.</p>
+          <p className="no-posts">No posts yet. Create your first post!</p>
         ) : (
           posts.map(post => (
             <div key={post.id} className="post-item">
+              {post.mediaUrl && (
+                <div className="post-media">
+                  {post.mediaType?.startsWith('video/') ? (
+                    <video 
+                      src={post.mediaUrl} 
+                      controls 
+                      className="post-video"
+                    />
+                  ) : (
+                    <img 
+                      src={post.mediaUrl} 
+                      alt="Post media" 
+                      className="post-image"
+                    />
+                  )}
+                </div>
+              )}
               <p className="post-content">{post.content}</p>
-              <small className="post-date">{post.date}</small>
+              <div className="post-meta">
+                <small className="post-date">{post.date}</small>
+              </div>
             </div>
           ))
         )}
