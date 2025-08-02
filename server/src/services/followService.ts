@@ -114,10 +114,16 @@ export async function retrieveSuggestedMutuals(followingId: string):
     const result = await driver.executeQuery(
         `
         MATCH (start:Person {_id: $followingId})-[:Follows*1..3]->(suggested:Person)
-        WHERE NOT (start)-[:Follows]->(suggested)
-        AND start <> suggested
-        OPTIONAL MATCH (others:Person)-[:Follows]->(suggested)
-        RETURN suggested._id AS id, suggested.actorId AS actorId, suggested.createdAt AS createdAt, suggested.inboxUrl AS inboxUrl, count(others) AS followers
+        WHERE NOT (start)-[:Follows]->(suggested) 
+        AND start <> suggested                  
+        WITH DISTINCT suggested                  
+        MATCH (follower:Person)-[:Follows]->(suggested)
+        RETURN
+            suggested._id AS id,
+            suggested.actorId AS actorId,
+            suggested.inboxUrl AS inboxUrl,
+            suggested.createdAt AS createdAt,
+            count(follower) AS followers
         ORDER BY followers DESC
         LIMIT 20
         `,
