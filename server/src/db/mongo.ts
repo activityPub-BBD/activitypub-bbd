@@ -8,7 +8,7 @@ const isConnectedMutex = new Mutex(false);
 const connectionPromise = new Promise<void>((resolve, reject) => {
   mongo.once("connected", () => {
     console.log("Connected to MongoDB");
-    isConnectedMutex.with((isConnected) => {
+    isConnectedMutex.update((isConnected) => {
       isConnected = true;
       return isConnected;
     });
@@ -22,14 +22,14 @@ const connectionPromise = new Promise<void>((resolve, reject) => {
 });
 
 mongo.on("connected", () => {
-  isConnectedMutex.with((isConnected) => {
+  isConnectedMutex.update((isConnected) => {
     isConnected = true;
     return isConnected;
   });
 });
 
 mongo.on("disconnected", () => {
-  isConnectedMutex.with((isConnected) => {
+  isConnectedMutex.update((isConnected) => {
     isConnected = false;
     return isConnected;
   });
@@ -57,7 +57,7 @@ export async function retrieveCollection(
 }
 
 export async function disconnectFromMongo(): Promise<void> {
-  await isConnectedMutex.with(async (isConnected) => {
+  await isConnectedMutex.update(async (isConnected) => {
     await mongo.close();
     isConnected = false;
     return isConnected;
