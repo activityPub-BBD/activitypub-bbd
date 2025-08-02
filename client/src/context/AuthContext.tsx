@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     localStorage.removeItem('jwt');
     localStorage.removeItem('user');
+    localStorage.clear();
     setJwt(null);
     setUser(null);
   };
