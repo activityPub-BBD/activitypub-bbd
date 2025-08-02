@@ -1,16 +1,7 @@
 import { HTTP_STATUS } from "@utils/httpStatus.ts";
 import type { NextFunction } from "express";
-import { verifyGoogleJwt } from "services/authService.ts";
-import { UserService } from '../services/userService.ts';
-import type { IUser } from "@models/index.ts";
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: IUser;
-    }
-  }
-}
+import { verifyGoogleJwt } from "@services/authService.ts";
+import { UserService } from '@services/userService.ts';
 
 export async function requireAuth(req: any, res: any, next: NextFunction) {
   
@@ -30,7 +21,7 @@ export async function requireAuth(req: any, res: any, next: NextFunction) {
           return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'User not found' });
         }
 
-        req.user = user;
+        res.locals.user = user;
         next();
     } catch (error) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Invalid token' });

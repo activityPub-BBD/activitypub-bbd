@@ -2,8 +2,8 @@ import { requireAuth } from "@middleware/auth.ts";
 import type { IUser } from "@models/index.ts";
 import { HTTP_STATUS } from "@utils/httpStatus.ts";
 import { Router } from "express";
-import { PostService } from "services/postService.ts";
-import { UserService } from "services/userService.ts";
+import { PostService } from "@services/postService.ts";
+import { UserService } from "@services/userService.ts";
 
 export const userRoutes = Router();
 
@@ -41,7 +41,7 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
  */
 userRoutes.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await UserService.getUserByGoogleId(req.user!.googleId);
+    const user = await UserService.getUserByGoogleId(res.locals.user!.googleId);
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
@@ -68,7 +68,7 @@ userRoutes.get('/me', requireAuth, async (req, res) => {
 userRoutes.put('/me', requireAuth, async (req, res) => {
   try {
 
-    const userId = req.user!.id;
+    const userId = res.locals.user!.id;
     const updates: Partial<IUser> = {};
 
     if (typeof req.body.displayName === 'string') {
@@ -81,6 +81,10 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
 
     if (typeof req.body.avatarUrl === 'string' || req.body.avatarUrl === null) {
       updates.avatarUrl = req.body.avatarUrl;
+    }
+
+    if (typeof req.body.location === 'string' || req.body.location === null) {
+      updates.location = req.body.location;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -100,6 +104,7 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
     // Include only the fields that were updated
     if ('displayName' in updates) responseUser.displayName = updated.displayName;
     if ('bio' in updates) responseUser.bio = updated.bio;
+    if ('location' in updates) responseUser.location = updated.location;
     if ('avatarUrl' in updates) responseUser.avatarUrl = updated.avatarUrl;
 
     res.status(HTTP_STATUS.OK).json({
