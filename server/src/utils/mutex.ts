@@ -11,4 +11,10 @@ export class Mutex<T> {
   async with<R>(fn: (val: T) => Promise<R> | R): Promise<R> {
     return this.mutex.runExclusive(() => fn(this.value));
   }
+  
+  async update(fn: (val: T) => Promise<T> | T): Promise<void> {
+    await this.mutex.runExclusive(async() => {
+      this.value = await fn(this.value);
+    });
+  }
 }

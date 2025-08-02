@@ -5,7 +5,7 @@ import { Mutex } from "@utils/index.ts";
 const s3Client = new Mutex<S3Client | undefined>(undefined);
 
 export async function connectToS3() {
-    return s3Client.with((client) => {
+    return s3Client.update((client) => {
         if (!client) {
             client = new S3Client({ region: config.aws.region });
             console.log("Connected to S3");
@@ -20,10 +20,11 @@ export async function retrieveS3Client() {
 }
 
 export async function disconnectFromS3() {
-    return s3Client.with((client) => {
+    return s3Client.update((client) => {
         if (client) {
             client.destroy();
         }
+        return undefined;
     });
 }
 
