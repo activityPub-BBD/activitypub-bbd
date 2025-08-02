@@ -62,7 +62,7 @@ export async function unfollowUser(followerId: string, followingId: string): Pro
     return result.records[0].get('deleted') as boolean;
 }
 
-export async function retrieveFollowing(followerId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: Date; }[]> {
+export async function retrieveFollowing(followerId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
@@ -80,12 +80,12 @@ export async function retrieveFollowing(followerId: string): Promise<{ id: strin
             id: record.get('id') as string,
             actorId: record.get('actorId') as string,
             inboxUrl: record.get('inboxUrl') as string,
-            createdAt: record.get('createdAt') as Date,
+            createdAt: new Date(record.get('createdAt')).toISOString(),
         };
     });
 }
 
-export async function retrieveFollowers(followingId: string){
+export async function retrieveFollowers(followingId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
@@ -103,12 +103,13 @@ export async function retrieveFollowers(followingId: string){
             id: record.get('id') as string,
             actorId: record.get('actorId') as string,
             inboxUrl: record.get('inboxUrl') as string,
-            createdAt: record.get('createdAt') as Date,
+            createdAt: new Date(record.get('createdAt')).toISOString(),
         };
     });
 }
 
-export async function retrieveSuggestedMutuals(followingId: string, connectionDepth = 3){
+export async function retrieveSuggestedMutuals(followingId: string, connectionDepth = 3):
+    Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; followers: number; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
@@ -130,7 +131,7 @@ export async function retrieveSuggestedMutuals(followingId: string, connectionDe
             id: record.get('id') as string,
             actorId: record.get('actorId') as string,
             inboxUrl: record.get('inboxUrl') as string,
-            createdAt: record.get('createdAt') as Date,
+            createdAt: new Date(record.get('createdAt')).toISOString(),
             followers: record.get('followers').toInt() as number
         };
     });
