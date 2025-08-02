@@ -177,3 +177,82 @@
   background-color: #e8f5fd;
 }
 
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+.input-field:disabled,
+.textarea-field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.user-profile-avatar:hover + .avatar-overlay {
+  opacity: 1;
+}
+
+.button-save:disabled,
+.button-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-meta {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.profile-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.meta-icon {
+  font-size: 1rem;
+}
+
+.meta-text {
+  color: #333;
+}
