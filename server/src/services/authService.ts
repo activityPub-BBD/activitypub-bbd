@@ -87,11 +87,12 @@ export async function getGoogleJwt(req: Request, res: Response) {
       // If user doesn't exist, try to create them (but don't block if it fails)
       if (!existingUser) {
         try {
+          console.log("heyy")
           existingUser = await UserService.createUser({
             googleId: sub,
             username,
             displayName: `${given_name} ${family_name}`,
-            avatarUrl: picture ?? ''
+            avatarUrl: picture ?? '',
           })
         } catch (createError) {
           res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
@@ -117,7 +118,8 @@ export async function getGoogleJwt(req: Request, res: Response) {
         id: existingUser._id,
         displayName: existingUser.displayName,
         avatarUrl: existingUser.avatarUrl,
-        userName: existingUser.username
+        userName: existingUser.username,
+        bio: existingUser.bio
       } : null
     });
 

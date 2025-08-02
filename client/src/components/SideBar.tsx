@@ -22,7 +22,7 @@ const SideBar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { logout } = useAuthContext();
-
+  
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -47,12 +47,7 @@ const SideBar: React.FC<SidebarProps> = ({
               className="sidebar-avatar"
               src={avatarUrl}
               onClick={() =>
-                navigate("/profile", {
-                  state: {
-                    displayName: displayName,
-                    avatarUrl: avatarUrl,
-                  },
-                })
+                navigate("/profile")
               }
             />
             <div className="sidebar-username">{displayName}</div>

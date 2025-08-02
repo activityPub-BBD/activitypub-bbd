@@ -10,7 +10,6 @@ const Home: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { user } = useAuthContext();
-
   const toggleSidebar = () => setSidebarOpen((open) => !open);
 
   return (

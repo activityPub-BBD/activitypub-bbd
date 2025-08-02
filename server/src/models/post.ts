@@ -52,7 +52,3 @@ export const postSchema = new Schema<IPost>({
     required: true
   }
 });
-
-export function getPostModel(conn: mongoose.Connection): Model<IPost> {
-  return conn.model<IPost>("Post", postSchema);
-}

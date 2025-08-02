@@ -12,7 +12,11 @@ const getUserByGoogleId = async (googleId: string): Promise<IUser | null> => {
 }
 
 const getUserByUsername = async (username: string): Promise<IUser | null> => {
-    return await UserModel.findOne({ username, isLocal: true });
+    return await UserModel.findOne({ username });
+}
+
+const getUserByActivityPubUri = async (actorId: string): Promise<IUser | null> => {
+    return await UserModel.findOne({ actorId});
 }
 
 const createUser = async (userData: ICreateUserData): Promise<IUser> => {
@@ -23,6 +27,7 @@ const createUser = async (userData: ICreateUserData): Promise<IUser> => {
         username: userData.username,
         domain: config.domain,
         actorId: `${baseURL}/users/${userData.username}`,
+        handle: `@${userData.username}@${config.domain}`,
         displayName: userData.displayName,
         avatarUrl: userData.avatarUrl ?? '', 
         inboxUrl: `${baseURL}/users/${userData.username}/inbox`,
@@ -30,7 +35,7 @@ const createUser = async (userData: ICreateUserData): Promise<IUser> => {
         followersUrl: `${baseURL}/users/${userData.username}/followers`,
         followingUrl: `${baseURL}/users/${userData.username}/following`,
         isLocal: true,
-        createdAt: new Date().toISOString()
+        createdAt: Date.now
     });
 }
 
@@ -65,6 +70,15 @@ const updateUser = async (id: string, updates: Partial<IUser>): Promise<IUser | 
     );
 }
 
+const deleteUserByActivityPubUri = async (actorId: string): Promise<boolean> => {
+    const user = await UserModel.findOne({ actorId: actorId });
+    if (!user) {
+      return false;
+    }
+    await UserModel.deleteOne({ actorId: actorId });
+    return true;
+}
+
 const searchUsers = (query: string) => {
   return UserModel.find({
     $or: [
@@ -77,10 +91,12 @@ const searchUsers = (query: string) => {
 export const UserService = {
     getUserByGoogleId,
     getUserByUsername,
+    getUserByActivityPubUri,
     validateUsername,
     isUsernameAvailable,
     createUser,
     updateUser,
+    deleteUserByActivityPubUri,
     searchUsers
 }
 

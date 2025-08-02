@@ -25,7 +25,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   posts
 }) => {
   const navigate = useNavigate();
-  const { user, jwt, setUser, logout } = useAuthContext();
+  const { jwt, setUser, logout } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);

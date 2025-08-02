@@ -6,6 +6,7 @@ export interface IUser extends Document {
   googleId: string;
   domain: string; //example.com
   actorId: string;
+  handle: string; //@alice@example.com -> webfinger resource
   username: string;
   displayName: string;
   bio?: string;
@@ -34,6 +35,11 @@ export const userSchema = new Schema<IUser>({
     required: true
   },
   actorId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  handle: {
     type: String,
     required: true,
     unique: true
@@ -79,6 +85,3 @@ export const userSchema = new Schema<IUser>({
   }
 });
 
-export function getUserModel(conn: mongoose.Connection): Model<IUser> {
-  return conn.model<IUser>("User", userSchema);
-}

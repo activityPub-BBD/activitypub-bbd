@@ -10,19 +10,21 @@ const logger = getLogger("server");
 export const app = express();
 
 app.set("trust proxy", true);
-
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://d7uwchvpta0lr.cloudfront.net'
-  ],
-  credentials: true
-}));
-
-
-
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 //ROUTES
 app.use('/api/auth', authRoutes);
@@ -39,6 +41,7 @@ app.use(integrateFederation(federation, (req: express.Request) => {
   if (!isFedifyRequest) return undefined; // Let other middleware handle it
 }));
 
+app.get("/", (req, res) => res.send("Hello, Fedify!"));
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
