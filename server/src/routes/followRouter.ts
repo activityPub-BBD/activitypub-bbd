@@ -18,12 +18,12 @@ followRoutes.get("/follow-summary/:oid", async(req, res) => {
 
 followRoutes.get("/follow-summary", requireAuth, async(req, res) => {
     try{
-        if(!req.user){
+        if(!res.locals.user){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
-        }else if(!req.user.id){
+        }else if(!res.locals.user.id){
                 return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else {
-            const followStats = await FollowService.getFollowStats(req.user.id);
+            const followStats = await FollowService.getFollowStats(res.locals.user.id);
             res.status(HTTP_STATUS.OK).json(followStats);
         }
     } catch (error) {
@@ -35,13 +35,13 @@ followRoutes.get("/follow-summary", requireAuth, async(req, res) => {
 followRoutes.post("/follow:oid", requireAuth, async(req, res) => {
     try{
         const { inboxUrl, accepted } = req.body;
-        if(!req.user){
+        if(!res.locals.user){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
-        }else if(!req.user.id){
+        }else if(!res.locals.user.id){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else {
             const { oid } = req.body;
-            const follow = await FollowService.followUser(req.user.id, oid, inboxUrl, accepted);
+            const follow = await FollowService.followUser(res.locals.user.id, oid, inboxUrl, accepted);
             if(!follow){
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to follow user' });
             } else{
@@ -56,13 +56,13 @@ followRoutes.post("/follow:oid", requireAuth, async(req, res) => {
 
 followRoutes.delete("/unfollow/:oid", requireAuth, async(req, res) => {
     try{
-        if(!req.user){
+        if(!res.locals.user){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
-        }else if(!req.user.id){
+        }else if(!res.locals.user.id){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else {
             const { oid } = req.body;
-            const unfollow = await FollowService.unfollowUser(req.user.id, oid);
+            const unfollow = await FollowService.unfollowUser(res.locals.user.id, oid);
             if(!unfollow){
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to unfollow user' });
             } else{
@@ -88,12 +88,12 @@ followRoutes.get("/following:oid", requireAuth, async(req, res) => {
 
 followRoutes.get("/following", requireAuth, async(req, res) => {
     try{
-        if(!req.user){
+        if(!res.locals.user){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
-        }else if(!req.user.id){
+        }else if(!res.locals.user.id){
                 return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else {
-            const following = await FollowService.retrieveFollowing(req.user.id);
+            const following = await FollowService.retrieveFollowing(res.locals.user.id);
             res.status(HTTP_STATUS.OK).json(following);
         }
     } catch (error) {
@@ -115,12 +115,12 @@ followRoutes.get("/followers/:oid", requireAuth, async(req, res) => {
 
 followRoutes.get("/followers", requireAuth, async(req, res) => {
     try{
-        if(!req.user){
+        if(!res.locals.user){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
-        }else if(!req.user.id){
+        }else if(!res.locals.user.id){
                 return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else {
-            const followers = await FollowService.retrieveFollowers(req.user.id);
+            const followers = await FollowService.retrieveFollowers(res.locals.user.id);
             res.status(HTTP_STATUS.OK).json(followers);
         }
     } catch (error) {
@@ -131,12 +131,12 @@ followRoutes.get("/followers", requireAuth, async(req, res) => {
 
 followRoutes.get("/suggested-mutuals", requireAuth, async(req, res) => {
     try{
-        if(!req.user){
+        if(!res.locals.user){
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
-        }else if(!req.user.id){
+        }else if(!res.locals.user.id){
                 return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else {
-            const suggestedMutuals = await FollowService.retrieveSuggestedMutuals(req.user.id);
+            const suggestedMutuals = await FollowService.retrieveSuggestedMutuals(res.locals.user.id);
             res.status(HTTP_STATUS.OK).json(suggestedMutuals);
         }
     } catch (error) {

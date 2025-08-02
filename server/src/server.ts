@@ -26,5 +26,5 @@ connectToS3();
 connectToNeo4j();
 
 app.listen(config.port, () => {
-  console.log(`Server is running on port ${config.port} 🚀`);
+  console.log(`Server is running on http://localhost:${config.port} 🚀`);
 });
