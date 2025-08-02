@@ -31,7 +31,7 @@
     "@types/multer": "^2.0.0"
   },
   "scripts": {
-    "dev": "dotenvx run -- tsx watch ./src/index.ts",
-    "prod": "dotenvx run -- node --import tsx ./src/index.ts"
+    "dev": "dotenvx run -- tsx watch ./src/server.ts",
+    "prod": "dotenvx run -- node --import tsx ./src/server.ts"
   }
 }

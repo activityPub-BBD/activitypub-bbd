@@ -2,7 +2,7 @@ import { requireAuth } from '@middleware/auth.ts';
 import { HTTP_STATUS } from '@utils/httpStatus.ts';
 import { Router } from 'express';
 import multer from 'multer';
-import { PostService } from 'services/postService.ts';
+import { PostService } from '@services/postService.ts';
 import type { IPostResponse } from 'types/post.ts';
 
 export const postRoutes = Router();
@@ -56,14 +56,14 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
       mediaUrl = await PostService.uploadImage(
         req.file.buffer,
         req.file.mimetype,
-        req.user!.id
+        res.locals.user!.id
       );
       mediaType = req.file.mimetype;
     }
     
 
     const post = await PostService.createPost({
-      authorId: req.user!.id,
+      authorId: res.locals.user!.id,
       caption,
       mediaUrl,
       mediaType,
@@ -110,7 +110,7 @@ postRoutes.get('/feed', requireAuth, async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 20;
 
     const posts = ownFeed ?
-      await PostService.getFeedPosts(req.user!.id, page, limit) :
+      await PostService.getFeedPosts(res.locals.user!.id, page, limit) :
       await PostService.getFeedPosts('', page, limit);
 
     res.json({
@@ -133,7 +133,7 @@ postRoutes.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const success = await PostService.deletePost(id, req.user!.id);
+    const success = await PostService.deletePost(id, res.locals.user!.id);
 
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Post not found' });

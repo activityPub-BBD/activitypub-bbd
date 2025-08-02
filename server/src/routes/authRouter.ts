@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { getGoogleJwt, updateUsername} from "../services/authService.ts";
+import { getGoogleJwt} from "@services/authService.ts";
 import { requireAuth } from "@middleware/auth.ts";
 import { HTTP_STATUS } from "@utils/httpStatus.ts";
 
 export const authRoutes = Router();
-
 
 /**
  * @route POST /api/auth/google
@@ -25,7 +24,7 @@ authRoutes.post('/logout', requireAuth,   async (req, res) => {
  * @description Get current authenticated user's profile
 */
 authRoutes.get('/me', requireAuth, async (req, res) => {
-    const user = req.user;
+    const user = res.locals.user;
     if (!user) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
     }
