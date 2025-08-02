@@ -1,0 +1,103 @@
+.notifications-feed {
+  flex: 1;
+  padding: 2rem 0;
+  background: #fafafa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.notifications-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #262626;
+  letter-spacing: -1px;
+}
+
+.notifications-list {
+  width: 100%;
+  max-width: 500px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.2rem;
+  transition: box-shadow 0.2s;
+}
+
+.notification-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.follower-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 1.2rem;
+  flex-shrink: 0;
+  border: 2px solid #dbdbdb;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.follower-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.follower-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.follower-username {
+  font-weight: 600;
+  color: #262626;
+  font-size: 1.1rem;
+}
+
+.follower-action {
+  color: #8e8e8e;
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+/* Optional: Follow Back button styling
+.follow-back-btn {
+  background: #0095f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 1rem;
+}
+
+.follow-back-btn:hover {
+  background: #1877f2;
+}
+*/
+
+.no-followers {
+  text-align: center;
+  color: #8e8e8e;
+  padding: 2rem 0;
+  font-size: 1.1rem;
+}
