@@ -1,7 +1,7 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
 import { HTTP_STATUS } from "../utils/httpStatus.ts";
-import { retrieveDb } from '@db/db.ts';
+import { retrieveDb } from '@db/mongo.ts';
 import { config } from '@config/config.ts';
 import type { IGoogleIdTokenPayload } from 'types/auth.ts';
 import { UserService } from './userService.ts';
@@ -159,7 +159,7 @@ export async function updateUsername(req: Request, res: Response) {
     }
 
     // Find user first to verify they exist
-    const existingUser = await UserService.getUserByGoogleId(req.user!.googleId);
+    const existingUser = await UserService.getUserByGoogleId(res.locals.user!.googleId);
 
     if (!existingUser) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ 
