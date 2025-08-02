@@ -89,7 +89,7 @@ export async function retrieveFollowers(followingId: string): Promise<{ id: stri
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
-        MATCH (follower:Person)-[:Follows]->(:Person {_id: $personId})
+        MATCH (follower:Person)-[:Follows]->(:Person {_id: $followingId})
         RETURN 
             follower._id AS id,
             follower.actorId AS actorId,
@@ -108,12 +108,12 @@ export async function retrieveFollowers(followingId: string): Promise<{ id: stri
     });
 }
 
-export async function retrieveSuggestedMutuals(followingId: string, connectionDepth = 3):
+export async function retrieveSuggestedMutuals(followingId: string):
     Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; followers: number; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
-        MATCH (start:Person {_id: $followingId})-[:Follows*1..$connectionDepth]->(suggested:Person)
+        MATCH (start:Person {_id: $followingId})-[:Follows*1..3]->(suggested:Person)
         WHERE NOT (start)-[:Follows]->(suggested)
         AND start <> suggested
         OPTIONAL MATCH (others:Person)-[:Follows]->(suggested)
@@ -121,10 +121,7 @@ export async function retrieveSuggestedMutuals(followingId: string, connectionDe
         ORDER BY followers DESC
         LIMIT 20
         `,
-        { 
-            followingId,
-            connectionDepth
-         }
+        { followingId }
     );
     return result.records.map((record) => {
         return {
