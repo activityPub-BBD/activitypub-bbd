@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getGoogleJwt} from "../services/authService.ts";
+import { getGoogleJwt} from "@services/authService.ts";
 import { requireAuth } from "@middleware/auth.ts";
 import { HTTP_STATUS } from "@utils/httpStatus.ts";
 

@@ -18,10 +18,11 @@ register(
 
 import { app } from "@app/index.ts";
 import { config } from "@config/index.ts";
-import { connectToMongo } from '@db/index.ts';
+import { connectToMongo, connectToS3 } from '@db/index.ts';
 import "@utils/logging.ts";
 
 connectToMongo();
+connectToS3();
 
 app.listen(config.port, () => {
   console.log(`Server is running on port ${config.port} 🚀`);

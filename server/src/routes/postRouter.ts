@@ -2,7 +2,7 @@ import { requireAuth } from '@middleware/auth.ts';
 import { HTTP_STATUS } from '@utils/httpStatus.ts';
 import { Router } from 'express';
 import multer from 'multer';
-import { PostService } from 'services/postService.ts';
+import { PostService } from '@services/postService.ts';
 import type { IPostResponse } from 'types/post.ts';
 
 export const postRoutes = Router();

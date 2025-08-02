@@ -1,7 +1,6 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
-import { HTTP_STATUS } from "../utils/httpStatus.ts";
-import { retrieveDb } from '@db/mongo.ts';
+import { HTTP_STATUS } from "@utils/index.ts";
 import { config } from '@config/config.ts';
 import type { IGoogleIdTokenPayload } from 'types/auth.ts';
 import { UserService } from './userService.ts';
