@@ -10,7 +10,7 @@ export async function connectToNeo4j() {
             // do nothing as we already have a connection
         } else{
             neo4jDriver = neo4j.driver(config.neo4j.uri, neo4j.auth.basic(config.neo4j.user, config.neo4j.password));
-            console.log('Connection established');
+            console.log('Connection to Neo4j established');
         }
         return neo4jDriver;
     })
