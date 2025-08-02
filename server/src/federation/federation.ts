@@ -10,11 +10,6 @@ import { registerModels, type IUser } from "@models/index.ts";
 import { config } from "@config/index.ts";
 import { KeyService } from "@services/keyService.ts";
 
-interface KeyPairEntry {
-  privateKey: JsonWebKey;
-  publicKey: JsonWebKey;
-}
-
 const logger = getLogger("fedify");
 
 const db = await retrieveDb(config.dbName);         
@@ -233,42 +228,32 @@ federation.setOutboxDispatcher("/users/{identifier}/outbox", async (ctx, identif
 
 federation.setFollowersDispatcher(
     "/users/{identifier}/followers",
-    async (ctx, identifier, cursor) => {
+    async (_ctx, identifier) => {
       //get following from db
-      
       const user =  await UserService.getUserByUsername(identifier);
       if (!user) return null;
-      //WTF?!@
-      let followers = [];
-      followers = await FollowModel.find({ followingId: user._id })
-          .populate<{followerId: IUser}>({
-        path: 'followerId',
-        model: UserModel,
-      })
       
-    
-      logger.debug('followers type')
-      logger.debug(followers.length)
-      //items cant have nulls
+      const followers = await FollowModel.find({ followingId: user._id })
+          .populate('followerId', 'actorId inboxUrl')
+      
       const items: Recipient[] = followers.map((f:any) => {
-       logger.debug('follower')
-        logger.debug(f);
           return {
-            id: new URL(f.actorId),
-            inboxId: new URL(f.inboxUrl)
+            id: new URL(f.followerId.actorId),
+            inboxId: new URL(f.followerId.inboxUrl)
           }
         });
       return { items };
     },
 )
-.setCounter(async (ctx, identifier) => {
+.setCounter(async (_ctx, identifier) => {
     // count followers in db
-      const user =  await UserService.getUserByUsername(identifier);
+    const user =  await UserService.getUserByUsername(identifier);
       if (!user) return null;
-     const count = await FollowModel.countDocuments({
+    const count = await FollowModel.countDocuments({
       followingId: user._id
-      });
-      return count == null ? 0 : count;
+    });
+
+    return count == null ? 0 : count;
 });
 
 federation.setFollowingDispatcher("/users/{identifier}/following", async (ctx, identifier, cursor) => {
