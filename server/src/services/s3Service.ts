@@ -1,10 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { config } from "@config/config.ts";
+import { retrieveS3Client } from "@db/s3.ts";
 import { v4 as uuidv4 } from "uuid";
-
-const s3Client = new S3Client({
-  region: config.aws.region,
-});
 
 export const uploadImageToS3 = async (
   file: Buffer,
@@ -51,7 +48,8 @@ export const uploadImageToS3 = async (
       },
     });
 
-    await s3Client.send(command);
+    const client = await retrieveS3Client();
+    await client.send(command);
 
     const url = `https://${config.aws.s3MediaBucket}.s3.${config.aws.region}.amazonaws.com/${fileName}`;
 

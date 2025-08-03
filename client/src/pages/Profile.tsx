@@ -1,21 +1,94 @@
 import { UserProfile } from "../components/UserProfile";
-import { useLocation } from "react-router-dom";
+// import { useLocation } from "react-router-dom";
+import { useAuthContext } from "../context/AuthContext";
+import { useState, useEffect } from "react";
 
-const samplePosts = [
-  { id: 1, content: 'Hello world! This is my first post.', date: '2025-07-27' },
-  { id: 2, content: 'Enjoying building my profile page.', date: '2025-07-28' },
-];
+interface Post {
+    id: string;
+    caption: string;
+    mediaUrl: string;
+    mediaType: string;
+    createdAt: string;
+    author: {
+        id: string;
+        displayName: string;
+        avatarUrl: string;
+    };
+}
 
 const Profile = () => {
-    const location = useLocation();
-    const { displayName, avatarUrl } = location.state || {};
+   // const location = useLocation();
+   // const { displayName, avatarUrl } = location.state || {};
+    const { user, jwt } = useAuthContext();
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+     useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (!user?.id || !jwt) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/posts/feed?page=1&limit=20`,
+          {
+            headers: {
+              'Authorization': `Bearer ${jwt}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPosts(data.posts || []);
+        } else {
+          console.error('Failed to fetch posts:', response.status);
+          setError('Failed to load posts');
+        }
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        setError('Failed to load posts');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserPosts();
+  }, [user?.id, jwt]);
+
+  // Convert posts to the format expected by UserProfile component
+  const formattedPosts = posts.map(post => ({
+    id: post.id,
+    content: post.caption,
+    date: new Date(post.createdAt).toLocaleDateString(),
+    mediaUrl: post.mediaUrl,
+    mediaType: post.mediaType
+  }));
+
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        Loading profile...
+      </div>
+    );
+  }
 
     return (
         <UserProfile
-            initialUsername={displayName || 'User'}
-            initialBio="Developer & designer"
-            initialAvatarUrl={avatarUrl ?? "/no-avatar.jpeg"}
-            posts={samplePosts}
+            initialUsername={user?.displayName || 'User'}
+            initialBio={user?.bio || "Tell us about yourself!"}
+            initialLocation={user?.location || ''}
+            initialAvatarUrl={user?.avatarUrl || "https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png"}
+            posts={formattedPosts}
         />
     )
 }

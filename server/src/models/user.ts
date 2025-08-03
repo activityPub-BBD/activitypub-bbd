@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  googleId: string;
+  googleId?: string; // Optional - only for local users with Google auth
   domain: string; //example.com
   actorId: string;
   username: string;
@@ -16,13 +16,17 @@ export interface IUser extends Document {
   followingUrl: string;
   isLocal: boolean;
   createdAt: Date;
+  location?: string;
+  followers: Types.ObjectId[];
+  following: Types.ObjectId[];
 }
 
 export const userSchema = new Schema<IUser>({
   googleId: {
     type: String,
-    required: true,
-    unique: true
+    required: false,
+    unique: true,
+    sparse: true // Allows multiple null/undefined values
   },
   username: {
     type: String,
@@ -71,9 +75,33 @@ export const userSchema = new Schema<IUser>({
   createdAt: {
     type: Date,
     required: true
-  }
+  },
+  location: {
+    type: String,
+    default: ''  
+  },
+  followers: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 });
 
 export function getUserModel(conn: mongoose.Connection): Model<IUser> {
-  return conn.model<IUser>("User", userSchema);
+  const model = conn.model<IUser>("User", userSchema);
+  
+  // Create compound index for username + domain to ensure uniqueness per domain
+  model.createIndexes().then(() => {
+    model.collection.createIndex(
+      { username: 1, domain: 1 },
+      { unique: true, name: 'username_domain_unique' }
+    ).catch(err => {
+      console.warn('Failed to create username_domain index:', err);
+    });
+  });
+  
+  return model;
 }

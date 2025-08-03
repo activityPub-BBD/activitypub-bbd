@@ -67,14 +67,15 @@ const SideBar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="nav-links">
-          <Link to="/profile">Profile</Link>
-          <Link to="/explore-communities">Explore Communities</Link>
-          <button onClick={handleLogout} className="logout-button">
-            Logout
-          </button>
-        </nav>
+            {/* Navigation */}
+            <nav className="nav-links">
+                <Link to="/profile">Profile</Link>
+                <Link to="/UserSearch">Search</Link>
+                <Link to="/CreatePost">Post</Link>
+                <Link to="/explore-communities">Explore Communities</Link>
+                <Link to="/notifications">Notifications</Link>
+                <button onClick={handleLogout} className="logout-button">Logout</button>
+            </nav>
       </aside>
 
       {/* Optional overlay when sidebar open on mobile */}

@@ -1,7 +1,6 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
-import { HTTP_STATUS } from "../utils/httpStatus.ts";
-import { retrieveDb } from '@db/db.ts';
+import { HTTP_STATUS } from "@utils/index.ts";
 import { config } from '@config/config.ts';
 import type { IGoogleIdTokenPayload } from 'types/auth.ts';
 import { UserService } from './userService.ts';
@@ -9,20 +8,13 @@ import { UserService } from './userService.ts';
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
         
-function generateUniqueUsername(firstName: string, lastName: string) {
-  const base = (firstName + lastName)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '');
-
-  let username = base;
-  let suffix = 0;
-  //TODO: Check db for username then add numbers for uniqueness
-  // while (await isUsernameTaken(username)) {
-  //   suffix++;
-  //   const trimmedBase = base.slice(0, 15 - suffix.toString().length); // keep total ≤ 15
-  //   username = `${trimmedBase}${suffix}`;
-  // }
-  return username;
+function generateUsernameFromEmail(email: string): string {
+  const username = email.split('@')[0];
+  
+  // emails come with dots, might cause issues with activitypub, but luckily according to gmaill john.doe@gmail.com and johndoe@gmail.com are the same email
+  const cleanUsername = username.toLowerCase().replace(/\./g, '');
+  
+  return cleanUsername;
 }
 
 export async function verifyGoogleJwt(jwt: string): Promise<IGoogleIdTokenPayload> {
@@ -30,7 +22,7 @@ export async function verifyGoogleJwt(jwt: string): Promise<IGoogleIdTokenPayloa
     // verify jwt's signature and validate claims
     const { payload } = await jwtVerify<IGoogleIdTokenPayload>(jwt, JWKS, {
       issuer: 'https://accounts.google.com',
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: config.googleClientId
     });
     return payload;
 
@@ -48,9 +40,9 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const params = new URLSearchParams({
       code: code,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+      client_id: config.googleClientId,
+      client_secret: config.googleClientSecret,
+      redirect_uri: config.googleRedirectUri,
       grant_type: "authorization_code",
     });
 
@@ -72,8 +64,8 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const { id_token: jwt } = await response.json();
     const payload = await verifyGoogleJwt(jwt);
-    const { sub, given_name='', family_name='', picture=''  } = payload;
-    const username = generateUniqueUsername(given_name, family_name);
+    const { sub, given_name='', family_name='', picture='', email=''  } = payload;
+    const username = generateUsernameFromEmail(email);
     
     if (!sub) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -89,11 +81,17 @@ export async function getGoogleJwt(req: Request, res: Response) {
       if (!existingUser) {
         try {
           existingUser = await UserService.createUser({
-            googleId: sub,
+            googleId: sub, // Google ID is provided for local users
             username,
             displayName: `${given_name} ${family_name}`,
             avatarUrl: picture ?? ''
           })
+
+          const addedToGrap = await UserService.addUserToGraphDb(existingUser);
+
+          if (!addedToGrap) {
+            throw new Error('User creation failed in graph db');
+          }
         } catch (createError) {
           res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
             error: `User creation failed`,
@@ -148,7 +146,7 @@ export async function updateUsername(req: Request, res: Response) {
     }
   
 
-     // Check if username is already taken
+     // Check if username is already taken on this domain
     const isAvailableUserName = await UserService.isUsernameAvailable(newUsername.toLowerCase());
     
     
@@ -159,7 +157,16 @@ export async function updateUsername(req: Request, res: Response) {
     }
 
     // Find user first to verify they exist
-    const existingUser = await UserService.getUserByGoogleId(req.user!.googleId);
+    // For local users, we can use googleId, but we should also support other lookup methods
+    let existingUser = null;
+    if (res.locals.user?.googleId) {
+      existingUser = await UserService.getUserByGoogleId(res.locals.user.googleId);
+    }
+    
+    // If not found by googleId, try by username (for cases where googleId might not be set)
+    if (!existingUser && res.locals.user?.username) {
+      existingUser = await UserService.getUserByUsername(res.locals.user.username);
+    }
 
     if (!existingUser) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ 
@@ -169,7 +176,7 @@ export async function updateUsername(req: Request, res: Response) {
 
     // Update the user
     await UserService.updateUser(
-      existingUser.id,
+      existingUser._id.toString(),
       { username: newUsername.toLowerCase() }
     );
 

@@ -2,8 +2,9 @@ import { requireAuth } from "@middleware/auth.ts";
 import type { IUser } from "@models/index.ts";
 import { HTTP_STATUS } from "@utils/httpStatus.ts";
 import { Router } from "express";
-import { PostService } from "services/postService.ts";
-import { UserService } from "services/userService.ts";
+import { PostService } from "@services/postService.ts";
+import { UserService } from "@services/userService.ts";
+import { config } from "@config/config.ts";
 
 export const userRoutes = Router();
 
@@ -20,7 +21,7 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
   }
 
   try {
-    const users = await UserService.searchUsers(query);
+    const users = await UserService.searchUsers(query, config.domain);
     res.json(
       users.map(user => ({
         username: user.username,
@@ -41,7 +42,8 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
  */
 userRoutes.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await UserService.getUserByGoogleId(req.user!.googleId);
+    // The user should already be available from the auth middleware
+    const user = res.locals.user;
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
@@ -68,7 +70,7 @@ userRoutes.get('/me', requireAuth, async (req, res) => {
 userRoutes.put('/me', requireAuth, async (req, res) => {
   try {
 
-    const userId = req.user!.id;
+    const userId = res.locals.user!._id.toString();
     const updates: Partial<IUser> = {};
 
     if (typeof req.body.displayName === 'string') {
@@ -81,6 +83,10 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
 
     if (typeof req.body.avatarUrl === 'string' || req.body.avatarUrl === null) {
       updates.avatarUrl = req.body.avatarUrl;
+    }
+
+    if (typeof req.body.location === 'string' || req.body.location === null) {
+      updates.location = req.body.location;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -100,6 +106,7 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
     // Include only the fields that were updated
     if ('displayName' in updates) responseUser.displayName = updated.displayName;
     if ('bio' in updates) responseUser.bio = updated.bio;
+    if ('location' in updates) responseUser.location = updated.location;
     if ('avatarUrl' in updates) responseUser.avatarUrl = updated.avatarUrl;
 
     res.status(HTTP_STATUS.OK).json({
@@ -122,7 +129,7 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
 userRoutes.get('/:username', requireAuth, async (req, res) => {
   try {
     const { username } = req.params;
-    const user = await UserService.getUserByUsername(username);
+    const user = await UserService.getUserByUsername(username, config.domain);
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
@@ -154,13 +161,13 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
     const limit = Number(req.query.limit) || 20;
 
     // Find user by username
-    const user = await UserService.getUserByUsername(username);
+    const user = await UserService.getUserByUsername(username, config.domain);
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
 
     // Get posts by user ID, paginated
-    const posts = await PostService.getUserPosts(user.id, page, limit);
+    const posts = await PostService.getUserPosts(user._id.toString(), page, limit);
     console.log(posts)
     res.status(HTTP_STATUS.OK).json(posts);
   } catch (error) {

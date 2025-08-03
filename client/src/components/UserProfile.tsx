@@ -1,18 +1,21 @@
 import React, { useState, useRef, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { useAuthContext } from '../context/AuthContext';
 import '../styles/UserProfile.css';
 
 interface Post {
-  id: number;
+  id: string;
   content: string;
   date: string;
+  mediaUrl?: string;
+  mediaType?: string;
 }
 
 interface UserProfileProps {
   initialUsername: string;
   initialBio: string;
   initialAvatarUrl: string;
+  initialLocation: string;
   posts: Post[];
 }
 
@@ -20,21 +23,84 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   initialUsername,
   initialBio,
   initialAvatarUrl,
+  initialLocation = '',
   posts
 }) => {
   const navigate = useNavigate();
+  const { user, jwt, setUser, logout } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);
+  const [location, setLocation] = useState(initialLocation);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const handleSave = () => {
-    setIsEditing(false);
-  };
+  
+  const handleSave = async () => {
+    if (!jwt) {
+      setError('Authentication required');
+      return;
+    }
 
+    setIsLoading(true);
+    setError('');
+
+  try {
+      // Update profile - send everything including base64 avatar if it's new
+      const updateResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`,
+        },
+        body: JSON.stringify({
+          displayName: username,
+          bio: bio,
+          location: location,
+          avatarUrl: avatarUrl, // This will be base64 if user uploaded new image
+        }),
+      });
+
+      if (updateResponse.ok) {
+        const updatedData = await updateResponse.json();
+        
+        // Update user context
+        setUser(prev => prev ? {
+          ...prev,
+          displayName: username,
+          bio: bio,
+          location: location,
+          avatarUrl: avatarUrl,
+        } : null);
+        
+        setIsEditing(false);
+        setError('');
+      } else {
+        const errorData = await updateResponse.json();
+        
+        // Handle token expiration
+        if (updateResponse.status === 401) {
+          setError('Your session has expired. Please sign in again.');
+          logout();
+          navigate('/');
+          return;
+        }
+        
+        setError(errorData.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      setError('Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
   const handleCancel = () => {
     setUsername(initialUsername);
     setBio(initialBio);
+    setLocation(initialLocation);
     setAvatarUrl(initialAvatarUrl);
     setIsEditing(false);
   };
@@ -43,6 +109,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be smaller than 5MB');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === 'string') {
@@ -69,15 +145,26 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             style={{ cursor: isEditing ? 'pointer' : 'default' }}
             onClick={isEditing ? triggerFileInput : undefined}
           />
+
+          <div className="avatar-container">
           {isEditing && (
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
+            <div className="avatar-wrapper" style={{ position: 'relative' }}>
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+              <div
+                className="avatar-overlay"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Click to change
+              </div>
+            </div>
           )}
+        </div>
         </div>
 
         {!isEditing ? (
@@ -94,6 +181,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             </div>
 
             <p className="user-profile-bio">{bio || 'No bio added yet.'}</p>
+            
+            <div className="profile-meta">
+              {location && (
+                <div className="profile-meta-item">
+                  <span className="meta-icon">📍</span>
+                  <span className="meta-text">{location}</span>
+                </div>
+              )}
+            </div>
+
             <button onClick={() => setIsEditing(true)} className="button-edit">
               Edit Profile
             </button>
@@ -101,7 +198,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         ) : (
           <div className="user-profile-info">
             <div className="username-back-wrapper">
-              <h2 className="user-profile-name">{username}</h2>
+              <h2 className="user-profile-name">Edit Profile</h2>
               <button
                 onClick={() => navigate('/home')}
                 className="button-back"
@@ -111,6 +208,24 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               </button>
             </div>
 
+            {error && (
+              <div className="error-message" style={{ marginBottom: '1rem' }}>
+                {error}
+              </div>
+            )}
+
+            <label className="input-label">
+              Display Name
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                className="input-field"
+                maxLength={50}
+                disabled={isLoading}
+              />
+            </label>
+
             <label className="input-label" style={{ marginTop: 16 }}>
               Bio
               <textarea
@@ -118,14 +233,37 @@ export const UserProfile: React.FC<UserProfileProps> = ({
                 onChange={e => setBio(e.target.value)}
                 rows={3}
                 className="textarea-field"
+                maxLength={500}
+                disabled={isLoading}
+              />
+            </label>
+
+            <label className="input-label" style={{ marginTop: 16 }}>
+              Location
+              <input
+                type="text"
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                className="input-field"
+                placeholder="Where are you located?"
+                maxLength={100}
+                disabled={isLoading}
               />
             </label>
 
             <div className="edit-buttons">
-              <button onClick={handleSave} className="button-save">
-                Save
+              <button 
+                onClick={handleSave} 
+                className="button-save"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Saving...' : 'Save'}
               </button>
-              <button onClick={handleCancel} className="button-cancel">
+              <button 
+                onClick={handleCancel} 
+                className="button-cancel"
+                disabled={isLoading}
+              >
                 Cancel
               </button>
             </div>
@@ -135,16 +273,34 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
       <hr className="divider" />
 
-      {/* Posts section unchanged */}
       <h3 className="posts-header">Your Posts</h3>
       <div className="posts-container">
         {posts.length === 0 ? (
-          <p className="no-posts">No posts yet.</p>
+          <p className="no-posts">No posts yet. Create your first post!</p>
         ) : (
           posts.map(post => (
             <div key={post.id} className="post-item">
+              {post.mediaUrl && (
+                <div className="post-media">
+                  {post.mediaType?.startsWith('video/') ? (
+                    <video 
+                      src={post.mediaUrl} 
+                      controls 
+                      className="post-video"
+                    />
+                  ) : (
+                    <img 
+                      src={post.mediaUrl} 
+                      alt="Post media" 
+                      className="post-image"
+                    />
+                  )}
+                </div>
+              )}
               <p className="post-content">{post.content}</p>
-              <small className="post-date">{post.date}</small>
+              <div className="post-meta">
+                <small className="post-date">{post.date}</small>
+              </div>
             </div>
           ))
         )}
