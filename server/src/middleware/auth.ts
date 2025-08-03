@@ -1,7 +1,7 @@
-import { HTTP_STATUS } from "@utils/httpStatus.ts";
+import { HTTP_STATUS } from "@utils/httpStatus";
 import type { NextFunction } from "express";
-import { verifyGoogleJwt } from "@services/authService.ts";
-import { UserService } from "@services/userService.ts";
+import { verifyGoogleJwt } from "@services/authService";
+import { UserService } from "@services/userService";
 
 export async function requireAuth(req: any, res: any, next: NextFunction) {
   try {

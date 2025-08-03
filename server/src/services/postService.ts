@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
-import { type IPost } from '../models/post.ts';
-import type { ICreatePostData } from 'types/post.ts';
-import { config } from '@config/config.ts';
-import { uploadImageToS3 } from "./s3Service.ts";
-import { retrieveDb } from "@db/mongo.ts";
-import { registerModels } from "@models/index.ts";
+import { type IPost } from '../models/post';
+import type { ICreatePostData } from 'types/post';
+import { config } from '@config/config';
+import { uploadImageToS3 } from "./s3Service";
+import { retrieveDb } from "@db/mongo";
+import { registerModels } from "@models/index";
 
 
 const db = await retrieveDb(config.dbName);         

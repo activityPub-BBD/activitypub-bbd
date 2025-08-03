@@ -1,25 +1,7 @@
-import { register } from 'tsconfig-paths';
-register(
-  { 
-    baseUrl: './src', 
-    paths: {
-      "@app/*": ["app/*"],
-      "@db/*": ["db/*"],
-      "@config/*": ["config/*"],
-      "@controllers/*": ["controllers/*"],
-      "@middleware/*": ["middleware/*"],
-      "@models/*": ["models/*"],
-      "@routes/*": ["routes/*"],
-      "@services/*": ["services/*"],
-      "@utils/*": ["utils/*"]
-    } 
-  }
-);
-
-import { app } from "@app/index.ts";
-import { config } from "@config/index.ts";
-import { connectToMongo, connectToNeo4j, connectToRedis, connectToS3 } from '@db/index.ts';
-import "@utils/logging.ts";
+import { app } from "@app/index";
+import { config } from "@config/index";
+import { connectToMongo, connectToNeo4j, connectToRedis, connectToS3 } from '@db/index';
+import "@utils/logging";
 
 await connectToMongo();
 await connectToS3();

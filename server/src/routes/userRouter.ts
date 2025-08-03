@@ -1,10 +1,10 @@
-import { requireAuth } from "@middleware/auth.ts";
-import type { IUser } from "@models/index.ts";
-import { HTTP_STATUS } from "@utils/httpStatus.ts";
+import { requireAuth } from "@middleware/auth";
+import type { IUser } from "@models/index";
+import { HTTP_STATUS } from "@utils/httpStatus";
 import { Router } from "express";
-import { PostService } from "@services/postService.ts";
-import { UserService } from "@services/userService.ts";
-import { config } from "@config/config.ts";
+import { PostService } from "@services/postService";
+import { UserService } from "@services/userService";
+import { config } from "@config/config";
 
 export const userRoutes = Router();
 

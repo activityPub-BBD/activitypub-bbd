@@ -1,12 +1,12 @@
-import { requireAuth } from '@middleware/auth.ts';
-import { HTTP_STATUS } from '@utils/httpStatus.ts';
+import { requireAuth } from '@middleware/auth';
+import { HTTP_STATUS } from '@utils/httpStatus';
 import { Router } from 'express';
 import multer from 'multer';
-import { PostService } from '@services/postService.ts';
-import type { IPostResponse } from 'types/post.ts';
-import { federation } from "@federation/index.ts";
+import { PostService } from '@services/postService';
+import type { IPostResponse } from 'types/post';
+import { federation } from "@federation/index";
 import { Create, Note } from "@fedify/fedify";
-import { config } from "@config/config.ts";
+import { config } from "@config/config";
 
 export const postRoutes = Router();
 

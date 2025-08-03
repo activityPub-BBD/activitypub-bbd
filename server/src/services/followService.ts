@@ -1,4 +1,4 @@
-import { retrieveNeo4jDriver } from "@db/index.ts";
+import { retrieveNeo4jDriver } from "@db/index";
 
 export async function getFollowStats(id: string): Promise<{id: string;followingCount: number;followerCount: number;}> {
     const driver = await retrieveNeo4jDriver();

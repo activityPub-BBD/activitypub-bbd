@@ -1,7 +1,7 @@
-import { requireAuth } from "@middleware/auth.ts";
+import { requireAuth } from "@middleware/auth";
 import { Router } from "express";
-import { FollowService } from "@services/followService.ts";
-import { HTTP_STATUS } from "@utils/httpStatus.ts";
+import { FollowService } from "@services/followService";
+import { HTTP_STATUS } from "@utils/httpStatus";
 
 /**
  * Express router for handling follow-related routes.

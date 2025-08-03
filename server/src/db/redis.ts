@@ -1,5 +1,5 @@
 import {Redis} from "ioredis";
-import { config } from '@config/index.ts';
+import { config } from '@config/index';
 
 const redisClient = new Redis({
     username: config.redis.username,
