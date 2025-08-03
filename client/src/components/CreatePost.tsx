@@ -61,6 +61,11 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onPostCreated }) => {
       return;
     }
 
+    if (!selectedFile) {
+      setError("Media is required");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 

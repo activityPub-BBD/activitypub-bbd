@@ -5,6 +5,7 @@ import Home from '../pages/Home';
 import Profile from '../pages/Profile';
 import LandingPage from '../pages/LandingPage';
 import type { JSX } from 'react';
+import UserSearch from '../pages/UserSearch';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuthContext();
@@ -38,6 +39,14 @@ export const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Profile />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/search" 
+        element={
+          <PrivateRoute>
+            <UserSearch />
           </PrivateRoute>
         } 
       />

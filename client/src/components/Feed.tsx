@@ -1,185 +1,161 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import CreatePost from "./CreatePost";
 import '../styles/Feed.css';
+import { useAuthContext } from '../context/AuthContext';
+import Post from './Post';
 
-const createDummyPosts = (startId: number, count: number) =>
-  Array.from({ length: count }, (_, i) => ({
-    id: startId + i,
-    username: `user${startId + i}`,
-    userAvatar: `https://i.pravatar.cc/150?img=${(startId + i) % 70 + 1}`, // pravatar has ~70 images
-    postImage: `https://picsum.photos/400/400?random=${startId + i}`,
-    caption: `This is an amazing moment captured! #chirp #life #moment${startId + i}`,
-    likes: Math.floor(Math.random() * 1000) + 10,
-    timeAgo: `${Math.floor(Math.random() * 24) + 1}h`,
-    isLiked: false,
-    isSaved: false,
-  }));
+interface Post {
+  id: string;
+  caption: string;
+  mediaUrl: string;
+  mediaType: string;
+  createdAt: string;
+  author: {
+    username: string;
+    displayName: string;
+    avatarUrl: string;
+  };
+}
 
 const Feed: React.FC = () => {
-  const [posts, setPosts] = useState(() => createDummyPosts(1, 20));
+  const { jwt } = useAuthContext();
+
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const feedRef = useRef<HTMLDivElement>(null);
 
-  const toggleLike = (postId: number) => {
-    setPosts(posts.map(post => 
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1
-            }
-          : post
-    ));
-  };
+  // Fetch posts for given page
+  const fetchPosts = useCallback(async (pageToLoad: number) => {
+    if (!jwt) return;
 
-  const toggleSave = (postId: number) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, isSaved: !post.isSaved }
-        : post
-    ));
-  };
+    setLoading(true);
+    try {
+      const ownFeed = false;
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/posts/feed?page=${pageToLoad}&limit=20`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ ownFeed }),
+          headers: {
+            'Authorization': `Bearer ${jwt}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-  // Handler to load more posts when near bottom
+      if (response.ok) {
+        const data = await response.json();
+
+        setPosts(prev => [...prev, ...(data.posts || [])]);
+
+        // If returned posts are less than limit, no more pages
+        if ((data.posts?.length ?? 0) < 20) {
+          setHasMore(false);
+        }
+      } else {
+        setError('Failed to load posts');
+      }
+    } catch {
+      setError('Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
+  }, [jwt]);
+
+  // On component mount and page change, load posts
+  useEffect(() => {
+    if (hasMore) {
+      fetchPosts(page);
+    }
+  }, [page, fetchPosts, hasMore]);
+
+  // Scroll handler to detect near bottom
   const handleScroll = () => {
-    if (!feedRef.current || loading) return;
+    if (loading || !hasMore || !feedRef.current) return;
 
     const { scrollTop, scrollHeight, clientHeight } = feedRef.current;
-    // Load more when scrolled within 150px of bottom
     if (scrollHeight - scrollTop - clientHeight < 150) {
-      loadMorePosts();
+      setPage(prevPage => prevPage + 1);
     }
   };
 
-  // Append 20 more posts, simulating network delay
-  const loadMorePosts = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setPosts(prevPosts => [
-        ...prevPosts,
-        ...createDummyPosts(prevPosts.length + 1, 20),
-      ]);
-      setLoading(false);
-    }, 1000);
-  };
-
-  const handlePostCreated = (newPost: any) => {
-    // Ensure media is required - only create post if mediaUrl exists
-    if (!newPost.mediaUrl) {
-      console.warn('Post creation failed: Media is required');
-      return;
-    }
-
-    // Convert backend post format to frontend format
-    const frontendPost = {
-      id: newPost.id,
-      username: newPost.author.displayName,
-      userAvatar: newPost.author.avatarUrl || `https://i.pravatar.cc/150?img=1`,
-      postImage: newPost.mediaUrl, // Media is required
-      caption: newPost.caption,
-      likes: newPost.likesCount,
-      timeAgo: "now",
-      isLiked: false,
-      isSaved: false,
-    };
-
-    // Add new post to the beginning of the posts array
-    setPosts((prevPosts) => [frontendPost, ...prevPosts]);
-  };
-
+  // Attach scroll listener
   useEffect(() => {
     const feedEl = feedRef.current;
     if (!feedEl) return;
-
     feedEl.addEventListener('scroll', handleScroll);
-    return () => {
-      feedEl.removeEventListener('scroll', handleScroll);
+    return () => feedEl.removeEventListener('scroll', handleScroll);
+  }, [loading, hasMore]);
+
+  // Handle new post created
+  const handlePostCreated = (newPost: any) => {
+    if (!newPost.mediaUrl) {
+      console.warn('Post creation failed: Media is required');
+      setError('Post creation failed: Media is required')
+      return;
+    }
+
+    const frontendPost = {
+      id: newPost.id,
+      caption: newPost.caption,
+      mediaUrl: newPost.mediaUrl,
+      mediaType: newPost.mediaType,
+      createdAt: new Date().toISOString(),
+      author: {
+        id: newPost.author.id,
+        displayName: newPost.author.displayName,
+        avatarUrl: newPost.author.avatarUrl,
+      },
     };
-  }, [loading]);
+
+    setPosts(prevPosts => [frontendPost, ...prevPosts]);
+  };
+
+  const formattedPosts = posts.map(post => ({
+    id: post.id,
+    content: post.caption,
+    date: new Date(post.createdAt).toLocaleDateString(),
+    mediaUrl: post.mediaUrl,
+    mediaType: post.mediaType,
+    author: {
+      displayName: post.author.displayName,
+      avatarUrl: post.author.avatarUrl,
+      username: post.author.username
+    }
+  }));
 
   return (
-    <div className="feed-container">
+    <div className="feed-container" ref={feedRef} style={{ overflowY: 'auto', height: '100vh' }}>
       {/* Header */}
       <div className="feed-header">
-        <img
-          src="chirp-landing-logo.png"
-          className="logo"
-          alt="Chirp Logo"
-          width={65}
-        />
-        <button
-          className="create-post-btn"
-          onClick={() => setShowCreatePost(true)}
-        >
+        <img src="chirp-landing-logo.png" className="logo" alt="Chirp Logo" width={65} />
+        <button className="create-post-btn" onClick={() => setShowCreatePost(true)}>
           + Create Post
         </button>
       </div>
 
       {/* Main Feed */}
-      <main className="feed"  style={{ overflowY: 'auto' }}>
-        <div className="posts-container" ref={feedRef}>
-          {posts.map(post => (
-            <article key={post.id} className="post">
-              {/* Post Header */}
-              <div className="post-header">
-                <div className="post-user-info">
-                  <img
-                    src={post.userAvatar}
-                    alt={post.username}
-                    className="user-avatar"
-                  />
-                  <span className="username">{post.username}</span>
-                </div>
-                <button className="post-options">⋯</button>
-              </div>
-
-              {/* Post Image */}
-              {post.postImage && (
-                <div className="post-image-container">
-                  <img
-                    src={post.postImage}
-                    alt="Post content"
-                    className="post-image"
-                  />
-                </div>
-              )}
-
-              {/* Post Actions */}
-              <div className="post-actions">
-                <div className="action-buttons">
-                  <button
-                    className={`action-btn like-btn ${post.isLiked ? 'liked' : ''}`}
-                    onClick={() => toggleLike(post.id)}
-                  >
-                    {post.isLiked ? '❤️' : '🤍'}
-                  </button>
-                  <button className="action-btn">💬</button>
-                  <button className="action-btn">📤</button>
-                </div>
-                <button
-                  className={`save-btn ${post.isSaved ? 'saved' : ''}`}
-                  onClick={() => toggleSave(post.id)}
-                >
-                  {post.isSaved ? '🔖' : '📋'}
-                </button>
-              </div>
-
-              {/* Post Info */}
-              <div className="post-info">
-                <div className="likes-count">
-                  {post.likes.toLocaleString()} likes
-                </div>
-                <div className="post-caption">
-                  <span className="username">{post.username}</span>
-                  <span className="caption-text">{post.caption}</span>
-                </div>
-                <div className="post-time">{post.timeAgo}</div>
-              </div>
-            </article>
+      <main className="feed">
+        <div className="posts-container">
+          {formattedPosts.map(post => (
+            <Post
+              key={post.id}
+              id={post.id}
+              content={post.content}
+              date={post.date}
+              mediaType={post.mediaType}
+              mediaUrl={post.mediaUrl}
+              author={post.author}
+            />
           ))}
-
           {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
+          {!hasMore && <div style={{ textAlign: 'center', padding: '1rem' }}>No more posts.</div>}
+          {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
         </div>
       </main>
 

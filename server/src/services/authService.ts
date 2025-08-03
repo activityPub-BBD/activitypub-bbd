@@ -87,9 +87,9 @@ export async function getGoogleJwt(req: Request, res: Response) {
             avatarUrl: picture ?? ''
           })
 
-          const addedToGrap = await UserService.addUserToGraphDb(existingUser);
+          const addedToGraph = await UserService.addUserToGraphDb(existingUser);
 
-          if (!addedToGrap) {
+          if (!addedToGraph) {
             throw new Error('User creation failed in graph db');
           }
         } catch (createError) {

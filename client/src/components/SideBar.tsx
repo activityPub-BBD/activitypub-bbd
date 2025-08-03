@@ -70,9 +70,7 @@ const SideBar: React.FC<SidebarProps> = ({
             {/* Navigation */}
             <nav className="nav-links">
                 <Link to="/profile">Profile</Link>
-                <Link to="/UserSearch">Search</Link>
-                <Link to="/CreatePost">Post</Link>
-                <Link to="/explore-communities">Explore Communities</Link>
+                <Link to="/search">Search</Link>
                 <Link to="/notifications">Notifications</Link>
                 <button onClick={handleLogout} className="logout-button">Logout</button>
             </nav>
