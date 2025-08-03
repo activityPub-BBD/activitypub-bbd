@@ -3,7 +3,7 @@ resource "aws_lb" "app_lb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = [data.aws_subnet.default_subnet_az1, data.aws_subnet.default_subnet_az2]
+  subnets            = [data.aws_availability_zones.available_zones.names[0], data.aws_availability_zones.available_zones.names[0]]
 
   enable_deletion_protection = false
 }
