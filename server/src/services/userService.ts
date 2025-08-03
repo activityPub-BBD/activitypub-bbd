@@ -84,51 +84,7 @@ const createRemoteUser = async (actorData: {
         followingUrl: actorData.followingUrl,
         isLocal: false,
         createdAt: new Date(),
-        followers: [],
-        following: []
     });
-}
-
-const addFollower = async (userId: string, followerId: string): Promise<IUser | null> => {
-    return await UserModel.findByIdAndUpdate(
-        userId,
-        { $addToSet: { followers: followerId } },
-        { new: true }
-    );
-}
-
-const addFollowing = async (userId: string, followingId: string): Promise<IUser | null> => {
-    return await UserModel.findByIdAndUpdate(
-        userId,
-        { $addToSet: { following: followingId } },
-        { new: true }
-    );
-}
-
-const removeFollower = async (userId: string, followerId: string): Promise<IUser | null> => {
-    return await UserModel.findByIdAndUpdate(
-        userId,
-        { $pull: { followers: followerId } },
-        { new: true }
-    );
-}
-
-const removeFollowing = async (userId: string, followingId: string): Promise<IUser | null> => {
-    return await UserModel.findByIdAndUpdate(
-        userId,
-        { $pull: { following: followingId } },
-        { new: true }
-    );
-}
-
-const getFollowers = async (userId: string): Promise<IUser[]> => {
-    const user = await UserModel.findById(userId).populate('followers');
-    return (user?.followers as unknown as IUser[]) || [];
-}
-
-const getFollowing = async (userId: string): Promise<IUser[]> => {
-    const user = await UserModel.findById(userId).populate('following');
-    return (user?.following as unknown as IUser[]) || [];
 }
 
 const addUserToGraphDb = async(user: IUser): Promise<boolean> => {
@@ -137,12 +93,14 @@ const addUserToGraphDb = async(user: IUser): Promise<boolean> => {
     `
     CREATE (p:Person {
       _id: $id,
+      actorId: $actorId,
       createdAt: $createdAt,
       inboxUrl: $inboxUrl
     })
     RETURN p
     `, { 
     id: user._id.toString(),
+    actorId: user.actorId,
     createdAt: user.createdAt instanceof Date
         ? user.createdAt.toISOString()
         : user.createdAt,
@@ -209,12 +167,6 @@ export const UserService = {
     createRemoteUser,
     updateUser,
     searchUsers,
-    addFollower,
-    addFollowing,
-    removeFollower,
-    removeFollowing,
-    getFollowers,
-    getFollowing,
     addUserToGraphDb
 }
 
