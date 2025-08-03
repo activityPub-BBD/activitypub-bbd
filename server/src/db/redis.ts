@@ -10,7 +10,10 @@ const redisClient = new Redis({
 
 export async function connectToRedis() {
     const response = await redisClient.ping();
-    if (response === "PONG") return;
+    if (response === "PONG"){ 
+        console.log("Redis is already connected");
+        return;
+    }
     await redisClient.connect();
     const res = await redisClient.ping();
     if(res === "PONG"){

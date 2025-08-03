@@ -21,10 +21,10 @@ import { config } from "@config/index.ts";
 import { connectToMongo, connectToNeo4j, connectToRedis, connectToS3 } from '@db/index.ts';
 import "@utils/logging.ts";
 
-connectToMongo();
-connectToS3();
-connectToNeo4j();
-connectToRedis();
+await connectToMongo();
+await connectToS3();
+await connectToNeo4j();
+await connectToRedis();
 
 app.listen(config.port, () => {
   console.log(`Server is running on http://localhost:${config.port} 🚀`);
