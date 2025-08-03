@@ -87,17 +87,19 @@ followRoutes.post("/follow/:oid/:accepted", requireAuth, async (req, res) => {
  */
 followRoutes.delete("/unfollow/:oid", requireAuth, async (req, res) => {
     try {
+        const oid = req.params.oid;
         if (!res.locals.user?.id) {
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
+        } else if (!oid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
+        } else{
+            const unfollow = await FollowService.unfollowUser(res.locals.user.id, oid);
+            if (!unfollow) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to unfollow user' });
+            } else{
+                return res.status(HTTP_STATUS.OK).end();
+            }
         }
-
-        const { oid } = req.body;
-        const unfollow = await FollowService.unfollowUser(res.locals.user.id, oid);
-
-        if (!unfollow) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to unfollow user' });
-        }
-        return res.status(HTTP_STATUS.OK).end();
     } catch (error) {
         console.error('Error unfollowing user:', error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
@@ -114,8 +116,12 @@ followRoutes.delete("/unfollow/:oid", requireAuth, async (req, res) => {
 followRoutes.get("/following/:oid", requireAuth, async (req, res) => {
     try {
         const oid = req.params.oid;
-        const following = await FollowService.retrieveFollowing(oid);
-        res.status(HTTP_STATUS.OK).json(following);
+        if (!oid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
+        } else{
+            const following = await FollowService.retrieveFollowing(oid);
+            res.status(HTTP_STATUS.OK).json(following);
+        }
     } catch (error) {
         console.error('Error retrieving following:', error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
@@ -152,8 +158,12 @@ followRoutes.get("/following", requireAuth, async (req, res) => {
 followRoutes.get("/followers/:oid", requireAuth, async (req, res) => {
     try {
         const oid = req.params.oid;
-        const followers = await FollowService.retrieveFollowers(oid);
-        res.status(HTTP_STATUS.OK).json(followers);
+        if (!oid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
+        } else{
+            const followers = await FollowService.retrieveFollowers(oid);
+            res.status(HTTP_STATUS.OK).json(followers);
+        }
     } catch (error) {
         console.error('Error retrieving followers:', error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
@@ -190,8 +200,12 @@ followRoutes.get("/followers", requireAuth, async (req, res) => {
 followRoutes.get("/suggested-mutuals/:oid", requireAuth, async (req, res) => {
     try {
         const oid = req.params.oid;
-        const suggestedMutuals = await FollowService.retrieveSuggestedMutuals(oid);
-        res.status(HTTP_STATUS.OK).json(suggestedMutuals);
+        if (!oid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
+        } else{
+            const suggestedMutuals = await FollowService.retrieveSuggestedMutuals(oid);
+            res.status(HTTP_STATUS.OK).json(suggestedMutuals);
+        }
     } catch (error) {
         console.error('Error retrieving suggested mutuals:', error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
