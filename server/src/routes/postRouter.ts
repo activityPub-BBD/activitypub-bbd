@@ -139,10 +139,10 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
 });
 
 /**
- * @route GET api/posts/feed
+ * @route POST api/posts/feed
  * @description Retrieve all posts (optionally paginated)
  */
-postRoutes.get('/feed', requireAuth, async (req, res) => {
+postRoutes.post('/feed', requireAuth, async (req, res) => {
   try {
     const  { ownFeed } = req.body;
     const page = parseInt(req.query.page as string) || 1;

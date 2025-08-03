@@ -30,7 +30,7 @@ const Notifications: React.FC = () => {
       <SideBar
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
-        username={user?.username || 'User'}
+        displayName={user?.displayName || 'User'}
       />
       <div className="notifications-feed">
         <h2 className="notifications-title">Notifications</h2>

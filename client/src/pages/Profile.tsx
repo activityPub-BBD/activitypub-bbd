@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { UserProfile } from "../components/UserProfile";
 // import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
@@ -10,21 +11,20 @@ interface Post {
     mediaType: string;
     createdAt: string;
     author: {
-        id: string;
         displayName: string;
         avatarUrl: string;
+        username: string;
     };
 }
 
 const Profile = () => {
-   // const location = useLocation();
-   // const { displayName, avatarUrl } = location.state || {};
-    const { user, jwt } = useAuthContext();
+    const { user, jwt, logout } = useAuthContext();
+    const navigate = useNavigate();
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-     useEffect(() => {
+    useEffect(() => {
     const fetchUserPosts = async () => {
       if (!user?.id || !jwt) {
         setLoading(false);
@@ -32,9 +32,12 @@ const Profile = () => {
       }
 
       try {
+        const ownFeed = true;
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/posts/feed?page=1&limit=20`,
+          `${import.meta.env.VITE_API_URL}/api/posts/feed?page=1&limit=20`,          
           {
+            method:'POST',
+            body: JSON.stringify({ ownFeed }),
             headers: {
               'Authorization': `Bearer ${jwt}`,
               'Content-Type': 'application/json',
@@ -46,6 +49,11 @@ const Profile = () => {
           const data = await response.json();
           setPosts(data.posts || []);
         } else {
+          if (response.status === 401) {
+            logout();
+            navigate('/');
+            return;
+          }
           console.error('Failed to fetch posts:', response.status);
           setError('Failed to load posts');
         }
@@ -66,7 +74,12 @@ const Profile = () => {
     content: post.caption,
     date: new Date(post.createdAt).toLocaleDateString(),
     mediaUrl: post.mediaUrl,
-    mediaType: post.mediaType
+    mediaType: post.mediaType,
+    author: {
+      displayName: post.author.displayName,
+      avatarUrl: post.author.avatarUrl,
+      username: post.author.username
+    }
   }));
 
   if (loading) {
@@ -78,6 +91,19 @@ const Profile = () => {
         height: '100vh' 
       }}>
         Loading profile...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        Error when trying to display profile
       </div>
     );
   }
