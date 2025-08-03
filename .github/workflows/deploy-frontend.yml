@@ -41,15 +41,21 @@ jobs:
       # === Install Dependencies ===
       - name: Install Dependencies
         run: npm install
+      - name: Save environment variables
+          # Save the variables into the .env.production file
+        run:
+          echo "VITE_API_URL=http://16.28.122.209:3000" >> .env.production &&
+          echo "VITE_GOOGLE_CLIENT_ID=692300555173-m16joirhb27h7cgoh9tnkatrs3af0den.apps.googleusercontent.com" >> .env.production
+          echo "VITE_GOOGLE_REDIRECT_URI=https://d7uwchvpta0lr.cloudfront.net/auth/callback" >> .env.production
+      - name: Test environment variables
+        # Test if the variables were being stored
+        run:
+          cat .env.production
 
-      # === Build Frontend with env vars from SSM ===
-      - name: Build Frontend (Vite with SSM ENV Vars)
-        run: |
-          echo "VITE_API_URL=http://16.28.122.209:3000" > .env
-          echo "VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --query "Parameter.Value" --output text)" >> .env
-          echo "VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --query "Parameter.Value" --output text)" >> .env
-          npm run build
-
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
       # === Upload to S3 ===
       - name: Upload to S3
         run: |
