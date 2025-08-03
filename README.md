@@ -38,20 +38,120 @@ DELETE /posts/:id — Delete a post (own posts only)
 GET /feed — Get main feed (posts from followed users, paginated)
 
 ### Follows
-GET /follow-summary/:oid — Get follow stats for a specific user by ID
-GET /follow-summary — Get follow stats for the authenticated user
+#### GET /follow-summary/:oid
+Get follow stats for a specific user
+```
+{
+  "id": "string",
+  "followingCount": 42,
+  "followerCount": 30
+}
+```
 
-POST /follow/:oid/:accepted — Follow a user or accept a follow request (authenticated)
-DELETE /unfollow/:oid — Unfollow a user (authenticated; uses oid from body)
+#### GET /follow-summary
+Get follow stats for the authenticated user
 
-GET /following/:oid — Get users that a specific user is following (authenticated)
-GET /following — Get users that the authenticated user is following
+```
+{
+  "id": "string",
+  "followingCount": 42,
+  "followerCount": 30
+}
+```
 
-GET /followers/:oid — Get followers of a specific user (authenticated)
-GET /followers — Get followers of the authenticated user
+#### POST /follow/:oid/:accepted
+Follow a user or accept a follow request
 
-GET /suggested-mutuals/:oid — Get suggested mutual connections for a specific user (authenticated)
-GET /suggested-mutuals — Get suggested mutual connections for the authenticated user
+```
+201 Created
+```
+
+#### DELETE /unfollow/:oid
+Unfollow a user
+
+```
+200 OK
+```
+
+#### GET /following/:oid
+Get users that a specific user is following
+
+```
+[
+  {
+    "id": "string",
+    "inboxUrl": "https://example.com/inbox",
+    "createdAt": "2025-08-03T11:00:00.000Z"
+  }
+]
+```
+
+#### GET /following
+Get users that the authenticated user is following
+
+```
+[
+  {
+    "id": "string",
+    "inboxUrl": "https://example.com/inbox",
+    "createdAt": "2025-08-03T11:00:00.000Z"
+  }
+]
+```
+
+#### GET /followers/:oid
+Get followers of a specific user
+
+```
+[
+  {
+    "id": "string",
+    "inboxUrl": "https://example.com/inbox",
+    "createdAt": "2025-08-03T11:00:00.000Z"
+  }
+]
+```
+
+#### GET /followers
+Get followers of the authenticated user
+
+```
+[
+  {
+    "id": "string",
+    "inboxUrl": "https://example.com/inbox",
+    "createdAt": "2025-08-03T11:00:00.000Z"
+  }
+]
+```
+
+#### GET /suggested-mutuals/:oid
+Get suggested mutual connections for a specific user
+
+```
+[
+  {
+    "id": "string",
+    "inboxUrl": "https://example.com/inbox",
+    "createdAt": "2025-08-03T11:00:00.000Z",
+    "followers": 12
+  }
+]
+```
+
+#### GET /suggested-mutuals
+Get suggested mutual connections for the authenticated user
+
+```
+[
+  {
+    "id": "string",
+    "inboxUrl": "https://example.com/inbox",
+    "createdAt": "2025-08-03T11:00:00.000Z",
+    "followers": 12
+  }
+]
+```
 
 ## 📌 Overview
 
