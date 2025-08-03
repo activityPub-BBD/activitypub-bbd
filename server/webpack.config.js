@@ -8,13 +8,32 @@ const __dirname = path.dirname(__filename);
 
 export default {
   target: 'node',
-  mode: 'production', // or 'development'
+  mode: 'production',
+
+  // Your entry point
   entry: './src/server.ts',
+
+  // Emit as a true ES module
+  experiments: {
+    outputModule: true,
+  },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'server.js',
+    filename: 'server.js',       // you can also use server.mjs
+    module: true,
+    library: {
+      type: 'module',
+    },
   },
-  externals: [nodeExternals()], // Don't bundle node_modules
+
+  // Treat externals as ESM imports
+  externalsType: 'module',
+  externals: [
+    nodeExternals({
+      importType: 'module',
+    }),
+  ],
+
   module: {
     rules: [
       {
@@ -24,6 +43,7 @@ export default {
       },
     ],
   },
+
   resolve: {
     extensions: ['.ts', '.js'],
     plugins: [
@@ -32,9 +52,7 @@ export default {
       }),
     ],
   },
-  experiments: {
-    outputModule: false, // Not needed unless you're outputting ESM
-  },
+
   stats: {
     errorDetails: true,
   },
