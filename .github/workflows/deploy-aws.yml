@@ -229,7 +229,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: changing working directory
-        run: cd server
+        run: ls
 
       # === Setup Node.js ===
       - name: Setup Node.js
