@@ -214,7 +214,7 @@ export const UserService = {
     removeFollower,
     removeFollowing,
     getFollowers,
-    getFollowing
+    getFollowing,
     addUserToGraphDb
 }
 
