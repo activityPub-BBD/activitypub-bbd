@@ -2,7 +2,11 @@ name: Deployment Pipeline - Backend
 env:
   AWS_REGION: af-south-1
 
+# deploy on push to main branch
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
