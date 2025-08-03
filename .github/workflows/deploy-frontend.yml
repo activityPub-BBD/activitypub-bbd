@@ -42,17 +42,18 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-       === Build Frontend with env vars from SSM ===
+      # === Build Frontend with env vars from SSM ===
       - name: Build Frontend (Vite with SSM ENV Vars)
         run: |
           export VITE_API_URL=http://16.28.122.209
           export VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --with-decryption --query "Parameter.Value" --output text)
           export VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --with-decryption --query "Parameter.Value" --output text)
+
           echo "Building with:"
           echo "VITE_API_URL=$VITE_API_URL"
           echo "VITE_CLIENT_ID=$VITE_CLIENT_ID"
           echo "VITE_GOOGLE_REDIRECT_URI=$VITE_GOOGLE_REDIRECT_URI"
-          
+
           npm run build
 
       # === Upload to S3 ===
@@ -60,14 +61,8 @@ jobs:
         run: |
           aws s3 sync ./dist/ s3://group-5-mastodon-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
 
-      # - name: Invalidate CloudFront cache
-      #   run: |
-      #     # Get CloudFront distribution ID for frontend
-      #     DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='case-supplier.projects.bbdgrad.com'].Id" --output text)
-      #     aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
-
+      # === Invalidate CloudFront cache ===
       - name: Invalidate CloudFront cache
         run: |
-          # Get CloudFront distribution ID for frontend
           DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='group-5-mastodon-s3-cloudfront-distribution-bucket.s3.af-south-1.amazonaws.com'].Id" --output text)
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
