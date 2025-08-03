@@ -1,5 +1,5 @@
 import { config } from "@config/index.ts";
-import { retrieveDb } from "@db/index.ts";
+import { retrieveDb, retrieveNeo4jDriver } from "@db/index.ts";
 import { registerModels, type IUser } from "@models/index.ts";
 import type { ICreateUserData } from "types/user.ts";
 
@@ -131,6 +131,27 @@ const getFollowing = async (userId: string): Promise<IUser[]> => {
     return (user?.following as unknown as IUser[]) || [];
 }
 
+const addUserToGraphDb = async(user: IUser): Promise<boolean> => {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    CREATE (p:Person {
+      _id: $id,
+      actorId: $name,
+      createdAt: $createdAt
+      domain: $email,
+    })
+    RETURN p
+    `, { 
+    id: user._id,
+    name: user.actorId,
+    createdAt: user.createdAt,
+    email: user.domain
+  });
+
+  return result.records.length > 0;
+}
+
 const validateUsername = (username: string): { valid: boolean; error?: string } => {
     
     if (!username || username.length < 1) {
@@ -194,6 +215,7 @@ export const UserService = {
     removeFollowing,
     getFollowers,
     getFollowing
+    addUserToGraphDb
 }
 
 

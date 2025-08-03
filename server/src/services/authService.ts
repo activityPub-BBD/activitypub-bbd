@@ -86,6 +86,12 @@ export async function getGoogleJwt(req: Request, res: Response) {
             displayName: `${given_name} ${family_name}`,
             avatarUrl: picture ?? ''
           })
+
+          const addedToGrap = await UserService.addUserToGraphDb(existingUser);
+
+          if (!addedToGrap) {
+            throw new Error('User creation failed in graph db');
+          }
         } catch (createError) {
           res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
             error: `User creation failed`,
