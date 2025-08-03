@@ -135,6 +135,14 @@ federation
         avatarUrl: "",
       });
 
+      // Add the user to the graph db
+      const success = await UserService.addUserToGraphDb(followerUser);
+      if (!success) {
+        logger.warn(
+          `Failed to add user to graph db: ${followerUser.displayName}`
+        );
+      }
+
       logger.info(
         `Created new remote user: ${followerUser.displayName} from ${followerDomain}`
       );
