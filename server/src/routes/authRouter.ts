@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { getGoogleJwt} from "@services/authService.ts";
-import { requireAuth } from "@middleware/auth.ts";
-import { HTTP_STATUS } from "@utils/httpStatus.ts";
+import { getGoogleJwt} from "@services/authService";
+import { requireAuth } from "@middleware/auth";
+import { HTTP_STATUS } from "@utils/httpStatus";
 
 export const authRoutes = Router();
 

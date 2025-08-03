@@ -16,11 +16,11 @@ import { getLogger } from "@logtape/logtape";
 import { RedisKvStore, RedisMessageQueue} from "@fedify/redis";
 import { Temporal } from "@js-temporal/polyfill";
 import { ObjectId } from "mongodb";
-import { UserService } from "@services/userService.ts";
-import { KeyService } from "@services/keyService.ts";
-import { PostService } from "@services/postService.ts";
-import { FollowService } from "@services/followService.ts";
-import { retrieveRedisClient } from "@db/redis.ts";
+import { UserService } from "@services/userService";
+import { KeyService } from "@services/keyService";
+import { PostService } from "@services/postService";
+import { FollowService } from "@services/followService";
+import { retrieveRedisClient } from "@db/redis";
 
 const logger = getLogger("server");
 

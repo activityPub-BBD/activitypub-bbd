@@ -29,10 +29,16 @@
     "@biomejs/biome": "^1.8.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.23",
-    "@types/multer": "^2.0.0"
+    "@types/multer": "^2.0.0",
+    "ts-loader": "^9.5.2",
+    "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "webpack": "^5.101.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-node-externals": "^3.0.0"
   },
   "scripts": {
     "dev": "dotenvx run -- tsx watch ./src/server.ts",
-    "prod": "dotenvx run -- node --import tsx ./src/server.ts"
+    "prod": "dotenvx run -- node --import tsx ./src/server.ts",
+    "build": "webpack --config webpack.config.js --mode production"
   }
 }

@@ -1,9 +1,9 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
-import { HTTP_STATUS } from "@utils/index.ts";
-import { config } from '@config/config.ts';
-import type { IGoogleIdTokenPayload } from 'types/auth.ts';
-import { UserService } from './userService.ts';
+import { HTTP_STATUS } from "@utils/index";
+import { config } from '@config/config';
+import type { IGoogleIdTokenPayload } from 'types/auth';
+import { UserService } from './userService';
 
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));

@@ -1,6 +1,6 @@
-import { config } from "@config/index.ts";
-import { retrieveDb } from "@db/index.ts";
-import { registerModels, type IKey } from "@models/index.ts";
+import { config } from "@config/index";
+import { retrieveDb } from "@db/index";
+import { registerModels, type IKey } from "@models/index";
 import { generateCryptoKeyPair, exportJwk, importJwk } from "@fedify/fedify";
 
 interface CryptoKeyPair {

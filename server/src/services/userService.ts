@@ -1,7 +1,7 @@
-import { config } from "@config/index.ts";
-import { retrieveDb, retrieveNeo4jDriver } from "@db/index.ts";
-import { registerModels, type IUser } from "@models/index.ts";
-import type { ICreateUserData } from "types/user.ts";
+import { config } from "@config/index";
+import { retrieveDb, retrieveNeo4jDriver } from "@db/index";
+import { registerModels, type IUser } from "@models/index";
+import type { ICreateUserData } from "types/user";
 
 
 const db = await retrieveDb(config.dbName);         

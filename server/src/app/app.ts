@@ -2,8 +2,8 @@ import express from "express";
 import cors from "cors";
 import { integrateFederation } from "@fedify/express";
 import { getLogger } from "@logtape/logtape";
-import { federation }  from "@federation/index.ts";
-import {authRoutes, postRoutes, userRoutes, followRoutes} from "@routes/index.ts"
+import { federation }  from "@federation/index";
+import {authRoutes, postRoutes, userRoutes, followRoutes} from "@routes/index"
 
 const logger = getLogger("server");
 
