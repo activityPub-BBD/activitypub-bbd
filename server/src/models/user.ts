@@ -17,8 +17,6 @@ export interface IUser extends Document {
   isLocal: boolean;
   createdAt: Date;
   location?: string;
-  followers: Types.ObjectId[];
-  following: Types.ObjectId[];
 }
 
 export const userSchema = new Schema<IUser>({
@@ -80,14 +78,6 @@ export const userSchema = new Schema<IUser>({
     type: String,
     default: ''  
   },
-  followers: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  following: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }]
 });
 
 export function getUserModel(conn: mongoose.Connection): Model<IUser> {
