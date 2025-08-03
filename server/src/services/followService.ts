@@ -23,14 +23,13 @@ export async function getFollowStats(id: string): Promise<{id: string;followingC
     };
 }
 
-export async function followUser(followerId: string, followingId: string, inboxUrl: string, accepted: boolean): Promise<boolean> {
+export async function followUser(followerId: string, followingId: string, accepted: boolean): Promise<boolean> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
         MATCH (A:Person {_id: $followerId}), (B:Person {_id: $followeeId})
         MERGE (A)-[R:Follows]->(B)
         ON CREATE SET
-            R.inboxUrl = $inboxUrl,
             R.accepted = $accepted,
             R.createdAt = $createdAt
         RETURN R;
@@ -38,7 +37,6 @@ export async function followUser(followerId: string, followingId: string, inboxU
         { 
             followerId,
             followingId,
-            inboxUrl,
             accepted,
             createdAt: new Date(),
          }
@@ -62,14 +60,13 @@ export async function unfollowUser(followerId: string, followingId: string): Pro
     return result.records[0].get('deleted') as boolean;
 }
 
-export async function retrieveFollowing(followerId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; }[]> {
+export async function retrieveFollowing(followerId: string): Promise<{ id: string; inboxUrl: string; createdAt: string; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
         MATCH (P:Person {_id: $followerId})-[:Follows]->(followee:Person)
         RETURN 
-            followee._id AS id, 
-            followee.actorId AS actorId, 
+            followee._id AS id,
             followee.inboxUrl AS inboxUrl, 
             followee.createdAt AS createdAt;
         `,
@@ -78,21 +75,19 @@ export async function retrieveFollowing(followerId: string): Promise<{ id: strin
     return result.records.map((record) => {
         return {
             id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
             inboxUrl: record.get('inboxUrl') as string,
             createdAt: new Date(record.get('createdAt')).toISOString(),
         };
     });
 }
 
-export async function retrieveFollowers(followingId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; }[]> {
+export async function retrieveFollowers(followingId: string): Promise<{ id: string; inboxUrl: string; createdAt: string; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
         MATCH (follower:Person)-[:Follows]->(:Person {_id: $followingId})
         RETURN 
             follower._id AS id,
-            follower.actorId AS actorId,
             follower.inboxUrl AS inboxUrl,
             follower.createdAt AS createdAt;
         `,
@@ -101,7 +96,6 @@ export async function retrieveFollowers(followingId: string): Promise<{ id: stri
     return result.records.map((record) => {
         return {
             id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
             inboxUrl: record.get('inboxUrl') as string,
             createdAt: new Date(record.get('createdAt')).toISOString(),
         };
@@ -109,7 +103,7 @@ export async function retrieveFollowers(followingId: string): Promise<{ id: stri
 }
 
 export async function retrieveSuggestedMutuals(followingId: string):
-    Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; followers: number; }[]> {
+    Promise<{ id: string; inboxUrl: string; createdAt: string; followers: number; }[]> {
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
@@ -120,7 +114,6 @@ export async function retrieveSuggestedMutuals(followingId: string):
         MATCH (follower:Person)-[:Follows]->(suggested)
         RETURN
             suggested._id AS id,
-            suggested.actorId AS actorId,
             suggested.inboxUrl AS inboxUrl,
             suggested.createdAt AS createdAt,
             count(follower) AS followers
@@ -132,7 +125,6 @@ export async function retrieveSuggestedMutuals(followingId: string):
     return result.records.map((record) => {
         return {
             id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
             inboxUrl: record.get('inboxUrl') as string,
             createdAt: new Date(record.get('createdAt')).toISOString(),
             followers: record.get('followers').toInt() as number
