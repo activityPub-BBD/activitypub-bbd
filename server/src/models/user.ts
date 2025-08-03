@@ -80,5 +80,17 @@ export const userSchema = new Schema<IUser>({
 });
 
 export function getUserModel(conn: mongoose.Connection): Model<IUser> {
-  return conn.model<IUser>("User", userSchema);
+  const model = conn.model<IUser>("User", userSchema);
+  
+  // Create compound index for username + domain to ensure uniqueness per domain
+  model.createIndexes().then(() => {
+    model.collection.createIndex(
+      { username: 1, domain: 1 },
+      { unique: true, name: 'username_domain_unique' }
+    ).catch(err => {
+      console.warn('Failed to create username_domain index:', err);
+    });
+  });
+  
+  return model;
 }

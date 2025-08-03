@@ -8,20 +8,13 @@ import { UserService } from './userService.ts';
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
         
-function generateUniqueUsername(firstName: string, lastName: string) {
-  const base = (firstName + lastName)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '');
-
-  let username = base;
-  let suffix = 0;
-  //TODO: Check db for username then add numbers for uniqueness
-  // while (await isUsernameTaken(username)) {
-  //   suffix++;
-  //   const trimmedBase = base.slice(0, 15 - suffix.toString().length); // keep total ≤ 15
-  //   username = `${trimmedBase}${suffix}`;
-  // }
-  return username;
+function generateUsernameFromEmail(email: string): string {
+  const username = email.split('@')[0];
+  
+  // emails come with dots, might cause issues with activitypub, but luckily according to gmaill john.doe@gmail.com and johndoe@gmail.com are the same email
+  const cleanUsername = username.toLowerCase().replace(/\./g, '');
+  
+  return cleanUsername;
 }
 
 export async function verifyGoogleJwt(jwt: string): Promise<IGoogleIdTokenPayload> {
@@ -71,8 +64,8 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const { id_token: jwt } = await response.json();
     const payload = await verifyGoogleJwt(jwt);
-    const { sub, given_name='', family_name='', picture=''  } = payload;
-    const username = generateUniqueUsername(given_name, family_name);
+    const { sub, given_name='', family_name='', picture='', email=''  } = payload;
+    const username = generateUsernameFromEmail(email);
     
     if (!sub) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -147,7 +140,7 @@ export async function updateUsername(req: Request, res: Response) {
     }
   
 
-     // Check if username is already taken
+     // Check if username is already taken on this domain
     const isAvailableUserName = await UserService.isUsernameAvailable(newUsername.toLowerCase());
     
     

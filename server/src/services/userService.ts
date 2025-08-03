@@ -11,8 +11,10 @@ const getUserByGoogleId = async (googleId: string): Promise<IUser | null> => {
     return await UserModel.findOne({ googleId });
 }
 
-const getUserByUsername = async (username: string): Promise<IUser | null> => {
-    return await UserModel.findOne({ username, isLocal: true });
+const getUserByUsername = async (username: string, domain?: string): Promise<IUser | null> => {
+    // For ActivityPub, we need to check username + domain combination
+    const targetDomain = domain || config.domain;
+    return await UserModel.findOne({ username, domain: targetDomain });
 }
 
 const createUser = async (userData: ICreateUserData): Promise<IUser> => {
@@ -52,8 +54,9 @@ const validateUsername = (username: string): { valid: boolean; error?: string } 
 }
 
 const isUsernameAvailable = async (username: string): Promise<boolean> => {
-    const existing = await UserModel.findOne({ username, isLocal: true });
-    console.log(existing)
+    const targetDomain =  config.domain;
+    const existing = await UserModel.findOne({ username, domain: targetDomain });
+    console.log('Checking username availability:', { username, domain: targetDomain, existing });
     return !existing;
 }
 
@@ -65,13 +68,19 @@ const updateUser = async (id: string, updates: Partial<IUser>): Promise<IUser | 
     );
 }
 
-const searchUsers = (query: string) => {
-  return UserModel.find({
+const searchUsers = (query: string, domain?: string) => {
+  const searchCriteria: any = {
     $or: [
       { username: { $regex: query, $options: 'i' } },
       { displayName: { $regex: query, $options: 'i' } }
     ]
-  }).limit(20).lean();
+  };
+  
+  if (domain) {
+    searchCriteria.domain = domain;
+  }
+  
+  return UserModel.find(searchCriteria).limit(20).lean();
 }
 
 export const UserService = {

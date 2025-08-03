@@ -4,6 +4,7 @@ import { HTTP_STATUS } from "@utils/httpStatus.ts";
 import { Router } from "express";
 import { PostService } from "@services/postService.ts";
 import { UserService } from "@services/userService.ts";
+import { config } from "@config/config.ts";
 
 export const userRoutes = Router();
 
@@ -20,7 +21,7 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
   }
 
   try {
-    const users = await UserService.searchUsers(query);
+    const users = await UserService.searchUsers(query, config.domain);
     res.json(
       users.map(user => ({
         username: user.username,
@@ -127,7 +128,7 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
 userRoutes.get('/:username', requireAuth, async (req, res) => {
   try {
     const { username } = req.params;
-    const user = await UserService.getUserByUsername(username);
+    const user = await UserService.getUserByUsername(username, config.domain);
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
@@ -159,7 +160,7 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
     const limit = Number(req.query.limit) || 20;
 
     // Find user by username
-    const user = await UserService.getUserByUsername(username);
+    const user = await UserService.getUserByUsername(username, config.domain);
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
