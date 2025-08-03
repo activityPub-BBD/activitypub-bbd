@@ -221,7 +221,7 @@ jobs:
     needs: terraform
     defaults:
       run:
-        working-directory: ./server
+        working-directory: server
 
     steps:
       # === Code Checkout ===
