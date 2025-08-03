@@ -19,6 +19,7 @@ import { Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import { UserService } from "@services/userService.ts";
 import { KeyService } from "@services/keyService.ts";
+import { PostService } from "@services/postService.ts";
 import { FollowService } from "@services/followService.ts";
 
 const logger = getLogger("server");
@@ -29,9 +30,8 @@ export const federation = createFederation({
 });
 
 //setup local actor
-federation.setActorDispatcher(
-  "/users/{identifier}",
-  async (ctx, identifier) => {
+federation
+  .setActorDispatcher("/users/{identifier}", async (ctx, identifier) => {
     logger.debug(`Actor dispatcher called for: ${identifier}`);
 
     const user = await UserService.getUserByUsername(identifier);
@@ -42,7 +42,7 @@ federation.setActorDispatcher(
 
     logger.info(`User found: ${user.displayName}`);
 
-    const keys = await ctx.getActorKeyPairs(identifier)
+    const keys = await ctx.getActorKeyPairs(identifier);
 
     return new Person({
       id: ctx.getActorUri(identifier),
@@ -67,11 +67,11 @@ federation.setActorDispatcher(
       publicKey: keys[0].cryptographicKey,
       assertionMethods: keys.map((key) => key.multikey),
     });
-  }
-).setKeyPairsDispatcher(async (ctx, identifier) => {
+  })
+  .setKeyPairsDispatcher(async (ctx, identifier) => {
     const user = await UserService.getUserByUsername(identifier);
     if (user == null) return [];
-    
+
     return await KeyService.getKeyPairsForUser(user._id.toString());
   });
 
@@ -201,69 +201,91 @@ federation
   });
 
 //setup local actor's outbox
-federation.setOutboxDispatcher(
-  "/users/{identifier}/outbox",
-  async (ctx, identifier, cursor) => {
-    //todo find user
-    const user = null;
+federation
+  .setOutboxDispatcher(
+    "/users/{identifier}/outbox",
+    async (ctx, identifier, cursor) => {
+      logger.debug(`Outbox dispatcher called for: ${identifier}`);
+
+      // Find user by username
+      const user = await UserService.getUserByUsername(identifier);
+      if (!user) {
+        logger.warn(`User not found for outbox: ${identifier}`);
+        return null;
+      }
+
+      const page = cursor ? parseInt(cursor) : 1;
+      const limit = 20;
+
+      // Get posts by user ID from database with pagination metadata
+      const postsResult = await PostService.getUserPosts(
+        user._id.toString(),
+        page,
+        limit
+      );
+
+      if (!postsResult || postsResult.items.length === 0) {
+        return {
+          items: [],
+          nextCursor: null,
+        };
+      }
+
+      const activities = postsResult.items.map((post) => {
+        const noteId = post.activityPubUri;
+
+        const note = new Note({
+          id: new URL(noteId),
+          content: post.caption,
+          to: PUBLIC_COLLECTION,
+          published: Temporal.Instant.fromEpochMilliseconds(
+            new Date(post.createdAt).getTime()
+          ),
+          attachments: post.mediaUrl
+            ? [
+                new Image({
+                  url: new URL(post.mediaUrl),
+                  mediaType: post.mediaType,
+                }),
+              ]
+            : undefined,
+          attribution: ctx.getActorUri(identifier),
+        });
+
+        return new Create({
+          id: new URL(`${noteId}/activity`),
+          actor: ctx.getActorUri(identifier),
+          object: note,
+          to: new URL("https://www.w3.org/ns/activitystreams#Public"),
+          published: Temporal.Instant.fromEpochMilliseconds(
+            new Date(post.createdAt).getTime()
+          ),
+        });
+      });
+
+      return {
+        items: activities,
+        nextCursor: postsResult.nextCursor,
+      };
+    }
+  )
+  .setFirstCursor(async (ctx, identifier) => {
+    return "1";
+  })
+  .setCounter(async (ctx, identifier) => {
+    const user = await UserService.getUserByUsername(identifier);
+    if (!user) return 0;
+
+    const posts = await PostService.getUserPosts(user._id.toString());
+    return posts.totalCount;
+  })
+  .setLastCursor(async (ctx, identifier) => {
+    const user = await UserService.getUserByUsername(identifier);
     if (!user) return null;
 
-    const page = cursor ? parseInt(cursor) : 1;
-    const limit = 20;
-    //todo get posts by user id
-    const posts = [
-      {
-        _id: new ObjectId("64e4f1f28f1c2b5c1f8d1234"),
-        author: new ObjectId("64e4f1c28f1c2b5c1f8d5678"), // Dummy user ID
-        caption: "A beautiful sunset at the beach 🌅",
-        mediaUrl: "https://your-s3-bucket.s3.amazonaws.com/media/sunset.jpg",
-        mediaType: "image/jpeg",
-        uri: "http://localhost:8000/users/cindi/posts/1",
-        likes: [
-          new ObjectId("64e4f1d38f1c2b5c1f8d9012"),
-          new ObjectId("64e4f1d48f1c2b5c1f8d3456"),
-        ],
-        likesCount: 2,
-        createdAt: new Date("2025-07-31T15:45:00Z"),
-      },
-    ];
-
-    const activities = posts.map((post) => {
-      const noteId = post.uri;
-
-      const note = new Note({
-        id: new URL(noteId),
-        content: post.caption,
-        to: PUBLIC_COLLECTION,
-        published: Temporal.Instant.fromEpochMilliseconds(
-          post.createdAt.getTime()
-        ),
-        attachments: [
-          new Image({
-            url: new URL(post.mediaUrl),
-            mediaType: post.mediaType,
-          }),
-        ],
-        attribution: ctx.getActorUri(identifier),
-      });
-
-      return new Create({
-        id: new URL(`${noteId}/activity`),
-        actor: ctx.getActorUri(identifier),
-        object: note,
-        to: new URL("https://www.w3.org/ns/activitystreams#Public"),
-        published: Temporal.Instant.fromEpochMilliseconds(
-          post.createdAt.getTime()
-        ),
-      });
-    });
-
-    return {
-      items: activities,
-      nextCursor: posts.length === limit ? (page + 1).toString() : null,
-    };
-  }
-);
+    const posts = await PostService.getUserPosts(user._id.toString());
+    return posts.last ? posts.last.toString() : null;
+  });
 
 federation
   .setFollowersDispatcher(
@@ -308,37 +330,36 @@ federation.setFollowingDispatcher(
 );
 
 // Posts
-federation.setObjectDispatcher(Note, "/posts/{id}", (ctx, values) => {
-  //TODO: return post by identifier
-  const post = {
-    _id: new ObjectId("64e4f1f28f1c2b5c1f8d1234"),
-    author: new ObjectId("64e4f1c28f1c2b5c1f8d5678"), // Dummy user ID
-    caption: "A beautiful sunset at the beach 🌅",
-    mediaUrl: "https://your-s3-bucket.s3.amazonaws.com/media/sunset.jpg",
-    mediaType: "image/jpeg",
-    uri: "https://chirp.example.com/posts/64e4f1f28f1c2b5c1f8d1234",
-    likes: [
-      new ObjectId("64e4f1d38f1c2b5c1f8d9012"),
-      new ObjectId("64e4f1d48f1c2b5c1f8d3456"),
-    ],
-    likesCount: 2,
-    createdAt: new Date("2025-07-31T15:45:00Z"),
-  };
-  if (!post) return null;
+federation.setObjectDispatcher(Note, "/posts/{id}", async (ctx, values) => {
+  logger.debug(`Object dispatcher called for post: ${values.id}`);
+
+  // Get post by ID from database
+  const post = await PostService.getPostById(values.id);
+  if (!post) {
+    logger.warn(`Post not found: ${values.id}`);
+    return null;
+  }
+
+  // Get the author's username for the actor URI
+  const authorUsername = post.author?.username || "unknown";
 
   return new Note({
     id: ctx.getObjectUri(Note, values),
-    attribution: ctx.getActorUri("unknown"), // We need to get the actual author from the post
+    attribution: ctx.getActorUri(authorUsername),
     to: PUBLIC_COLLECTION,
-    cc: ctx.getFollowersUri("unknown"), // We need to get the actual author from the post
+    cc: ctx.getFollowersUri(authorUsername),
     content: post.caption,
-    published: Temporal.Instant.fromEpochMilliseconds(post.createdAt.getTime()),
-    attachments: [
-      new Image({
-        url: new URL(post.mediaUrl),
-        mediaType: post.mediaType,
-      }),
-    ],
+    published: Temporal.Instant.fromEpochMilliseconds(
+      new Date(post.createdAt).getTime()
+    ),
+    attachments: post.mediaUrl
+      ? [
+          new Image({
+            url: new URL(post.mediaUrl),
+            mediaType: post.mediaType,
+          }),
+        ]
+      : undefined,
   });
 });
 

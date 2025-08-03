@@ -33,15 +33,41 @@ const getPostById = async (id: string): Promise<any | null> => {
   return await PostModel.findById(id).populate('author', 'username displayName avatarUrl');
 }
 
- const getUserPosts = async (userId: string, page = 1, limit = 20): Promise<IPost[]> => {
+ const getUserPosts = async (userId: string, page = 1, limit = 20): Promise<{
+   items: IPost[];
+   nextCursor: string | null;
+   last: number;
+   totalCount: number;
+ }> => {
     //for pagination
     const skip = (page - 1) * limit;
-    return await PostModel.find({ author: userId })
+    
+    const totalCount = await PostModel.countDocuments({ author: userId });
+    
+    // Get posts for current page
+    const posts = await PostModel.find({ author: userId })
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
+      .limit(limit + 1) // Get one extra to check if there are more pages
       .populate('author', 'username displayName avatarUrl')
       .lean();
+    
+    // Check if there are more pages
+    const hasMore = posts.length > limit;
+    const items = hasMore ? posts.slice(0, limit) : posts;
+    
+         // Determine nextCursor and last
+     const nextCursor = hasMore ? (page + 1).toString() : null;
+     const last = Math.ceil(totalCount / limit);
+
+     console.log("last: ", last);
+    
+         return {
+       items,
+       nextCursor,
+       last,
+       totalCount
+     };
 }
 
  const getFeedPosts = async (userId: string, page = 1, limit = 20): Promise<IPost[]> => {
