@@ -45,9 +45,9 @@ jobs:
       # === Build Frontend with env vars from SSM ===
       - name: Build Frontend (Vite with SSM ENV Vars)
         run: |
-          echo "VITE_API_URL=http://16.28.122.209:3000" > .env.production
-          echo "VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --query "Parameter.Value" --output text)" >> .env.production
-          echo "VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --query "Parameter.Value" --output text)" >> .env.production
+          echo "VITE_API_URL=http://16.28.122.209:3000" > .env
+          echo "VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --query "Parameter.Value" --output text)" >> .env
+          echo "VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --query "Parameter.Value" --output text)" >> .env
           npm run build
 
       # === Upload to S3 ===
