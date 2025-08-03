@@ -18,6 +18,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import { UserService } from "@services/userService.ts";
+import { KeyService } from "@services/keyService.ts";
 
 const logger = getLogger("server");
 
@@ -40,6 +41,8 @@ federation.setActorDispatcher(
 
     logger.info(`User found: ${user.displayName}`);
 
+    const keys = await ctx.getActorKeyPairs(identifier)
+
     return new Person({
       id: ctx.getActorUri(identifier),
       preferredUsername: user.username,
@@ -60,9 +63,16 @@ federation.setActorDispatcher(
       endpoints: new Endpoints({
         sharedInbox: ctx.getInboxUri(),
       }),
+      publicKey: keys[0].cryptographicKey,
+      assertionMethods: keys.map((key) => key.multikey),
     });
   }
-);
+).setKeyPairsDispatcher(async (ctx, identifier) => {
+    const user = await UserService.getUserByUsername(identifier);
+    if (user == null) return [];
+    
+    return await KeyService.getKeyPairsForUser(user._id.toString());
+  });
 
 //setup local actor's inbox
 federation

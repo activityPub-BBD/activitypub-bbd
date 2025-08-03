@@ -81,7 +81,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
       if (!existingUser) {
         try {
           existingUser = await UserService.createUser({
-            googleId: sub,
+            googleId: sub, // Google ID is provided for local users
             username,
             displayName: `${given_name} ${family_name}`,
             avatarUrl: picture ?? ''
@@ -151,7 +151,16 @@ export async function updateUsername(req: Request, res: Response) {
     }
 
     // Find user first to verify they exist
-    const existingUser = await UserService.getUserByGoogleId(res.locals.user!.googleId);
+    // For local users, we can use googleId, but we should also support other lookup methods
+    let existingUser = null;
+    if (res.locals.user?.googleId) {
+      existingUser = await UserService.getUserByGoogleId(res.locals.user.googleId);
+    }
+    
+    // If not found by googleId, try by username (for cases where googleId might not be set)
+    if (!existingUser && res.locals.user?.username) {
+      existingUser = await UserService.getUserByUsername(res.locals.user.username);
+    }
 
     if (!existingUser) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ 
@@ -161,7 +170,7 @@ export async function updateUsername(req: Request, res: Response) {
 
     // Update the user
     await UserService.updateUser(
-      existingUser.id,
+      existingUser._id.toString(),
       { username: newUsername.toLowerCase() }
     );
 

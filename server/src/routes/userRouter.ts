@@ -42,7 +42,8 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
  */
 userRoutes.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await UserService.getUserByGoogleId(res.locals.user!.googleId);
+    // The user should already be available from the auth middleware
+    const user = res.locals.user;
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
@@ -69,7 +70,7 @@ userRoutes.get('/me', requireAuth, async (req, res) => {
 userRoutes.put('/me', requireAuth, async (req, res) => {
   try {
 
-    const userId = res.locals.user!.id;
+    const userId = res.locals.user!._id.toString();
     const updates: Partial<IUser> = {};
 
     if (typeof req.body.displayName === 'string') {
@@ -166,7 +167,7 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
     }
 
     // Get posts by user ID, paginated
-    const posts = await PostService.getUserPosts(user.id, page, limit);
+    const posts = await PostService.getUserPosts(user._id.toString(), page, limit);
     console.log(posts)
     res.status(HTTP_STATUS.OK).json(posts);
   } catch (error) {

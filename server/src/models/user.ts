@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
-  googleId: string;
+  googleId?: string; // Optional - only for local users with Google auth
   domain: string; //example.com
   actorId: string;
   username: string;
@@ -24,8 +24,9 @@ export interface IUser extends Document {
 export const userSchema = new Schema<IUser>({
   googleId: {
     type: String,
-    required: true,
-    unique: true
+    required: false,
+    unique: true,
+    sparse: true // Allows multiple null/undefined values
   },
   username: {
     type: String,

@@ -24,8 +24,9 @@ const getUserByActorId = async (actorId: string): Promise<IUser | null> => {
 const createUser = async (userData: ICreateUserData): Promise<IUser> => {
     const protocol = config.domain.includes('localhost') ? 'http' : 'https';
     const baseURL = `${protocol}://${config.domain}`;
-    return await UserModel.create({ 
-        googleId: userData.googleId,
+    
+    // Use findOneAndUpdate with upsert to handle duplicate googleId gracefully
+    const updateData: any = {
         username: userData.username,
         domain: config.domain,
         actorId: `${baseURL}/users/${userData.username}`,
@@ -37,7 +38,24 @@ const createUser = async (userData: ICreateUserData): Promise<IUser> => {
         followingUrl: `${baseURL}/users/${userData.username}/following`,
         isLocal: true,
         createdAt: new Date().toISOString()
-    });
+    };
+    
+    // Only add googleId if it's provided
+    if (userData.googleId) {
+        updateData.googleId = userData.googleId;
+    }
+    
+    const query = userData.googleId ? { googleId: userData.googleId } : { username: userData.username, domain: config.domain };
+    
+    return await UserModel.findOneAndUpdate(
+        query,
+        updateData,
+        { 
+            upsert: true, 
+            new: true, 
+            setDefaultsOnInsert: true 
+        }
+    );
 }
 
 const createRemoteUser = async (actorData: {
@@ -53,7 +71,7 @@ const createRemoteUser = async (actorData: {
     avatarUrl?: string;
 }): Promise<IUser> => {
     return await UserModel.create({
-        googleId: '', // Remote users don't have Google ID
+        // googleId is not set for remote users
         username: actorData.username,
         domain: actorData.domain,
         actorId: actorData.actorId,
