@@ -3,7 +3,7 @@ import cors from "cors";
 import { integrateFederation } from "@fedify/express";
 import { getLogger } from "@logtape/logtape";
 import { federation }  from "@federation/index.ts";
-import {authRoutes, postRoutes, userRoutes} from "@routes/index.ts"
+import {authRoutes, postRoutes, userRoutes, followRoutes} from "@routes/index.ts"
 
 const logger = getLogger("server");
 
@@ -28,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/follows', followRoutes);
 
 //FEDIFY
 app.use(integrateFederation(federation, (req: express.Request) => {
