@@ -37,8 +37,21 @@ DELETE /posts/:id — Delete a post (own posts only)
 
 GET /feed — Get main feed (posts from followed users, paginated)
 
+### Follows
+GET /follow-summary/:oid — Get follow stats for a specific user by ID
+GET /follow-summary — Get follow stats for the authenticated user
 
+POST /follow/:oid/:accepted — Follow a user or accept a follow request (authenticated)
+DELETE /unfollow/:oid — Unfollow a user (authenticated; uses oid from body)
 
+GET /following/:oid — Get users that a specific user is following (authenticated)
+GET /following — Get users that the authenticated user is following
+
+GET /followers/:oid — Get followers of a specific user (authenticated)
+GET /followers — Get followers of the authenticated user
+
+GET /suggested-mutuals/:oid — Get suggested mutual connections for a specific user (authenticated)
+GET /suggested-mutuals — Get suggested mutual connections for the authenticated user
 
 ## 📌 Overview
 
