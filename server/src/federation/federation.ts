@@ -1,4 +1,4 @@
-import { createFederation, Person, Image, Create, Note, Follow, Accept, Undo, type Recipient, PUBLIC_COLLECTION, isActor } from "@fedify/fedify";
+import { createFederation, Person, Image, Create, Note, Follow, Accept, Undo, type Recipient, PUBLIC_COLLECTION, isActor, Endpoints } from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
 import { MemoryKvStore, InProcessMessageQueue } from "@fedify/fedify";
 import { Temporal } from "@js-temporal/polyfill";
@@ -36,9 +36,13 @@ federation.setActorDispatcher("/users/{identifier}", async (ctx, identifier) => 
       mediaType: "image/jpeg",
     }) : undefined,
     inbox: ctx.getInboxUri(identifier),
+    outbox: ctx.getOutboxUri(identifier),
     followers: ctx.getFollowersUri(identifier),
     following: ctx.getFollowingUri(identifier),
-    discoverable: true
+    discoverable: true,
+    endpoints: new Endpoints( {
+      sharedInbox: ctx.getInboxUri(),
+    })
   });
 });
 
