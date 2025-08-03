@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/SideBar.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
@@ -12,7 +12,7 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-const SideBar: React.FC<SidebarProps> = ({
+const SideBar: React.FC<SidebarProps> = React.memo(({
   displayName = "User",
   avatarUrl,
   followers = 39,
@@ -21,12 +21,34 @@ const SideBar: React.FC<SidebarProps> = ({
   onToggle,
 }) => {
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
-
+  const { logout, user } = useAuthContext();
+  const [stats, setStats] = useState({ followers: 0, following: 0 });
+  const [loading, setLoading] = useState(true);
   const handleLogout = () => {
     logout();
     navigate("/");
   };
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/users/${user.id}/stats`);
+        if (!res.ok) throw new Error("Failed to fetch user stats");
+        const data = await res.json();
+        setStats({ followers: data.followers || 0, following: data.following || 0 });
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+        setStats({ followers: 0, following: 0 });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [user?.id]);
 
   return (
     <>
@@ -59,10 +81,10 @@ const SideBar: React.FC<SidebarProps> = ({
           </div>
           <div className="sidebar-stats">
             <div>
-              <span className="count">{followers}</span>Followers
+              <span className="count"> {stats.followers}</span>Followers
             </div>
             <div>
-              <span className="count">{following}</span>Following
+              <span className="count"> {stats.following}</span>Following
             </div>
           </div>
         </div>
@@ -70,6 +92,8 @@ const SideBar: React.FC<SidebarProps> = ({
             {/* Navigation */}
             <nav className="nav-links">
                 <Link to="/profile">Profile</Link>
+                <Link to='/follower-tab'>Followers</Link>
+                <Link to='/following-tab'>Following</Link>
                 <Link to="/search">Search</Link>
                 <Link to="/notifications">Notifications</Link>
                 <button onClick={handleLogout} className="logout-button">Logout</button>
@@ -80,6 +104,6 @@ const SideBar: React.FC<SidebarProps> = ({
       {isOpen && <div className="overlay" onClick={onToggle} />}
     </>
   );
-};
+});
 
 export default SideBar;

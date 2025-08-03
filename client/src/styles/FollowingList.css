@@ -1,0 +1,46 @@
+.following-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.following-list {
+  list-style: none;
+  padding: 0;
+}
+
+.following-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.following-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+
+.following-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}

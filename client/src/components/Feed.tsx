@@ -3,6 +3,7 @@ import CreatePost from "./CreatePost";
 import '../styles/Feed.css';
 import { useAuthContext } from '../context/AuthContext';
 import Post from './Post';
+import {useNavigate} from "react-router-dom"
 
 interface Post {
   id: string;
@@ -18,8 +19,8 @@ interface Post {
 }
 
 const Feed: React.FC = () => {
-  const { jwt } = useAuthContext();
-
+  const { jwt, logout } = useAuthContext();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +51,7 @@ const Feed: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-
+        // Handle token expiration
         setPosts(prev => [...prev, ...(data.posts || [])]);
 
         // If returned posts are less than limit, no more pages
@@ -58,6 +59,11 @@ const Feed: React.FC = () => {
           setHasMore(false);
         }
       } else {
+        if (response.status === 401) {
+          logout();
+          navigate('/');
+          return;
+        }
         setError('Failed to load posts');
       }
     } catch {

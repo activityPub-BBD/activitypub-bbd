@@ -1,7 +1,6 @@
 import { type IPost } from "./UserProfile";
 
 export const Post = (post: IPost) => {
-    console.log(post)
   return (
     <div key={post.id} className="post-item">
       {/* Author info */}

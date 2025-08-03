@@ -6,6 +6,8 @@ import Profile from '../pages/Profile';
 import LandingPage from '../pages/LandingPage';
 import type { JSX } from 'react';
 import UserSearch from '../pages/UserSearch';
+import { FollowersList } from '../pages/FollowersTab';
+import { FollowingList } from '../pages/FollowingTab';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuthContext();
@@ -31,6 +33,22 @@ export const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Home />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/follower-tab" 
+        element={
+          <PrivateRoute>
+            <FollowersList />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/following-tab" 
+        element={
+          <PrivateRoute>
+            <FollowingList />
           </PrivateRoute>
         } 
       />

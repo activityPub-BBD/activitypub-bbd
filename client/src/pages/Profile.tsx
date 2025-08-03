@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { UserProfile } from "../components/UserProfile";
 // import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
@@ -17,7 +18,8 @@ interface Post {
 }
 
 const Profile = () => {
-    const { user, jwt } = useAuthContext();
+    const { user, jwt, logout } = useAuthContext();
+    const navigate = useNavigate();
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -47,6 +49,11 @@ const Profile = () => {
           const data = await response.json();
           setPosts(data.posts || []);
         } else {
+          if (response.status === 401) {
+            logout();
+            navigate('/');
+            return;
+          }
           console.error('Failed to fetch posts:', response.status);
           setError('Failed to load posts');
         }
