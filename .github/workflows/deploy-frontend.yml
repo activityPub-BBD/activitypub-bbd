@@ -41,21 +41,14 @@ jobs:
       # === Install Dependencies ===
       - name: Install Dependencies
         run: npm install
-      - name: Save environment variables
-          # Save the variables into the .env.production file
-        run:
-          echo "VITE_API_URL=http://16.28.122.209:3000" >> .env.production &&
-          echo "VITE_GOOGLE_CLIENT_ID=692300555173-m16joirhb27h7cgoh9tnkatrs3af0den.apps.googleusercontent.com" >> .env.production
-          echo "VITE_GOOGLE_REDIRECT_URI=https://d7uwchvpta0lr.cloudfront.net/auth/callback" >> .env.production
-      - name: Test environment variables
-        # Test if the variables were being stored
-        run:
-          cat .env.production
-
+        
       - name: Build
         run: npm run build
         env:
           NODE_ENV: production
+          VITE_API_URL: http://16.28.122.209:3000
+          VITE_GOOGLE_CLIENT_ID: 692300555173-m16joirhb27h7cgoh9tnkatrs3af0den.apps.googleusercontent.com
+          VITE_GOOGLE_REDIRECT_URI: https://d7uwchvpta0lr.cloudfront.net/auth/callback
       # === Upload to S3 ===
       - name: Upload to S3
         run: |
