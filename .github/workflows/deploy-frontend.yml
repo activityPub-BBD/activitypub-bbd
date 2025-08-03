@@ -46,8 +46,8 @@ jobs:
       - name: Build Frontend (Vite with SSM ENV Vars)
         run: |
           export VITE_API_URL=http://16.28.122.209:3000
-          export VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --with-decryption --query "Parameter.Value" --output text)
-          export VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --with-decryption --query "Parameter.Value" --output text)
+          export VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --query "Parameter.Value" --output text)
+          export VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --query "Parameter.Value" --output text)
           npm run build
 
       # === Upload to S3 ===
