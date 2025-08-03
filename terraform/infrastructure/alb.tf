@@ -26,7 +26,7 @@ resource "aws_lb_target_group_attachment" "api_attachment" {
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
   description = "Allow HTTPS in"
-  vpc_id      = aws_vpc.way_out_vpc.id
+  vpc_id      = aws_default_vpc.default_vpc.id
 
   ingress {
     from_port   = 443
