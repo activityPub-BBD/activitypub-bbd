@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-timport "../styles/CreatePost.css";
+import "../styles/CreatePost.css";
 import { useAuthContext } from "../context/AuthContext";
 
 interface CreatePostProps {
