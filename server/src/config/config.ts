@@ -22,6 +22,12 @@ interface Config {
     auraInstanceId: string;
     auraInstanceName: string;
   };
+  redis: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+  }
 }
 
 /** PLEASE DO NOT HARD CODE SECRETS FOR THE DEFAULT VALUES */
@@ -45,6 +51,12 @@ const config: Config = {
     password: process.env.NEO4J_PASSWORD || "neo4j",
     auraInstanceId: process.env.AURA_INSTANCE_ID || "neo4j",
     auraInstanceName: process.env.AURA_INSTANCE_NAME || "neo4j",
+  },
+  redis: {
+    host: process.env.REDIS_HOST || "localhost",
+    port: Number(process.env.REDIS_PORT) || 6379,
+    username: process.env.REDIS_USERNAME || "",
+    password: process.env.REDIS_PASSWORD || "",
   },
 };
 

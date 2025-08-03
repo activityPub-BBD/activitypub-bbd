@@ -1,16 +1,19 @@
-import { requireAuth } from '@middleware/auth.ts';
-import { HTTP_STATUS } from '@utils/httpStatus.ts';
+import { requireAuth } from '@middleware/auth';
+import { HTTP_STATUS } from '@utils/httpStatus';
 import { Router } from 'express';
 import multer from 'multer';
-import { PostService } from '@services/postService.ts';
-import type { IPostResponse } from 'types/post.ts';
+import { PostService } from '@services/postService';
+import type { IPostResponse } from 'types/post';
+import { federation } from "@federation/index";
+import { Create, Note } from "@fedify/fedify";
+import { config } from "@config/config";
 
 export const postRoutes = Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, 
+    fileSize: 10 * 1024 * 1024,
   },
   fileFilter: (req: any, file: any, cb: any) => {
     const allowedTypes = [
@@ -37,11 +40,22 @@ const upload = multer({
  * @route POST api/posts
  * @description Create and upload a post
  */
-postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
-  
+postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
+    const fullUrl = `https://${config.domain}${req.originalUrl}`;
+    let requestBody: any = undefined;
+    if (!["GET", "HEAD"].includes(req.method)) {
+      requestBody = req.body ? JSON.stringify(req.body) : undefined;
+    }
+    const fetchRequest = new Request(fullUrl, {
+      method: req.method,
+      headers: req.headers as any,
+      body: requestBody,
+    });
+    const ctx = federation.createContext(fetchRequest, undefined);
+
     const { caption } = req.body;
-    
+
     if (!caption) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption is required' });
     }
@@ -71,9 +85,34 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
 
     const populatedPost = await PostService.getPostById(post.id);
 
-    
+
     if (!populatedPost) {
-      return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to retrieve created post' });
+      return res
+        .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
+        .json({ error: "Failed to retrieve created post" });
+    }
+
+    try {
+      const username = populatedPost.author.username;
+      const noteArgs = { identifier: username, id: post.id.toString() };
+
+      const note = await ctx.getObject(Note, noteArgs);
+
+      if (note) {
+        await ctx.sendActivity(
+          { identifier: username },
+          "followers",
+          new Create({
+            id: new URL(`#activity`, note?.id ?? undefined),
+            object: note,
+            actors: note?.attributionIds,
+            tos: note?.toIds,
+            ccs: note?.ccIds,
+          })
+        );
+      }
+    } catch (federationError) {
+      console.error("Failed to send Create(Note) activity:", federationError);
     }
 
     const response: IPostResponse = {
@@ -100,10 +139,10 @@ postRoutes.post('/', requireAuth, upload.single('image'), async (req, res) => {
 });
 
 /**
- * @route GET api/posts/feed
+ * @route POST api/posts/feed
  * @description Retrieve all posts (optionally paginated)
  */
-postRoutes.get('/feed', requireAuth, async (req, res) => {
+postRoutes.post('/feed', requireAuth, async (req, res) => {
   try {
     const  { ownFeed } = req.body;
     const page = parseInt(req.query.page as string) || 1;
@@ -132,7 +171,7 @@ postRoutes.get('/feed', requireAuth, async (req, res) => {
 postRoutes.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const success = await PostService.deletePost(id, res.locals.user!.id);
 
     if (!success) {

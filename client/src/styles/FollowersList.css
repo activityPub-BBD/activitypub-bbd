@@ -1,0 +1,58 @@
+.followers-container {
+  padding: 1rem;
+  max-width: 500px;
+  margin: auto;
+  font-family: system-ui, sans-serif;
+}
+
+.back-button {
+  background-color: transparent;
+  border: none;
+  color: #007bff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.followers-list {
+  list-style: none;
+  padding: 0;
+}
+
+.follower-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.follower-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.follower-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.follower-info strong {
+  font-size: 1rem;
+}
+
+.follower-info span {
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.error {
+  color: red;
+  margin-top: 1rem;
+}

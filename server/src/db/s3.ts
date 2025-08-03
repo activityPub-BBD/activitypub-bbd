@@ -1,6 +1,6 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { config } from "@config/index.ts";
-import { Mutex } from "@utils/index.ts";
+import { config } from "@config/index";
+import { Mutex } from "@utils/index";
 
 const s3Client = new Mutex<S3Client | undefined>(undefined);
 

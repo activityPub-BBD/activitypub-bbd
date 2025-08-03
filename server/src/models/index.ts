@@ -1,11 +1,11 @@
 import type { Connection, Model } from "mongoose";
-import { postSchema, type IPost } from "./post.ts";
-import { userSchema, type IUser } from "./user.ts";
-import { keySchema, type IKey } from "./key.ts";
+import { postSchema, type IPost } from "./post";
+import { userSchema, type IUser } from "./user";
+import { keySchema, type IKey } from "./key";
 
-export * from "./post.ts";
-export * from "./user.ts";
-export * from "./key.ts";
+export * from "./post";
+export * from "./user";
+export * from "./key";
 
 export function registerModels(conn: Connection): {
   User: Model<IUser>;

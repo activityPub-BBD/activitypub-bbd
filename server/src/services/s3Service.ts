@@ -1,6 +1,6 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { config } from "@config/config.ts";
-import { retrieveS3Client } from "@db/s3.ts";
+import { config } from "@config/config";
+import { retrieveS3Client } from "@db/s3";
 import { v4 as uuidv4 } from "uuid";
 
 export const uploadImageToS3 = async (

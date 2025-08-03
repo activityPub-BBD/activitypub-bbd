@@ -44,7 +44,8 @@ const UserSearch: React.FC = () => {
       <SideBar
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
-        username={user?.username || 'User'}
+        displayName={user?.displayName || 'User'}
+        avatarUrl={user?.avatarUrl}
       />
       <div className="search-feed">
         <h2 className="search-title">Search Users</h2>

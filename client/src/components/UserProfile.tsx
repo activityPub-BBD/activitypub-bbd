@@ -2,11 +2,19 @@ import React, { useState, useRef, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import '../styles/UserProfile.css';
+import Post from './Post';
 
-interface Post {
-  id: number;
+export interface IPost {
+  id: string;
   content: string;
   date: string;
+  mediaUrl: string;
+  mediaType: string;
+  author: {           
+    avatarUrl : string,
+    displayName: string,
+    username: string,
+  }
 }
 
 interface UserProfileProps {
@@ -14,7 +22,7 @@ interface UserProfileProps {
   initialBio: string;
   initialAvatarUrl: string;
   initialLocation: string;
-  posts: Post[];
+  posts: IPost[];
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -25,7 +33,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   posts
 }) => {
   const navigate = useNavigate();
-  const { user, jwt, setUser, logout } = useAuthContext();
+  const { jwt, setUser, logout } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);
@@ -61,7 +69,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       });
 
       if (updateResponse.ok) {
-        const updatedData = await updateResponse.json();
         
         // Update user context
         setUser(prev => prev ? {
@@ -78,7 +85,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         const errorData = await updateResponse.json();
         
         // Handle token expiration
-        if (updateResponse.status === 401 && errorData.code === 'TOKEN_EXPIRED') {
+        if (updateResponse.status === 401) {
           setError('Your session has expired. Please sign in again.');
           logout();
           navigate('/');
@@ -274,14 +281,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       <h3 className="posts-header">Your Posts</h3>
       <div className="posts-container">
         {posts.length === 0 ? (
-          <p className="no-posts">No posts yet.</p>
+          <p className="no-posts">No posts yet. Create your first post!</p>
         ) : (
-          posts.map(post => (
-            <div key={post.id} className="post-item">
-              <p className="post-content">{post.content}</p>
-              <small className="post-date">{post.date}</small>
-            </div>
-          ))
+          posts.map(post => {
+            console.log(post)
+            return (
+              <Post
+                id={post.id}
+                content={post.content}
+                date={post.date}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                author={post.author}
+              />
+            );})
         )}
       </div>
     </div>

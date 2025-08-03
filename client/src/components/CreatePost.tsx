@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import "../styles/CreatePost.css";
+timport "../styles/CreatePost.css";
 import { useAuthContext } from "../context/AuthContext";
 
 interface CreatePostProps {
@@ -58,6 +58,11 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onPostCreated }) => {
 
     if (caption.length > 2200) {
       setError("Caption must be 2200 characters or less.");
+      return;
+    }
+
+    if (!selectedFile) {
+      setError("Media is required");
       return;
     }
 

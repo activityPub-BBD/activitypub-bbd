@@ -1,1 +1,1 @@
-export * from "./federation.ts"
+export * from "./federation"
