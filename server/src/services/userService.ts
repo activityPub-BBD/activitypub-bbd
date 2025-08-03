@@ -40,16 +40,16 @@ const addUserToGraphDb = async(user: IUser): Promise<boolean> => {
     `
     CREATE (p:Person {
       _id: $id,
-      actorId: $name,
-      createdAt: $createdAt
-      domain: $email,
+      createdAt: $createdAt,
+      inboxUrl: $inboxUrl
     })
     RETURN p
     `, { 
-    id: user._id,
-    name: user.actorId,
-    createdAt: user.createdAt,
-    email: user.domain
+    id: user._id.toString(),
+    createdAt: user.createdAt instanceof Date
+        ? user.createdAt.toISOString()
+        : user.createdAt,
+    inboxUrl: user.inboxUrl
   });
 
   return result.records.length > 0;
