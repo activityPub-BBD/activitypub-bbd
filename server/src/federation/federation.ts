@@ -18,6 +18,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { ObjectId } from "mongodb";
 import { UserService } from "@services/userService.ts";
 import { KeyService } from "@services/keyService.ts";
+import { FollowService } from "@services/followService.ts";
 import { retrieveRedisClient } from "@db/redis.ts";
 
 const logger = getLogger("server");
@@ -142,9 +143,10 @@ federation
     }
 
     // Add the follower to the following user's followers list
-    await UserService.addFollower(
+    await FollowService.followUser(
+      followerUser._id.toString(),
       followingUser._id.toString(),
-      followerUser._id.toString()
+      true
     );
 
     logger.info(
@@ -190,9 +192,9 @@ federation
     }
 
     // Remove the follower from the unfollowed user's followers list
-    await UserService.removeFollower(
-      unfollowedUser._id.toString(),
-      unfollowerUser._id.toString()
+    await FollowService.unfollowUser(
+      unfollowerUser._id.toString(),
+      unfollowedUser._id.toString()
     );
 
     logger.info(
@@ -273,7 +275,7 @@ federation
       const user = await UserService.getUserByUsername(identifier);
       if (!user) return { items: [] };
 
-      const followers = await UserService.getFollowers(user._id.toString());
+      const followers = await FollowService.retrieveFollowers(user._id.toString());
       const items: Recipient[] = followers.map((f) => ({
         id: new URL(f.actorId),
         inboxId: new URL(f.inboxUrl),
@@ -286,8 +288,8 @@ federation
     const user = await UserService.getUserByUsername(identifier);
     if (!user) return 0;
 
-    const followers = await UserService.getFollowers(user._id.toString());
-    return followers.length;
+    const stats = await FollowService.getFollowStats(user._id.toString());
+    return stats.followerCount;
   });
 
 federation.setFollowingDispatcher(
@@ -297,7 +299,7 @@ federation.setFollowingDispatcher(
     const user = await UserService.getUserByUsername(identifier);
     if (!user) return null;
 
-    const following = await UserService.getFollowing(user._id.toString());
+    const following = await FollowService.retrieveFollowing(user._id.toString());
     const items = following.map((f) => new URL(f.actorId));
 
     return {
