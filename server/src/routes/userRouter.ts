@@ -2,8 +2,8 @@ import { requireAuth } from "@middleware/auth.ts";
 import type { IUser } from "@models/index.ts";
 import { HTTP_STATUS } from "@utils/httpStatus.ts";
 import { Router } from "express";
-import { PostService } from "services/postService.ts";
-import { UserService } from "services/userService.ts";
+import { PostService } from "@services/postService.ts";
+import { UserService } from "@services/userService.ts";
 
 export const userRoutes = Router();
 
@@ -41,7 +41,7 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
  */
 userRoutes.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await UserService.getUserByGoogleId(req.user!.googleId);
+    const user = await UserService.getUserByGoogleId(res.locals.user!.googleId);
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
@@ -68,7 +68,7 @@ userRoutes.get('/me', requireAuth, async (req, res) => {
 userRoutes.put('/me', requireAuth, async (req, res) => {
   try {
 
-    const userId = req.user!.id;
+    const userId = res.locals.user!.id;
     const updates: Partial<IUser> = {};
 
     if (typeof req.body.displayName === 'string') {

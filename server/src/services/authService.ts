@@ -1,7 +1,6 @@
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import type { Request, Response } from 'express';
-import { HTTP_STATUS } from "../utils/httpStatus.ts";
-import { retrieveDb } from '@db/db.ts';
+import { HTTP_STATUS } from "@utils/index.ts";
 import { config } from '@config/config.ts';
 import type { IGoogleIdTokenPayload } from 'types/auth.ts';
 import { UserService } from './userService.ts';
@@ -30,7 +29,7 @@ export async function verifyGoogleJwt(jwt: string): Promise<IGoogleIdTokenPayloa
     // verify jwt's signature and validate claims
     const { payload } = await jwtVerify<IGoogleIdTokenPayload>(jwt, JWKS, {
       issuer: 'https://accounts.google.com',
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: config.googleClientId
     });
     return payload;
 
@@ -48,9 +47,9 @@ export async function getGoogleJwt(req: Request, res: Response) {
 
     const params = new URLSearchParams({
       code: code,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+      client_id: config.googleClientId,
+      client_secret: config.googleClientSecret,
+      redirect_uri: config.googleRedirectUri,
       grant_type: "authorization_code",
     });
 
@@ -159,7 +158,7 @@ export async function updateUsername(req: Request, res: Response) {
     }
 
     // Find user first to verify they exist
-    const existingUser = await UserService.getUserByGoogleId(req.user!.googleId);
+    const existingUser = await UserService.getUserByGoogleId(res.locals.user!.googleId);
 
     if (!existingUser) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ 

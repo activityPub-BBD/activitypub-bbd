@@ -3,7 +3,7 @@ import { type IPost } from '../models/post.ts';
 import type { ICreatePostData } from 'types/post.ts';
 import { config } from '@config/config.ts';
 import { uploadImageToS3 } from "./s3Service.ts";
-import { retrieveDb } from "@db/db.ts";
+import { retrieveDb } from "@db/mongo.ts";
 import { registerModels } from "@models/index.ts";
 
 
