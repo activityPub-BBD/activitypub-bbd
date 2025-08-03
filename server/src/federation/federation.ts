@@ -13,20 +13,22 @@ import {
   Endpoints,
 } from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
-import { MemoryKvStore, InProcessMessageQueue } from "@fedify/fedify";
+import { RedisKvStore, RedisMessageQueue} from "@fedify/redis";
 import { Temporal } from "@js-temporal/polyfill";
-import { Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import { UserService } from "@services/userService.ts";
 import { KeyService } from "@services/keyService.ts";
 import { PostService } from "@services/postService.ts";
 import { FollowService } from "@services/followService.ts";
+import { retrieveRedisClient } from "@db/redis.ts";
 
 const logger = getLogger("server");
 
+const redisClient = await retrieveRedisClient();
+
 export const federation = createFederation({
-  kv: new MemoryKvStore(),
-  queue: new InProcessMessageQueue(),
+  kv: new RedisKvStore(redisClient),
+  queue: new RedisMessageQueue(() => redisClient.duplicate()),
 });
 
 //setup local actor
