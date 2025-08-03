@@ -4,6 +4,7 @@ import { MemoryKvStore, InProcessMessageQueue } from "@fedify/fedify";
 import { Temporal } from "@js-temporal/polyfill";
 import { Types } from 'mongoose';
 import { ObjectId } from "mongodb";
+import { UserService } from "@services/userService.ts";
 
 const logger = getLogger("server");
 
@@ -16,27 +17,17 @@ export const federation = createFederation({
 federation.setActorDispatcher("/users/{identifier}", async (ctx, identifier) => {
   logger.debug(`Actor dispatcher called for: ${identifier}`);
 
-  // find local actor/user
-  // const user = await userService.findByUsername(identifier);
-  // if (!user) {
-  //   logger.warn(`User not found: ${identifier}`);
-  //   return null;
-  // }
+  const user = await UserService.getUserByUsername(identifier);
+  if (!user) {
+    logger.warn(`User not found: ${identifier}`);
+    return null;
+  }
 
-  const user = {
-      _id: new Types.ObjectId(),
-      googleId: '123456789012345678901',
-      domain: 'example.com',
-      displayName: 'Cindi',
-      bio: 'This is a dummy user for testing purposes.',
-      uri: 'http://localhost:8000/users/cindi',
-      inbox: 'http://localhost:8000/users/cindi/inbox'
-  };
   logger.info(`User found: ${user.displayName}`);
 
   return new Person({
     id: ctx.getActorUri(identifier),
-    preferredUsername: user.displayName,
+    preferredUsername: user.username,
     name: user.displayName,
     url: ctx.getActorUri(identifier),
     summary: user.bio || "",
