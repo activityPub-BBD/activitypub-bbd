@@ -19,7 +19,7 @@ resource "aws_lb_target_group" "api" {
 
 resource "aws_lb_target_group_attachment" "api_attachment" {
   target_group_arn = aws_lb_target_group.api.arn
-  target_id        = aws_instance.way_out_ec2.id
+  target_id        = aws_instance.group_5_mastodon_ec2_instance.id
   port             = 3000
 }
 
