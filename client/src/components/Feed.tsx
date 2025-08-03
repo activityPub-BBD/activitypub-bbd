@@ -113,9 +113,9 @@ const Feed: React.FC = () => {
       mediaType: newPost.mediaType,
       createdAt: new Date().toISOString(),
       author: {
-        id: newPost.author.id,
         displayName: newPost.author.displayName,
         avatarUrl: newPost.author.avatarUrl,
+        username: newPost.author.username
       },
     };
 

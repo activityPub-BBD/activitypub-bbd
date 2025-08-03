@@ -8,6 +8,7 @@ import type { JSX } from 'react';
 import UserSearch from '../pages/UserSearch';
 import { FollowersList } from '../pages/FollowersTab';
 import { FollowingList } from '../pages/FollowingTab';
+import Notifications from '../pages/Notifications';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuthContext();
@@ -49,6 +50,14 @@ export const AppRoutes = () => {
         element={
           <PrivateRoute>
             <FollowingList />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
+        path="/notifications" 
+        element={
+          <PrivateRoute>
+            <Notifications />
           </PrivateRoute>
         } 
       />

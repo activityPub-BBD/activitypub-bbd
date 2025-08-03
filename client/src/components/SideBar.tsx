@@ -15,8 +15,6 @@ interface SidebarProps {
 const SideBar: React.FC<SidebarProps> = React.memo(({
   displayName = "User",
   avatarUrl,
-  followers = 39,
-  following = 2000,
   isOpen,
   onToggle,
 }) => {
@@ -79,25 +77,29 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
             />
             <div className="sidebar-username">{displayName}</div>
           </div>
-          <div className="sidebar-stats">
-            <div>
-              <span className="count"> {stats.followers}</span>Followers
+          {!loading && (
+            <div className="sidebar-stats">
+              <div>
+                <span className="count"> {stats.followers}</span>Followers
+              </div>
+              <div>
+                <span className="count"> {stats.following}</span>Following
+              </div>
             </div>
-            <div>
-              <span className="count"> {stats.following}</span>Following
-            </div>
-          </div>
+          )}
         </div>
 
-            {/* Navigation */}
-            <nav className="nav-links">
-                <Link to="/profile">Profile</Link>
-                <Link to='/follower-tab'>Followers</Link>
-                <Link to='/following-tab'>Following</Link>
-                <Link to="/search">Search</Link>
-                <Link to="/notifications">Notifications</Link>
-                <button onClick={handleLogout} className="logout-button">Logout</button>
-            </nav>
+        {/* Navigation */}
+        <nav className="nav-links">
+          <Link to="/profile">Profile</Link>
+          <Link to="/follower-tab">Followers</Link>
+          <Link to="/following-tab">Following</Link>
+          <Link to="/search">Search</Link>
+          <Link to="/notifications">Notifications</Link>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        </nav>
       </aside>
 
       {/* Optional overlay when sidebar open on mobile */}
