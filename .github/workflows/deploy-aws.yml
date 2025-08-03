@@ -259,6 +259,10 @@ jobs:
           echo "GOOGLE_CLIENT_SECRET=$(aws ssm get-parameter --name '/google/client_secret' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
           echo "AURA_INSTANCEID=$(aws ssm get-parameter --name '/dbconfig/aura/instance_id' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
           echo "AURA_INSTANCENAME=$(aws ssm get-parameter --name '/dbconfig/aura/instance_name' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_HOST=$(aws ssm get-parameter --name '/dbconfig/redis/host' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_PORT=$(aws ssm get-parameter --name '/dbconfig/redis/port' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_USERNAME=$(aws ssm get-parameter --name '/dbconfig/redis/username' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_PASSWORD=$(aws ssm get-parameter --name '/dbconfig/redis/password' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
       # === Install Dependencies ===
       - name: Install Root Dependencies
         run: npm install
@@ -295,7 +299,7 @@ jobs:
           host: ${{ needs.terraform.outputs.ec2host }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: API_HOST, DB_NAME, DB_URL, GOOGLE_REDIRECT_URI, DOMAIN, AWS_REGION, S3_MEDIA_BUCKET, NEO4J_DATABASE, NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AURA_INSTANCEID, AURA_INSTANCENAME
+          envs: API_HOST, DB_NAME, DB_URL, GOOGLE_REDIRECT_URI, DOMAIN, AWS_REGION, S3_MEDIA_BUCKET, NEO4J_DATABASE, NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AURA_INSTANCEID, AURA_INSTANCENAME, REDIS_HOST, REDIS_PORT, REDIS_USERNAME, REDIS_PASSWORD
           port: 22
           script: |
             set -e
@@ -329,6 +333,10 @@ jobs:
             GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
             AURA_INSTANCEID=$AURA_INSTANCEID
             AURA_INSTANCENAME=$AURA_INSTANCENAME
+            REDIS_HOST=$REDIS_HOST
+            REDIS_PORT=$REDIS_PORT
+            REDIS_USERNAME=$REDIS_USERNAME
+            REDIS_PASSWORD=$REDIS_PASSWORD
             EOF
             # Restart the app with PM2
             pm2 stop mastodon || true
