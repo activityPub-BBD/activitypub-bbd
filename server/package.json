@@ -11,6 +11,7 @@
     "@logtape/logtape": "^0.8.2",
     "@types/uuid": "^10.0.0",
     "async-mutex": "^0.5.0",
+    "copy-webpack-plugin": "^13.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "ioredis": "^5.7.0",
@@ -39,6 +40,7 @@
   "scripts": {
     "dev": "dotenvx run -- tsx watch ./src/server.ts",
     "prod": "dotenvx run -- node --import tsx ./src/server.ts",
-    "build": "webpack --config webpack.config.js --mode production"
+    "build": "webpack --config webpack.config.js",
+    "start": "node dist/server.js"
   }
 }
