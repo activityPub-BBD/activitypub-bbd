@@ -114,10 +114,16 @@ const UserSearch: React.FC = () => {
     localStorage.setItem("recentSearches", JSON.stringify(newSearches));
   };
 
-  const handleUserClick = (username: string) => {
-    addToRecentSearches(username);
+  const handleUserClick = (user: SearchUser) => {
+    addToRecentSearches(user.username);
     setQuery("");
-    navigate(`/user/${username}`);
+    
+    // For remote users, use the full username@domain format
+    const usernameForNavigation = user.isRemote && user.domain 
+      ? `${user.username}@${user.domain}`
+      : user.username;
+    
+    navigate(`/user/${usernameForNavigation}`);
   };
 
   return (
@@ -161,7 +167,7 @@ const UserSearch: React.FC = () => {
               <li
                 className="search-user-card"
                 key={user.id}
-                onClick={() => handleUserClick(user.username)}
+                onClick={() => handleUserClick(user)}
                 tabIndex={0}
                 style={{ cursor: 'pointer' }}
               >

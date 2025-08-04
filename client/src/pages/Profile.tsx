@@ -22,8 +22,10 @@ interface User {
     username: string;
     displayName: string;
     bio: string;
-    location: string;
+    location?: string;
     avatarUrl: string;
+    joinDate: string;
+    activityPubId: string;
 }
 
 const Profile = () => {
