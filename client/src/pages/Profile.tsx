@@ -57,7 +57,8 @@ const Profile = () => {
           console.error('Failed to fetch posts:', response.status);
           setError('Failed to load posts');
         }
-      } catch (error) {
+      }
+       catch (error) {
         console.error('Error fetching posts:', error);
         setError('Failed to load posts');
       } finally {
@@ -115,6 +116,7 @@ const Profile = () => {
             initialLocation={user?.location || ''}
             initialAvatarUrl={user?.avatarUrl || "https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png"}
             posts={formattedPosts}
+            isOwnProfile={true}
         />
     )
 }
