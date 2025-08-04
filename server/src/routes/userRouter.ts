@@ -10,6 +10,130 @@ import { isActor, type Actor } from "@fedify/fedify";
 
 export const userRoutes = Router();
 
+
+/**
+ * Maps a user object to the standard response format
+ */
+const mapUserToResponse = (user: any) => ({
+  id: user._id,
+  username: user.username,
+  displayName: user.displayName,
+  avatarUrl: user.avatarUrl,
+  isRemote: !user.isLocal,
+  domain: user.domain || config.domain,
+  actorId: user.actorId,
+});
+
+/**
+ * Maps a user object to profile response format
+ */
+const mapUserToProfileResponse = (user: any) => ({
+  id: user._id.toString(),
+  username: user.username,
+  displayName: user.displayName,
+  bio: user.bio,
+  avatarUrl: user.avatarUrl,
+  joinDate: user.createdAt,
+  activityPubId: user.actorId,
+});
+
+/**
+ * Creates federation context for remote user lookup
+ */
+const createFederationContext = (req: any) => {
+  const fullUrl = `https://${config.domain}${req.originalUrl}`;
+  let requestBody: any = undefined;
+  if (!["GET", "HEAD"].includes(req.method)) {
+    requestBody = req.body ? JSON.stringify(req.body) : undefined;
+  }
+  const fetchRequest = new Request(fullUrl, {
+    method: req.method,
+    headers: req.headers as any,
+    body: requestBody,
+  });
+  return federation.createContext(fetchRequest, undefined);
+};
+
+/**
+ * Creates actor data from remote user
+ */
+const createActorData = (remoteUser: Actor, username: string) => ({
+  actorId: remoteUser.id?.toString() || '',
+  username: remoteUser.preferredUsername?.toString() || username.split('@')[0],
+  domain: username.includes('@') ? username.split('@')[1] : config.domain,
+  displayName: remoteUser.name?.toString() || remoteUser.preferredUsername?.toString() || username.split('@')[0],
+  inboxUrl: remoteUser.inboxId?.toString() || '',
+  outboxUrl: remoteUser.outboxId?.toString() || '',
+  followersUrl: remoteUser.followersId?.toString() || '',
+  followingUrl: remoteUser.followingId?.toString() || '',
+  bio: remoteUser.summary?.toString() || '',
+  avatarUrl: '', 
+});
+
+/**
+ * Handles federation lookup for remote users
+ */
+const handleFederationLookup = async (req: any, query: string) => {
+  try {
+    const ctx = createFederationContext(req);
+    
+    // Extract username and domain from username@domain.com format
+    const usernameParts = query.split('@');
+    const usernameOnly = usernameParts[0];
+    const domainWithTLD = usernameParts[1];
+    const domainOnly = domainWithTLD.split('.')[0]; // Remove TLD
+    const fedifyQuery = `@${usernameOnly}@${domainOnly}`;
+    const remoteUser = await ctx.lookupObject(fedifyQuery);
+    
+    if (remoteUser && isActor(remoteUser) && remoteUser.id) {
+      let localUser = await UserService.getUserByActorId(remoteUser.id.toString());
+      
+      if (!localUser) {
+        const actorData = createActorData(remoteUser, query);
+        localUser = await UserService.createRemoteUser(actorData);
+      }
+      
+      return localUser;
+    }
+  } catch (federationError) {
+    console.error('Fedify lookup error:', federationError);
+  }
+  return null;
+};
+
+/**
+ * Handles federation lookup for username-based queries
+ */
+const handleUsernameFederationLookup = async (req: any, username: string) => {
+  try {
+    const ctx = createFederationContext(req);
+    const fedifyQuery = `@${username}`;
+    const remoteUser = await ctx.lookupObject(fedifyQuery);
+    
+    if (remoteUser && isActor(remoteUser) && remoteUser.id) {
+      let user = await UserService.getUserByActorId(remoteUser.id.toString());
+      
+      if (!user) {
+        const actorData = createActorData(remoteUser, username);
+        user = await UserService.createRemoteUser(actorData);
+      }
+      
+      return user;
+    }
+  } catch (federationError) {
+    console.error('Fedify lookup error:', federationError);
+  }
+  return null;
+};
+
+/**
+ * Standard error response handler
+ */
+const handleError = (res: any, error: any, message: string) => {
+  console.error(message, error);
+  res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+};
+
 /**
  * @route GET /api/users/search
  * @description Search for users by query string
@@ -22,20 +146,11 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
     // Return first 5 users when query is empty
     try {
       const localUsers = await UserService.getFirstUsers(5, config.domain);
-      const localResults = localUsers.map(user => ({
-        id: user._id,
-        username: user.username,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        isRemote: false,
-        domain: user.domain || config.domain,
-        actorId: user.actorId,
-      }));
+      const localResults = localUsers.map(mapUserToResponse);
       
       res.json(localResults);
     } catch (error) {
-      console.error('Error fetching first users:', error);
-      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+      handleError(res, error, 'Error fetching first users:');
     }
     return;
   }
@@ -44,68 +159,15 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
     const results = [];
     
     if (query.includes('@')) {
-      try {
-        const fullUrl = `https://${config.domain}${req.originalUrl}`;
-        let requestBody: any = undefined;
-        if (!["GET", "HEAD"].includes(req.method)) {
-          requestBody = req.body ? JSON.stringify(req.body) : undefined;
-        }
-        const fetchRequest = new Request(fullUrl, {
-          method: req.method,
-          headers: req.headers as any,
-          body: requestBody,
-        });
-        const ctx = federation.createContext(fetchRequest, undefined);
-
-        // Try to lookup the remote user with @ prefix for Fedify
-        const fedifyQuery = `@${query}`;
-        const remoteUser = await ctx.lookupObject(fedifyQuery);
-        
-        if (remoteUser && isActor(remoteUser) && remoteUser.id) {
-          let localUser = await UserService.getUserByActorId(remoteUser.id.toString());
-          
-          if (!localUser) {
-            const actorData = {
-              actorId: remoteUser.id.toString(),
-              username: remoteUser.preferredUsername?.toString() || remoteUser.name?.toString() || query.split('@')[0],
-              domain: query.includes('@') ? query.split('@')[1] : config.domain,
-              displayName: remoteUser.name?.toString() || remoteUser.preferredUsername?.toString() || query.split('@')[0],
-              inboxUrl: remoteUser.inboxId?.toString() || '',
-              outboxUrl: remoteUser.outboxId?.toString() || '',
-              followersUrl: remoteUser.followersId?.toString() || '',
-              followingUrl: remoteUser.followingId?.toString() || '',
-              bio: remoteUser.summary?.toString() || '',
-              avatarUrl: '', 
-            };
-            
-            localUser = await UserService.createRemoteUser(actorData);
-          }
-          
-          results.push({
-            id: localUser._id,
-            username: localUser.username,
-            displayName: localUser.displayName,
-            avatarUrl: localUser.avatarUrl,
-            isRemote: true,
-            domain: localUser.domain,
-            actorId: localUser.actorId,
-          });
-        }
-      } catch (federationError) {
-        console.error('Fedify lookup error:', federationError);
+      const remoteUser = await handleFederationLookup(req, query);
+      if (remoteUser) {
+        results.push(mapUserToResponse(remoteUser));
       }
     }
     
+
     const localUsers = await UserService.searchUsers(query, config.domain);
-    const localResults = localUsers.map(user => ({
-      id: user._id,
-      username: user.username,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-      isRemote: false,
-      domain: user.domain || config.domain,
-      actorId: user.actorId,
-    }));
+    const localResults = localUsers.map(mapUserToResponse);
     
     const allResults = [...results, ...localResults];
     const uniqueResults = allResults.filter((user, index, self) => 
@@ -114,8 +176,7 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
     
     res.json(uniqueResults);
   } catch (error) {
-    console.error('Error searching users:', error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    handleError(res, error, 'Error searching users:');
   }
 });
 
@@ -140,8 +201,7 @@ userRoutes.get('/me', requireAuth, async (req, res) => {
       activityPubId: user.actorId,
     });
   } catch (error) {
-    console.error('Error retrieving current user:', error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    handleError(res, error, 'Error retrieving current user:');
   }
 });
 
@@ -182,10 +242,6 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: "User not found" });
     }
 
-    if (!updated) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: "User not found" });
-    }
-
     const responseUser: Partial<typeof updated> = { username: updated.username };
     // Include only the fields that were updated
     if ('displayName' in updates) responseUser.displayName = updated.displayName;
@@ -199,8 +255,7 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error updating user profile:", error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: "Internal server error" });
+    handleError(res, error, "Error updating user profile:");
   }
 });
 
@@ -213,22 +268,22 @@ userRoutes.put('/me', requireAuth, async (req, res) => {
 userRoutes.get('/:username', requireAuth, async (req, res) => {
   try {
     const { username } = req.params;
-    const user = await UserService.getUserByUsername(username, config.domain);
+    
+    // First try to get the user as a local user
+    let user = await UserService.getUserByUsername(username, config.domain);
+    
+    // If not found locally and username contains @, try to lookup as remote user
+    if (!user && username.includes('@')) {
+      user = await handleUsernameFederationLookup(req, username);
+    }
+    
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
     
-    res.json({
-      username: user.username,
-      displayName: user.displayName,
-      bio: user.bio,
-      avatarUrl: user.avatarUrl,
-      joinDate: user.createdAt,
-      activityPubId: user.actorId,
-    });
+    res.json(mapUserToProfileResponse(user));
   } catch (error) {
-    console.error('Error retrieving user profile:', error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    handleError(res, error, 'Error retrieving user profile:');
   }
 });
 
@@ -244,19 +299,34 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
 
-    // Find user by username
-    const user = await UserService.getUserByUsername(username, config.domain);
+    let user = await UserService.getUserByUsername(username, config.domain);
+    
+    if (!user && username.includes('@')) {
+      user = await handleUsernameFederationLookup(req, username);
+    }
+
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
 
-    // Get posts by user ID, paginated
+    // For remote users, return empty posts since we don't have their posts locally
+    if (!user.isLocal) {
+      res.status(HTTP_STATUS.OK).json({
+        items: [],
+        totalCount: 0,
+        page: page,
+        limit: limit,
+        nextCursor: null
+      });
+      return;
+    }
+
+    // Get posts by user ID, paginated (only for local users)
     const posts = await PostService.getUserPosts(user._id.toString(), page, limit);
     console.log(posts)
     res.status(HTTP_STATUS.OK).json(posts);
   } catch (error) {
-    console.error('Error fetching user posts:', error);
-    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    handleError(res, error, 'Error fetching user posts:');
   }
 });
 

@@ -23,6 +23,8 @@ interface UserProfileProps {
   initialAvatarUrl: string;
   initialLocation: string;
   posts: IPost[];
+  isOwnProfile?: boolean;
+  profileUserId?: string;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -30,7 +32,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   initialBio,
   initialAvatarUrl,
   initialLocation = '',
-  posts
+  posts,
+  isOwnProfile
 }) => {
   const navigate = useNavigate();
   const { jwt, setUser, logout } = useAuthContext();
@@ -196,9 +199,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               )}
             </div>
 
-            <button onClick={() => setIsEditing(true)} className="button-edit">
-              Edit Profile
-            </button>
+            {isOwnProfile && (
+              <button onClick={() => setIsEditing(true)} className="button-edit">
+                Edit Profile
+              </button>
+            )}
           </div>
         ) : (
           <div className="user-profile-info">
@@ -278,10 +283,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
       <hr className="divider" />
 
-      <h3 className="posts-header">Your Posts</h3>
+      <h3 className="posts-header">{isOwnProfile ? 'Your Posts' : `${initialUsername}'s Posts`}</h3>
       <div className="posts-container">
         {posts.length === 0 ? (
-          <p className="no-posts">No posts yet. Create your first post!</p>
+          <p className="no-posts">
+            {isOwnProfile 
+              ? 'No posts yet. Create your first post!' 
+              : `${initialUsername} hasn't posted anything yet.`
+            }
+          </p>
         ) : (
           posts.map(post => {
             console.log(post)
