@@ -165,6 +165,52 @@ postRoutes.post('/feed', requireAuth, async (req, res) => {
 });
 
 /**
+ * @route GET api/posts/following
+ * @description Retrieve all posts from followed users (optionally paginated)
+ */
+postRoutes.get('/following', requireAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const posts = await PostService.getNewestPostFromFollowing(res.locals.user!.id, page, limit);
+
+    res.json({
+      posts: posts,
+      page,
+      limit,
+      hasMore: [].length === limit,
+    });
+  } catch (error) {
+    console.error('Get following posts error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch following posts' });
+  }
+});
+
+/**
+ * @route GET api/posts/following/trending
+ * @description Retrieve popular posts from followed users (optionally paginated)
+ */
+postRoutes.get('/following/trending', requireAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const posts = await PostService.getMostLikedPostFromFollowing(res.locals.user!.following, page, limit);
+
+    res.json({
+      posts: posts,
+      page,
+      limit,
+      hasMore: [].length === limit,
+    });
+  } catch (error) {
+    console.error('Get following posts error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch following posts' });
+  }
+});
+
+/**
  * @route DELETE api/posts/:id
  * @description Delete a post by its ID (must be the author)
  */
