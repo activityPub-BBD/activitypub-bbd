@@ -5,6 +5,8 @@ import { Router } from "express";
 import { PostService } from "@services/postService";
 import { UserService } from "@services/userService";
 import { config } from "@config/config";
+import { federation } from "@federation/index";
+import { isActor, type Actor } from "@fedify/fedify";
 
 export const userRoutes = Router();
 
@@ -17,18 +19,100 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
   const query = req.query.q as string;
 
   if (!query || query.trim() === '') {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Query string is required' });
-  }
-
-  try {
-    const users = await UserService.searchUsers(query, config.domain);
-    res.json(
-      users.map(user => ({
+    // Return first 5 users when query is empty
+    try {
+      const localUsers = await UserService.getFirstUsers(5, config.domain);
+      const localResults = localUsers.map(user => ({
+        id: user._id,
         username: user.username,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
-      }))
+        isRemote: false,
+        domain: user.domain || config.domain,
+        actorId: user.actorId,
+      }));
+      
+      res.json(localResults);
+    } catch (error) {
+      console.error('Error fetching first users:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    }
+    return;
+  }
+
+  try {
+    const results = [];
+    
+    if (query.includes('@')) {
+      try {
+        const fullUrl = `https://${config.domain}${req.originalUrl}`;
+        let requestBody: any = undefined;
+        if (!["GET", "HEAD"].includes(req.method)) {
+          requestBody = req.body ? JSON.stringify(req.body) : undefined;
+        }
+        const fetchRequest = new Request(fullUrl, {
+          method: req.method,
+          headers: req.headers as any,
+          body: requestBody,
+        });
+        const ctx = federation.createContext(fetchRequest, undefined);
+
+        // Try to lookup the remote user with @ prefix for Fedify
+        const fedifyQuery = `@${query}`;
+        const remoteUser = await ctx.lookupObject(fedifyQuery);
+        
+        if (remoteUser && isActor(remoteUser) && remoteUser.id) {
+          let localUser = await UserService.getUserByActorId(remoteUser.id.toString());
+          
+          if (!localUser) {
+            const actorData = {
+              actorId: remoteUser.id.toString(),
+              username: remoteUser.preferredUsername?.toString() || remoteUser.name?.toString() || query.split('@')[0],
+              domain: query.includes('@') ? query.split('@')[1] : config.domain,
+              displayName: remoteUser.name?.toString() || remoteUser.preferredUsername?.toString() || query.split('@')[0],
+              inboxUrl: remoteUser.inboxId?.toString() || '',
+              outboxUrl: remoteUser.outboxId?.toString() || '',
+              followersUrl: remoteUser.followersId?.toString() || '',
+              followingUrl: remoteUser.followingId?.toString() || '',
+              bio: remoteUser.summary?.toString() || '',
+              avatarUrl: '', 
+            };
+            
+            localUser = await UserService.createRemoteUser(actorData);
+          }
+          
+          results.push({
+            id: localUser._id,
+            username: localUser.username,
+            displayName: localUser.displayName,
+            avatarUrl: localUser.avatarUrl,
+            isRemote: true,
+            domain: localUser.domain,
+            actorId: localUser.actorId,
+          });
+        }
+      } catch (federationError) {
+        console.error('Fedify lookup error:', federationError);
+      }
+    }
+    
+    const localUsers = await UserService.searchUsers(query, config.domain);
+    const localResults = localUsers.map(user => ({
+      id: user._id,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      isRemote: false,
+      domain: user.domain || config.domain,
+      actorId: user.actorId,
+    }));
+    
+    const allResults = [...results, ...localResults];
+    const uniqueResults = allResults.filter((user, index, self) => 
+      index === self.findIndex(u => u.actorId === user.actorId)
     );
+    
+    res.json(uniqueResults);
   } catch (error) {
     console.error('Error searching users:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
