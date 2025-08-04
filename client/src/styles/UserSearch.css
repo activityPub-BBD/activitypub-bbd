@@ -15,21 +15,72 @@
   color: #262626;
 }
 
-.search-input {
+
+
+.search-input:focus {
+  border-color: #0095f6;
+}
+
+.search-container {
+  display: flex;
+  gap: 0.5rem;
   width: 100%;
   max-width: 400px;
+  margin-bottom: 2rem;
+}
+
+.search-input {
+  flex: 1;
   padding: 0.75rem 1rem;
   border: 1px solid #dbdbdb;
   border-radius: 8px;
   font-size: 1.1rem;
-  margin-bottom: 2rem;
   outline: none;
   background: #fff;
   transition: border 0.2s;
 }
 
-.search-input:focus {
-  border-color: #0095f6;
+.search-button {
+  padding: 0.75rem 1.5rem;
+  background: #0095f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.search-button:hover:not(:disabled) {
+  background: #0081d6;
+}
+
+.search-button:disabled {
+  background: #b2dffc;
+  cursor: not-allowed;
+}
+
+.search-loading {
+  text-align: center;
+  color: #0095f6;
+  padding: 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.search-error {
+  text-align: center;
+  color: #ed4956;
+  padding: 1rem 0;
+  font-size: 1.1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-width: 500px;
+  width: 100%;
 }
 
 .search-results {
@@ -70,12 +121,39 @@
 .search-user-info {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .search-username {
   font-weight: 600;
   color: #262626;
   font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.domain-indicator {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.domain-indicator.remote {
+  color: #0095f6;
+  background: #e3f2fd;
+}
+
+.domain-indicator.local {
+  color: #8e8e8e;
+  background: #f0f0f0;
+}
+
+.search-display-name {
+  color: #8e8e8e;
+  font-size: 0.95rem;
+  margin-top: 2px;
 }
 
 .search-user-followers {
@@ -89,6 +167,40 @@
   color: #8e8e8e;
   padding: 2rem 0;
   font-size: 1.1rem;
+}
+
+.recent-searches {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 2rem;
+}
+
+.recent-searches h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 1rem;
+}
+
+.recent-searches ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-searches li {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  transition: background 0.2s;
+}
+
+.recent-searches li:hover {
+  background: #f0f0f0;
 }
 
 .recent-searches-list {

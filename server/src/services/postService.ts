@@ -127,11 +127,45 @@ const uploadImage = async (
   }
 };
 
+const likePost = async (postId: string, userId: string): Promise<boolean> => {
+  const objectId = new mongoose.Types.ObjectId(userId);
+
+  // Check if user already liked the post
+  const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
+  if (alreadyLiked) return false;
+
+  // Add user to likes
+  const result = await PostModel.updateOne(
+    { _id: postId },
+    { $push: { likes: objectId } }
+  );
+
+  return result.modifiedCount > 0;
+};
+
+const unlikePost = async (postId: string, userId: string): Promise<boolean> => {
+  const objectId = new mongoose.Types.ObjectId(userId);
+
+  // Check if user already liked the post
+  const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
+  if (!alreadyLiked) return false;
+
+  // Remove user from likes
+  const result = await PostModel.updateOne(
+    { _id: postId },
+    { $pull: { likes: objectId } }
+  );
+
+  return result.modifiedCount > 0;
+};
+
 export const PostService = {
   createPost,
   getPostById,
   getUserPosts,
   getFeedPosts,
   deletePost,
-  uploadImage
+  uploadImage,
+  likePost,
+  unlikePost
 }

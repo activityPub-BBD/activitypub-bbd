@@ -116,7 +116,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
         id: existingUser._id,
         displayName: existingUser.displayName,
         avatarUrl: existingUser.avatarUrl,
-        userName: existingUser.username
+        username: existingUser.username
       } : null
     });
 

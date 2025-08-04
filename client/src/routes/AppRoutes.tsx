@@ -70,6 +70,14 @@ export const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/user/:username" 
+        element={
+          <PrivateRoute>
+            <Profile />
+          </PrivateRoute>
+        } 
+      />
+      <Route 
         path="/search" 
         element={
           <PrivateRoute>

@@ -154,11 +154,13 @@ const searchUsers = (query: string, domain?: string) => {
     ]
   };
   
-  if (domain) {
-    searchCriteria.domain = domain;
-  }
-  
   return UserModel.find(searchCriteria).limit(20).lean();
+}
+
+const getFirstUsers = (limit: number, domain?: string) => {
+  const searchCriteria: any = {};
+  
+  return UserModel.find(searchCriteria).limit(limit).lean();
 }
 
 export const UserService = {
@@ -172,6 +174,7 @@ export const UserService = {
     createRemoteUser,
     updateUser,
     searchUsers,
+    getFirstUsers,
     addUserToGraphDb
 }
 
