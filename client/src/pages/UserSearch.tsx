@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SideBar from '../components/SideBar';
 import '../styles/Home.css';
 import '../styles/SideBar.css';
@@ -23,6 +24,7 @@ const UserSearch: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const { user } = useAuthContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedSearches = localStorage.getItem("recentSearches");
@@ -115,6 +117,7 @@ const UserSearch: React.FC = () => {
   const handleUserClick = (username: string) => {
     addToRecentSearches(username);
     setQuery("");
+    navigate(`/user/${username}`);
   };
 
   return (
