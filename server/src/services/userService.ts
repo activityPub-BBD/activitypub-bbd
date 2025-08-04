@@ -11,6 +11,10 @@ const getUserByGoogleId = async (googleId: string): Promise<IUser | null> => {
     return await UserModel.findOne({ googleId });
 }
 
+const getUserByObjectId = async (userId: string): Promise<IUser | null> => {
+    return await UserModel.findById(userId);
+}
+
 const getUserByUsername = async (username: string, domain?: string): Promise<IUser | null> => {
     // For ActivityPub, we need to check username + domain combination
     const targetDomain = domain || config.domain;
@@ -161,6 +165,7 @@ export const UserService = {
     getUserByGoogleId,
     getUserByUsername,
     getUserByActorId,
+    getUserByObjectId,
     validateUsername,
     isUsernameAvailable,
     createUser,

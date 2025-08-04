@@ -12,71 +12,18 @@ import {
   isActor,
   Endpoints,
   MemoryKvStore,
-  InProcessMessageQueue,
-  type Actor,
-  getActorHandle
-} from "@fedify/fedify";
+  InProcessMessageQueue} from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
-import { RedisKvStore, RedisMessageQueue} from "@fedify/redis";
 import { Temporal } from "@js-temporal/polyfill";
-import { ObjectId } from "mongodb";
 import { UserService } from "@services/userService";
 import { KeyService } from "@services/keyService";
 import { PostService } from "@services/postService";
 import { FollowService } from "@services/followService";
 import { retrieveRedisClient } from "@db/redis";
-import { registerModels, type IUser } from "@models/index";
-import { retrieveDb } from "@db/index";
-import { config } from "@config/index";
 
 const logger = getLogger("server");
 
 const redisClient = await retrieveRedisClient();
-
-// async function persistActor(actor: Actor): Promise<IUser| null> {
-//       if (actor.id == null || actor.inboxId == null) {
-//         logger.debug("Actor is missing required fields: {actor}", { actor });
-//         return null;
-//       }
-
-//       // Find the actor in our database if not then create them
-//       let existingActor = await UserService.getUserByActorId(actor.id.href);
-//       if (!existingActor) {
-//         logger.debug(
-//           "Actor not found in database: {actor}",
-//           { actor }
-//         );
-
-//         // Extract username and domain from the actor ID
-//         const actorUrl = new URL(actor.id.href);
-//         const actorPath = actorUrl.pathname;
-//         const actorUsername = actorPath.split("/").pop() || "unknown";
-//         const actorDomain = actorUrl.hostname;
-
-//         logger.debug(actor.getIcon())
-
-//         const remoteActor = await UserService.createRemoteUser({
-//           actorId: actor.id.href,
-//           username: actorUsername,
-//           domain: actorDomain,
-//           displayName: actor.name?.toString() || actorUsername,
-//           inboxUrl: actor.inboxId.href,
-//           outboxUrl: actor.outboxId?.href || "",
-//           followersUrl: actor.followersId?.href || "",
-//           followingUrl: actor.followingId?.href || "",
-//           bio: actor.summary?.toString() || "",
-//           avatarUrl: "",
-//         });
-//         // Add the user to the graph db
-//         const success = await UserService.addUserToGraphDb(remoteActor);
-//         if (!success) {
-//           logger.warn(
-//             `Failed to add user to graph db: ${remoteActor.displayName}`
-//           );
-//         }
-//       }
-//       return existingActor;
-// }
 
 export const federation = createFederation({
   kv: new MemoryKvStore(),
@@ -467,7 +414,15 @@ federation.setFollowingDispatcher(
       nextCursor: null,
     };
   }
-);
+)
+.setCounter(async (ctx, identifier) => {
+    // count followers in db
+    const user = await UserService.getUserByUsername(identifier);
+    if (!user) return 0;
+
+    const stats = await FollowService.getFollowStats(user._id.toString());
+    return stats.followingCount;
+  });
 
 // Posts
 federation.setObjectDispatcher(Note, "/posts/{id}", async (ctx, values) => {
