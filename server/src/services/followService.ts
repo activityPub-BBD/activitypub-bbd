@@ -150,11 +150,22 @@ export async function retrieveFollowers(
 }
 
 
-export async function retrieveSuggestedMutuals(followingId: string):
-    Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; followers: number; }[]> {
-    const driver = await retrieveNeo4jDriver();
-    const result = await driver.executeQuery(
-        `
+export async function retrieveSuggestedMutuals(
+  followingId: string
+): Promise<
+  {
+    id: string;
+    actorId: string;
+    inboxUrl: string;
+    createdAt: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+  }[]
+> {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
         MATCH (start:Person {_id: $followingId})-[:Follows*1..3]->(suggested:Person)
         WHERE NOT (start)-[:Follows]->(suggested) 
         AND start <> suggested                  
@@ -169,17 +180,25 @@ export async function retrieveSuggestedMutuals(followingId: string):
         ORDER BY followers DESC
         LIMIT 20
         `,
-        { followingId }
-    );
-    return result.records.map((record) => {
-        return {
-            id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
-            inboxUrl: record.get('inboxUrl') as string,
-            createdAt: new Date(record.get('createdAt')).toISOString(),
-            followers: record.get('followers').toInt() as number
-        };
-    });
+    { followingId }
+  );
+  const suggestedMutuals = await Promise.all(
+    result.records.map(async (record) => {
+      const actorId = record.get("actorId") as string;
+      const user = await UserService.getUserByActorId(actorId);
+
+      return {
+        id: record.get("id") as string,
+        actorId,
+        inboxUrl: record.get("inboxUrl") as string,
+        createdAt: new Date(record.get("createdAt")).toISOString(),
+        displayName: user!.displayName,
+        username: user!.username,
+        avatarUrl: user!.avatarUrl,
+      };
+    })
+  );
+  return suggestedMutuals;
 }
 
 export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals };
