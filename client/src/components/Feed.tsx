@@ -122,12 +122,6 @@ const Feed: React.FC = () => {
     setPosts(prevPosts => [frontendPost, ...prevPosts]);
   };
 
-  // Handle search button click
-  const handleSearchClick = () => {
-    navigate('/search');
-  };
-
-
   const formattedPosts = posts.map(post => ({
     id: post.id,
     content: post.caption,
@@ -146,14 +140,9 @@ const Feed: React.FC = () => {
       {/* Header */}
       <div className="feed-header">
         <img src="chirp-landing-logo.png" className="logo" alt="Chirp Logo" width={65} />
-        <div className="header-buttons">
-          <button className="search-btn" onClick={handleSearchClick}>
-            🔍 Search
-          </button>
-          <button className="create-post-btn" onClick={() => setShowCreatePost(true)}>
-            + Create Post
-          </button>
-        </div>
+        <button className="create-post-btn" onClick={() => setShowCreatePost(true)}>
+          + Create Post
+        </button>
       </div>
 
       {/* Main Feed */}

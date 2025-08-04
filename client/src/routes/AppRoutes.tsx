@@ -9,8 +9,6 @@ import UserSearch from '../pages/UserSearch';
 import { FollowersList } from '../pages/FollowersTab';
 import { FollowingList } from '../pages/FollowingTab';
 import Notifications from '../pages/Notifications';
-import UserProfilePage from '../pages/UserProfilePage';
-
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuthContext();
@@ -76,14 +74,6 @@ export const AppRoutes = () => {
         element={
           <PrivateRoute>
             <UserSearch />
-          </PrivateRoute>
-        } 
-      />
-      <Route 
-        path="/users/:username" 
-        element={
-          <PrivateRoute>
-            <UserProfilePage />
           </PrivateRoute>
         } 
       />

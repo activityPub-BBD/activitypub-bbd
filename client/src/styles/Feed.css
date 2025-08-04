@@ -19,42 +19,6 @@
   background: linear-gradient(135deg, #e6f2ff, #ffffff);
 }
 
-/* Header Buttons Container */
-.header-buttons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-}
-
-/* Search Button */
-.search-btn {
-  background: #f8f9fa;
-  color: #495057;
-  border: 1px solid #dbdbdb;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.search-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-  transform: translateY(-1px);
-}
-
-.search-btn:active {
-  transform: translateY(0);
-  background: #dee2e6;
-}
-
-/* Create Post Button */
 .create-post-btn {
   background: #0095f6;
   color: white;
@@ -65,6 +29,7 @@
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-left: auto;
 }
 
 .create-post-btn:hover {
@@ -451,19 +416,9 @@
     width: 200px;
   }
   
+  
   .header-icons {
     gap: 12px;
-  }
-  
-  /* Mobile button adjustments */
-  .header-buttons {
-    gap: 8px;
-  }
-  
-  .search-btn,
-  .create-post-btn {
-    padding: 6px 12px;
-    font-size: 13px;
   }
 }
 
@@ -485,20 +440,5 @@
     border-left: none;
     border-right: none;
     margin-bottom: 16px;
-  }
-  
-  /* Very small screen button adjustments */
-  .header-buttons {
-    gap: 6px;
-  }
-  
-  .search-btn {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  
-  .create-post-btn {
-    padding: 6px 12px;
-    font-size: 12px;
   }
 }
