@@ -41,33 +41,21 @@ jobs:
       # === Install Dependencies ===
       - name: Install Dependencies
         run: npm install
-
-       === Build Frontend with env vars from SSM ===
-      - name: Build Frontend (Vite with SSM ENV Vars)
-        run: |
-          export VITE_API_URL=http://16.28.122.209
-          export VITE_CLIENT_ID=$(aws ssm get-parameter --name "/google/client_id" --with-decryption --query "Parameter.Value" --output text)
-          export VITE_GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name "/google/redirect_uri" --with-decryption --query "Parameter.Value" --output text)
-          echo "Building with:"
-          echo "VITE_API_URL=$VITE_API_URL"
-          echo "VITE_CLIENT_ID=$VITE_CLIENT_ID"
-          echo "VITE_GOOGLE_REDIRECT_URI=$VITE_GOOGLE_REDIRECT_URI"
-          
-          npm run build
-
+        
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_API_URL: https://mastodon.thups.co.za
+          VITE_GOOGLE_CLIENT_ID: 692300555173-m16joirhb27h7cgoh9tnkatrs3af0den.apps.googleusercontent.com
+          VITE_GOOGLE_REDIRECT_URI: https://d7uwchvpta0lr.cloudfront.net/auth/callback
       # === Upload to S3 ===
       - name: Upload to S3
         run: |
           aws s3 sync ./dist/ s3://group-5-mastodon-s3-cloudfront-distribution-bucket/ --delete --exact-timestamps
 
-      # - name: Invalidate CloudFront cache
-      #   run: |
-      #     # Get CloudFront distribution ID for frontend
-      #     DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[0]=='case-supplier.projects.bbdgrad.com'].Id" --output text)
-      #     aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
-
+      # === Invalidate CloudFront cache ===
       - name: Invalidate CloudFront cache
         run: |
-          # Get CloudFront distribution ID for frontend
           DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Origins.Items[0].DomainName=='group-5-mastodon-s3-cloudfront-distribution-bucket.s3.af-south-1.amazonaws.com'].Id" --output text)
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
