@@ -56,7 +56,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     setError('');
 
   try {
-      // Update profile - send everything including base64 avatar if it's new
       const updateResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         method: 'PUT',
         headers: {
@@ -67,7 +66,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           displayName: username,
           bio: bio,
           location: location,
-          avatarUrl: avatarUrl, // This will be base64 if user uploaded new image
+          avatarUrl: avatarUrl,
         }),
       });
 
@@ -86,8 +85,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         setError('');
       } else {
         const errorData = await updateResponse.json();
-        
-        // Handle token expiration
+
         if (updateResponse.status === 401) {
           setError('Your session has expired. Please sign in again.');
           logout();
@@ -122,7 +120,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         return;
       }
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please select an image file');
         return;
@@ -137,17 +134,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
   };
 
-  // Trigger file input click
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
 
-  // Handle back button - different behavior for own vs other profiles
   const handleBackClick = () => {
     if (isOwnProfile) {
       navigate('/home');
     } else {
-      navigate(-1); // Go back to previous page (likely search)
+      navigate(-1);
     }
   };
 
@@ -208,7 +203,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               )}
             </div>
 
-            {/* Only show Edit Profile button for own profile */}
             {isOwnProfile && (
               <button onClick={() => setIsEditing(true)} className="button-edit">
                 Edit Profile
@@ -216,7 +210,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             )}
           </div>
         ) : (
-          // Edit mode - only shown for own profile
           <div className="user-profile-info">
             <div className="username-back-wrapper">
               <h2 className="user-profile-name">Edit Profile</h2>
