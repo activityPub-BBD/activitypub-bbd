@@ -70,6 +70,7 @@ federation
     });
   })
   .setKeyPairsDispatcher(async (ctx, identifier) => {
+    logger.debug(`Key pairs dispatcher called for: ${identifier}`);
     const user = await UserService.getUserByUsername(identifier);
     if (user == null) return [];
 
