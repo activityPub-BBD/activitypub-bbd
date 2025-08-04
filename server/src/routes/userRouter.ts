@@ -78,7 +78,6 @@ const handleFederationLookup = async (req: any, query: string) => {
     const ctx = createFederationContext(req);
     
     const fedifyQuery = `@${query}`;
-    console.log("fedifyQuery", fedifyQuery)
     const remoteUser = await ctx.lookupObject(fedifyQuery);
     
     if (remoteUser && isActor(remoteUser) && remoteUser.id) {
