@@ -1,4 +1,6 @@
 import { retrieveNeo4jDriver } from "@db/index";
+import neo4j from 'neo4j-driver';
+import { UserService } from "./userService";
 
 export async function getFollowStats(id: string): Promise<{id: string;followingCount: number;followerCount: number;}> {
     const driver = await retrieveNeo4jDriver();
@@ -27,7 +29,7 @@ export async function followUser(followerId: string, followingId: string, accept
     const driver = await retrieveNeo4jDriver();
     const result = await driver.executeQuery(
         `
-        MATCH (A:Person {_id: $followerId}), (B:Person {_id: $followeeId})
+        MATCH (A:Person {_id: $followerId}), (B:Person {_id: $followingId})
         MERGE (A)-[R:Follows]->(B)
         ON CREATE SET
             R.accepted = $accepted,
@@ -38,7 +40,7 @@ export async function followUser(followerId: string, followingId: string, accept
             followerId,
             followingId,
             accepted,
-            createdAt: new Date(),
+            createdAt: neo4j.types.DateTime.fromStandardDate(new Date()),
          }
     );
 
@@ -46,71 +48,124 @@ export async function followUser(followerId: string, followingId: string, accept
 }
 
 export async function unfollowUser(followerId: string, followingId: string): Promise<boolean> {
-    const driver = await retrieveNeo4jDriver();
-    const result = await driver.executeQuery(
-        `
-        MATCH (A:Person {_id: $followerId})-[R:Follows]->(B:Person {_id: $followingId})
-        WITH R
-        DELETE R
-        RETURN count(R) > 0 AS deleted;
-        `,
-        { followerId, followingId }
-    );
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    MATCH (A:Person {_id: $followerId})-[R:Follows]->(B:Person {_id: $followingId})
+    WITH count(R) AS relCount, R
+    DELETE R
+    RETURN relCount > 0 AS deleted;
+    `,
+    { followerId, followingId }
+  );
 
-    return result.records[0].get('deleted') as boolean;
+  return result.records[0].get('deleted') as boolean;
 }
 
-export async function retrieveFollowing(followerId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; }[]> {
-    const driver = await retrieveNeo4jDriver();
-    const result = await driver.executeQuery(
-        `
-        MATCH (P:Person {_id: $followerId})-[:Follows]->(followee:Person)
-        RETURN 
-            followee._id AS id,
-            followee.actorId AS actorId,
-            followee.inboxUrl AS inboxUrl, 
-            followee.createdAt AS createdAt;
-        `,
-        { followerId }
-    );
-    return result.records.map((record) => {
-        return {
-            id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
-            inboxUrl: record.get('inboxUrl') as string,
-            createdAt: new Date(record.get('createdAt')).toISOString(),
-        };
-    });
+export async function retrieveFollowing(
+  followerId: string
+): Promise<{
+  id: string;
+  actorId: string;
+  inboxUrl: string;
+  createdAt: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string;
+}[]> {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    MATCH (P:Person {_id: $followerId})-[:Follows]->(followee:Person)
+    RETURN 
+        followee._id AS id,
+        followee.actorId AS actorId,
+        followee.inboxUrl AS inboxUrl, 
+        followee.createdAt AS createdAt
+    `,
+    { followerId }
+  );
+
+  const following = await Promise.all(
+    result.records.map(async (record) => {
+      const actorId = record.get('actorId') as string;
+      const user = await UserService.getUserByActorId(actorId);
+
+      return {
+        id: record.get('id') as string,
+        actorId,
+        inboxUrl: record.get('inboxUrl') as string,
+        createdAt: new Date(record.get('createdAt')).toISOString(),
+        displayName: user!.displayName,
+        username: user!.username,
+        avatarUrl: user!.avatarUrl,
+      };
+    })
+  );
+
+  return following;
 }
 
-export async function retrieveFollowers(followingId: string): Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; }[]> {
-    const driver = await retrieveNeo4jDriver();
-    const result = await driver.executeQuery(
-        `
-        MATCH (follower:Person)-[:Follows]->(:Person {_id: $followingId})
-        RETURN 
-            follower._id AS id,
-            follower.actorId AS actorId,
-            follower.inboxUrl AS inboxUrl,
-            follower.createdAt AS createdAt;
-        `,
-        { followingId }
-    );
-    return result.records.map((record) => {
-        return {
-            id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
-            inboxUrl: record.get('inboxUrl') as string,
-            createdAt: new Date(record.get('createdAt')).toISOString(),
-        };
-    });
+export async function retrieveFollowers(
+  followingId: string
+): Promise<{
+  id: string;
+  actorId: string;
+  inboxUrl: string;
+  createdAt: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string;
+}[]> {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    MATCH (follower:Person)-[:Follows]->(:Person {_id: $followingId})
+    RETURN 
+        follower._id AS id,
+        follower.actorId AS actorId,
+        follower.inboxUrl AS inboxUrl,
+        follower.createdAt AS createdAt
+    `,
+    { followingId }
+  );
+
+  const followers = await Promise.all(
+    result.records.map(async (record) => {
+      const actorId = record.get('actorId') as string;
+      const user = await UserService.getUserByActorId(actorId);
+
+      return {
+        id: record.get('id') as string,
+        actorId,
+        inboxUrl: record.get('inboxUrl') as string,
+        createdAt: new Date(record.get('createdAt')).toISOString(),
+        displayName: user!.displayName,
+        username: user!.username,
+        avatarUrl: user!.avatarUrl,
+      };
+    })
+  );
+  return followers;
 }
 
-export async function retrieveSuggestedMutuals(followingId: string):
-    Promise<{ id: string; actorId: string; inboxUrl: string; createdAt: string; followers: number; }[]> {
-    const driver = await retrieveNeo4jDriver();
-    const result = await driver.executeQuery(
-        `
+
+export async function retrieveSuggestedMutuals(
+  followingId: string
+): Promise<
+  {
+    id: string;
+    actorId: string;
+    inboxUrl: string;
+    createdAt: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+  }[]
+> {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
         MATCH (start:Person {_id: $followingId})-[:Follows*1..3]->(suggested:Person)
         WHERE NOT (start)-[:Follows]->(suggested) 
         AND start <> suggested                  
@@ -125,17 +180,25 @@ export async function retrieveSuggestedMutuals(followingId: string):
         ORDER BY followers DESC
         LIMIT 20
         `,
-        { followingId }
-    );
-    return result.records.map((record) => {
-        return {
-            id: record.get('id') as string,
-            actorId: record.get('actorId') as string,
-            inboxUrl: record.get('inboxUrl') as string,
-            createdAt: new Date(record.get('createdAt')).toISOString(),
-            followers: record.get('followers').toInt() as number
-        };
-    });
+    { followingId }
+  );
+  const suggestedMutuals = await Promise.all(
+    result.records.map(async (record) => {
+      const actorId = record.get("actorId") as string;
+      const user = await UserService.getUserByActorId(actorId);
+
+      return {
+        id: record.get("id") as string,
+        actorId,
+        inboxUrl: record.get("inboxUrl") as string,
+        createdAt: new Date(record.get("createdAt")).toISOString(),
+        displayName: user!.displayName,
+        username: user!.username,
+        avatarUrl: user!.avatarUrl,
+      };
+    })
+  );
+  return suggestedMutuals;
 }
 
 export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals };
