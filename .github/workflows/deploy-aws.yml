@@ -2,7 +2,11 @@ name: Deployment Pipeline - Backend
 env:
   AWS_REGION: af-south-1
 
+# deploy on push to main branch
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -241,6 +245,24 @@ jobs:
         run: |
           EC2_HOST="${{ needs.terraform.outputs.ec2host }}"
           echo "API_HOST=$EC2_HOST" >> $GITHUB_ENV
+          echo "DB_NAME=$(aws ssm get-parameter --name '/dbconfig/db_name' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "DB_URL=$(aws ssm get-parameter --name '/dbconfig/db_url' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "GOOGLE_REDIRECT_URI=$(aws ssm get-parameter --name '/google/redirect_uri' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "DOMAIN=$(aws ssm get-parameter --name 'domain' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "AWS_REGION=$(aws ssm get-parameter --name 'region' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "S3_MEDIA_BUCKET=$(aws ssm get-parameter --name 's3_media_bucketname' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "NEO4J_DATABASE=$(aws ssm get-parameter --name '/dbconfig/neo4j/database' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "NEO4J_URI=$(aws ssm get-parameter --name '/dbconfig/neo4j/uri' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "NEO4J_USERNAME=$(aws ssm get-parameter --name '/dbconfig/neo4j/username' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "NEO4J_PASSWORD=$(aws ssm get-parameter --name '/dbconfig/neo4j/password' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_ID=$(aws ssm get-parameter --name '/google/client_id' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_SECRET=$(aws ssm get-parameter --name '/google/client_secret' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "AURA_INSTANCEID=$(aws ssm get-parameter --name '/dbconfig/aura/instance_id' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "AURA_INSTANCENAME=$(aws ssm get-parameter --name '/dbconfig/aura/instance_name' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_HOST=$(aws ssm get-parameter --name '/dbconfig/redis/host' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_PORT=$(aws ssm get-parameter --name '/dbconfig/redis/port' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_USERNAME=$(aws ssm get-parameter --name '/dbconfig/redis/username' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "REDIS_PASSWORD=$(aws ssm get-parameter --name '/dbconfig/redis/password' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
       # === Install Dependencies ===
       - name: Install Root Dependencies
         run: npm install
@@ -277,7 +299,7 @@ jobs:
           host: ${{ needs.terraform.outputs.ec2host }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: API_HOST
+          envs: API_HOST, DB_NAME, DB_URL, GOOGLE_REDIRECT_URI, DOMAIN, AWS_REGION, S3_MEDIA_BUCKET, NEO4J_DATABASE, NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AURA_INSTANCEID, AURA_INSTANCENAME, REDIS_HOST, REDIS_PORT, REDIS_USERNAME, REDIS_PASSWORD
           port: 22
           script: |
             set -e
@@ -297,6 +319,24 @@ jobs:
             NODE_ENV=production
             PORT=3000
             API_HOST=$API_HOST
+            DB_NAME=$DB_NAME
+            DB_URL=$DB_URL
+            GOOGLE_REDIRECT_URI=$GOOGLE_REDIRECT_URI
+            DOMAIN=$DOMAIN
+            AWS_REGION=$AWS_REGION
+            S3_MEDIA_BUCKET=$S3_MEDIA_BUCKET
+            NEO4J_DATABASE=$NEO4J_DATABASE
+            NEO4J_URI=$NEO4J_URI
+            NEO4J_USERNAME=$NEO4J_USERNAME
+            NEO4J_PASSWORD=$NEO4J_PASSWORD
+            GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+            AURA_INSTANCEID=$AURA_INSTANCEID
+            AURA_INSTANCENAME=$AURA_INSTANCENAME
+            REDIS_HOST=$REDIS_HOST
+            REDIS_PORT=$REDIS_PORT
+            REDIS_USERNAME=$REDIS_USERNAME
+            REDIS_PASSWORD=$REDIS_PASSWORD
             EOF
             # Restart the app with PM2
             pm2 stop mastodon || true

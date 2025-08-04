@@ -33,8 +33,8 @@ data "aws_subnet" "default_subnet_az2" {
 # Security Group for EC2
 resource "aws_security_group" "ec2_sg" {
   name_prefix = "group_5_mastodon_api_sg_"
-  vpc_id = aws_default_vpc.default_vpc.id
-  
+  vpc_id      = aws_default_vpc.default_vpc.id
+
   # Ingress rules for web access
   ingress {
     description = "Allow HTTP"
@@ -64,6 +64,14 @@ resource "aws_security_group" "ec2_sg" {
     description = "Allow SSH"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow PostgreSQL"
+    from_port   = 3000
+    to_port     = 3000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
