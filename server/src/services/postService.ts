@@ -24,7 +24,8 @@ const createPost = async (postData: ICreatePostData): Promise<IPost> => {
         activityPubUri: activityPubUri,
         likes: [],
         likesCount: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        comments: []
     });
     return savedPost;
 };
@@ -148,6 +149,23 @@ const unlikePost = async (postId: string, userId: string): Promise<boolean> => {
   return result.modifiedCount > 0;
 };
 
+const addComment = async (postId: string, userId: string, comment: string): Promise<boolean> => {
+  const objectId = new mongoose.Types.ObjectId(userId);
+  const result = await PostModel.updateOne(
+    { _id: postId },
+    { $push: { comments: { author: objectId, content: comment, createdAt: new Date().toISOString() } } }
+  );
+  return result.modifiedCount > 0;
+};
+
+const deleteComment = async (postId: string, commentId: string, authorId: string): Promise<boolean> => {
+  const result = await PostModel.updateOne(
+    { _id: postId },
+    { $pull: { comments: { _id: commentId, author: authorId } } }
+  )
+  return result.modifiedCount > 0;
+};
+
 export const PostService = {
   createPost,
   getPostById,
@@ -156,5 +174,7 @@ export const PostService = {
   deletePost,
   uploadImage,
   likePost,
-  unlikePost
+  unlikePost,
+  addComment,
+  deleteComment
 }

@@ -221,4 +221,41 @@ postRoutes.delete('/like/:id', requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * @route POST api/posts/comments/:id
+ * @description Create a comment on a post
+ */
+postRoutes.post('/comments/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+    const success = await PostService.addComment(id, res.locals.user!.id, comment);
+    if (!success) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to add comment' });
+    }
+    res.status(HTTP_STATUS.CREATED).end();
+  } catch (error) {
+    console.error('Add comment error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to add comment' });
+  }
+});
+
+/**
+ * @route DELETE api/posts/comments/:id/:commentId
+ * @description Delete a comment on a post
+ */
+postRoutes.delete('/comments/:id/:commentId', requireAuth, async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const success = await PostService.deleteComment(id, commentId, res.locals.user!.id);
+    if (!success) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to delete comment' });
+    }
+    res.status(HTTP_STATUS.OK).end();
+  } catch (error) {
+    console.error('Delete comment error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to delete comment' });
+  }
+});
+
 export default postRoutes;
