@@ -6,22 +6,16 @@ import '../styles/SideBar.css';
 import '../styles/UserSearch.css';
 import { useAuthContext } from '../context/AuthContext';
 
+// Type definitions based on your backend response
 interface SearchUser {
-  id: string;
   username: string;
   displayName: string;
   avatarUrl: string;
-  isRemote?: boolean;
-  domain?: string;
-  actorId?: string;
 }
 
 const UserSearch: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -87,83 +81,6 @@ const UserSearch: React.FC = () => {
 
   // Handle search input with debouncing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
-    setError(null);
-
-    // Only auto-search when input is empty (to show first 5 users)
-    // struggled with live searching, so this is a compromise
-    if (value.trim() === "") {
-      searchUsers("");
-    }
-  };
-
-  const handleSearch = () => {
-    if (query.trim() !== "") {
-      addToRecentSearches(query);
-    }
-    searchUsers(query);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  const searchUsers = async (searchQuery: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem("jwt");
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      let processedQuery = searchQuery;
-      if (searchQuery.startsWith("@")) {
-        processedQuery = searchQuery.substring(1);
-      }
-
-      const apiUrl = import.meta.env.VITE_API_URL || "";
-      const response = await fetch(
-        `${apiUrl}/api/users/search?q=${encodeURIComponent(processedQuery)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to search users");
-      }
-
-      const data = await response.json();
-      setSearchResults(data);
-      setLoading(false);
-    } catch (err) {
-      console.error("Search error:", err);
-      setError(err instanceof Error ? err.message : "Failed to search users");
-      setSearchResults([]);
-      setLoading(false);
-    }
-  };
-
-  // Add search to recent searches (FIFO - max 5 items)
-  const addToRecentSearches = (searchTerm: string) => {
-    if (searchTerm.trim() === "") return;
-
-    const newSearches = [
-      searchTerm,
-      ...recentSearches.filter((s) => s !== searchTerm),
-    ].slice(0, 5);
-    setRecentSearches(newSearches);
-    localStorage.setItem("recentSearches", JSON.stringify(newSearches));
-  };
-
     const value = e.target.value;
     setQuery(value);
 
