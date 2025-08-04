@@ -80,6 +80,11 @@
 /* Search Input - matching original style */
 .search-input {
   width: 100%;
+  margin-bottom: 2rem;
+}
+
+.search-input {
+  flex: 1;
   padding: 0.75rem 1rem;
   border: 1px solid #dbdbdb;
   border-radius: 8px;
@@ -90,8 +95,47 @@
   box-sizing: border-box;
 }
 
-.search-input:focus {
-  border-color: #0095f6;
+.search-button {
+  padding: 0.75rem 1.5rem;
+  background: #0095f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.search-button:hover:not(:disabled) {
+  background: #0081d6;
+}
+
+.search-button:disabled {
+  background: #b2dffc;
+  cursor: not-allowed;
+}
+
+.search-loading {
+  text-align: center;
+  color: #0095f6;
+  padding: 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.search-error {
+  text-align: center;
+  color: #ed4956;
+  padding: 1rem 0;
+  font-size: 1.1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  max-width: 500px;
+  width: 100%;
   box-shadow: 0 0 0 2px rgba(0, 149, 246, 0.1);
 }
 
@@ -199,6 +243,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
 .username {
@@ -209,6 +254,32 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.domain-indicator {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.domain-indicator.remote {
+  color: #0095f6;
+  background: #e3f2fd;
+}
+
+.domain-indicator.local {
+  color: #8e8e8e;
+  background: #f0f0f0;
+}
+
+.search-display-name {
+  color: #8e8e8e;
+  font-size: 0.95rem;
+  margin-top: 2px;
 }
 
 .display-name {

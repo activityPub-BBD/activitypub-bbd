@@ -11,6 +11,7 @@ import {
   PUBLIC_COLLECTION,
   isActor,
   Endpoints,
+  
 } from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
 import { RedisKvStore, RedisMessageQueue} from "@fedify/redis";
@@ -81,6 +82,7 @@ federation
 federation
   .setInboxListeners("/users/{identifier}/inbox", "/inbox")
   .on(Follow, async (ctx, follow) => {
+    logger.info("== Received Follow activity ==");
     if (follow.objectId == null) {
       logger.debug("The Follow object does not have an object: {follow}", {
         follow,
@@ -137,6 +139,8 @@ federation
         avatarUrl: "",
       });
 
+      logger.info("== Before addig user to graph ==");
+
       // Add the user to the graph db
       const success = await UserService.addUserToGraphDb(followerUser);
       if (!success) {
@@ -149,7 +153,8 @@ federation
         `Created new remote user: ${followerUser.displayName} from ${followerDomain}`
       );
     }
-
+    logger.info("== Before addig follow relationship to graph ==");
+    
     // Add the follower to the following user's followers list
     await FollowService.followUser(
       followerUser._id.toString(),

@@ -185,4 +185,40 @@ postRoutes.delete('/:id', requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * @route POST api/posts/like/:id
+ * @description Like a post by its ID
+ */
+postRoutes.post('/like/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const success = await PostService.likePost(id, res.locals.user!.id);
+    if (!success) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to like post' });
+    }
+    res.status(HTTP_STATUS.CREATED).end();
+  } catch (error) {
+    console.error('Like post error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to like post' });
+  }
+});
+
+/**
+ * @route DELETE api/posts/like/:id
+ * @description Unlike a post by its ID
+ */
+postRoutes.delete('/like/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const success = await PostService.unlikePost(id, res.locals.user!.id);
+    if (!success) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to unlike post' });
+    }
+    res.status(HTTP_STATUS.OK).end();
+  } catch (error) {
+    console.error('Unlike post error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to unlike post' });
+  }
+});
+
 export default postRoutes;
