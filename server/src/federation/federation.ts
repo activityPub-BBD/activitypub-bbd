@@ -11,6 +11,10 @@ import {
   PUBLIC_COLLECTION,
   isActor,
   Endpoints,
+  MemoryKvStore,
+  InProcessMessageQueue,
+  type Actor,
+  getActorHandle
 } from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
 import { RedisKvStore, RedisMessageQueue} from "@fedify/redis";
@@ -21,14 +25,62 @@ import { KeyService } from "@services/keyService";
 import { PostService } from "@services/postService";
 import { FollowService } from "@services/followService";
 import { retrieveRedisClient } from "@db/redis";
+import { registerModels, type IUser } from "@models/index";
+import { retrieveDb } from "@db/index";
+import { config } from "@config/index";
 
 const logger = getLogger("server");
 
 const redisClient = await retrieveRedisClient();
 
+// async function persistActor(actor: Actor): Promise<IUser| null> {
+//       if (actor.id == null || actor.inboxId == null) {
+//         logger.debug("Actor is missing required fields: {actor}", { actor });
+//         return null;
+//       }
+
+//       // Find the actor in our database if not then create them
+//       let existingActor = await UserService.getUserByActorId(actor.id.href);
+//       if (!existingActor) {
+//         logger.debug(
+//           "Actor not found in database: {actor}",
+//           { actor }
+//         );
+
+//         // Extract username and domain from the actor ID
+//         const actorUrl = new URL(actor.id.href);
+//         const actorPath = actorUrl.pathname;
+//         const actorUsername = actorPath.split("/").pop() || "unknown";
+//         const actorDomain = actorUrl.hostname;
+
+//         logger.debug(actor.getIcon())
+
+//         const remoteActor = await UserService.createRemoteUser({
+//           actorId: actor.id.href,
+//           username: actorUsername,
+//           domain: actorDomain,
+//           displayName: actor.name?.toString() || actorUsername,
+//           inboxUrl: actor.inboxId.href,
+//           outboxUrl: actor.outboxId?.href || "",
+//           followersUrl: actor.followersId?.href || "",
+//           followingUrl: actor.followingId?.href || "",
+//           bio: actor.summary?.toString() || "",
+//           avatarUrl: "",
+//         });
+//         // Add the user to the graph db
+//         const success = await UserService.addUserToGraphDb(remoteActor);
+//         if (!success) {
+//           logger.warn(
+//             `Failed to add user to graph db: ${remoteActor.displayName}`
+//           );
+//         }
+//       }
+//       return existingActor;
+// }
+
 export const federation = createFederation({
-  kv: new RedisKvStore(redisClient),
-  queue: new RedisMessageQueue(() => redisClient.duplicate()),
+  kv: new MemoryKvStore(),
+  queue: new InProcessMessageQueue()
 });
 
 //setup local actor
@@ -117,6 +169,16 @@ federation
 
     // Check if the follower exists in our database, if not create them
     let followerUser = await UserService.getUserByActorId(follower.id.href);
+    let icon = await follower.getIcon()
+    let avatarUrl
+
+    if (icon) {
+      avatarUrl = icon.url?.href?.toString()
+    } else {
+      avatarUrl = ""
+      logger.debug("NO ICON FOUND")
+    }
+
     if (!followerUser) {
       // Extract username and domain from the follower's actor ID
       const followerUrl = new URL(follower.id.href);
@@ -135,7 +197,7 @@ federation
         followersUrl: follower.followersId?.href || "",
         followingUrl: follower.followingId?.href || "",
         bio: follower.summary?.toString() || "",
-        avatarUrl: "",
+        avatarUrl: avatarUrl,
       });
 
       logger.info("== Before addig user to graph ==");
@@ -212,6 +274,70 @@ federation
     logger.info(
       `Removed ${unfollowerUser.displayName} as follower of ${unfollowedUser.displayName}`
     );
+  })
+  .on(Create, async (ctx, create) => {
+    const object = await create.getObject();
+    if (!(object instanceof Note)) return;
+    const actor = create.actorId;
+    if (actor == null) return;
+    const author = await object.getAttribution();
+    if (!isActor(author) || author.id?.href !== actor.href) return;
+    
+    // add user to db if DNE or just find them if they do exist
+    let postUser = await UserService.getUserByActorId(author.id.href);
+    let icon = await author.getIcon()
+    let avatarUrl
+
+    if (icon) {
+      avatarUrl = icon.url?.href?.toString()
+    } else {
+      avatarUrl = ""
+      logger.debug("NO ICON FOUND")
+    }
+    if (!postUser) {
+      // Extract username and domain from the follower's actor ID
+      const postUserUrl = new URL(author.id.href);
+      const postUserPath = postUserUrl.pathname;
+      const postUserUsername = postUserPath.split("/").pop() || "unknown";
+      const postUserDomain = postUserUrl.hostname;
+
+      // Create the remote user
+      postUser = await UserService.createRemoteUser({
+        actorId: author.id.href,
+        username: postUserUsername,
+        domain: postUserDomain,
+        displayName: author.name?.toString() || postUserUsername,
+        inboxUrl: author.inboxId!.href,
+        outboxUrl: author.outboxId?.href || "",
+        followersUrl: author.followersId?.href || "",
+        followingUrl: author.followingId?.href || "",
+        bio: author.summary?.toString() || "",
+        avatarUrl: avatarUrl,
+      });
+
+      logger.info("== Before addig user to graph ==");
+
+      // Add the user to the graph db
+      const success = await UserService.addUserToGraphDb(postUser);
+      if (!success) {
+        logger.warn(
+          `Failed to add user to graph db: ${postUser.displayName}`
+        );
+      }
+      logger.info(
+        `Created new remote user: ${postUser.displayName} from ${postUserDomain}`
+      );
+    }
+
+    if (postUser == null) return;
+    if (object.id == null) return;
+    const content = object.content?.toString();
+    const attachments = object.getAttachments();
+    logger.debug('POSTS')
+    logger.debug(content)
+    logger.debug(attachments) 
+
+    
   });
 
 //setup local actor's outbox

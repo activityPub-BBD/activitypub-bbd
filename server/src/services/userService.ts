@@ -137,8 +137,8 @@ const isUsernameAvailable = async (username: string): Promise<boolean> => {
 const updateUser = async (id: string, updates: Partial<IUser>): Promise<IUser | null> => {
     return await UserModel.findByIdAndUpdate(
       id,
-      updates,
-      { new: true }
+      { $set: updates },
+      { new: true, upsert: true, }
     );
 }
 
