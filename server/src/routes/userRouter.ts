@@ -77,12 +77,8 @@ const handleFederationLookup = async (req: any, query: string) => {
   try {
     const ctx = createFederationContext(req);
     
-    // Extract username and domain from username@domain.com format
-    const usernameParts = query.split('@');
-    const usernameOnly = usernameParts[0];
-    const domainWithTLD = usernameParts[1];
-    const domainOnly = domainWithTLD.split('.')[0]; // Remove TLD
-    const fedifyQuery = `@${usernameOnly}@${domainOnly}`;
+    const fedifyQuery = `@${query}`;
+    console.log("fedifyQuery", fedifyQuery)
     const remoteUser = await ctx.lookupObject(fedifyQuery);
     
     if (remoteUser && isActor(remoteUser) && remoteUser.id) {
