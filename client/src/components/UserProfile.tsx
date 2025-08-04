@@ -56,7 +56,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     setError('');
 
   try {
-      // Update profile - send everything including base64 avatar if it's new
       const updateResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         method: 'PUT',
         headers: {
@@ -67,7 +66,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           displayName: username,
           bio: bio,
           location: location,
-          avatarUrl: avatarUrl, // This will be base64 if user uploaded new image
+          avatarUrl: avatarUrl,
         }),
       });
 
@@ -86,8 +85,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         setError('');
       } else {
         const errorData = await updateResponse.json();
-        
-        // Handle token expiration
+
         if (updateResponse.status === 401) {
           setError('Your session has expired. Please sign in again.');
           logout();
@@ -122,7 +120,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         return;
       }
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please select an image file');
         return;
@@ -137,9 +134,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
   };
 
-  // Trigger file input click
   const triggerFileInput = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleBackClick = () => {
+    if (isOwnProfile) {
+      navigate('/home');
+    } else {
+      navigate(-1);
+    }
   };
 
   return (
@@ -150,12 +154,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             src={avatarUrl || '/no-avatar.jpg'}
             alt="Avatar"
             className="user-profile-avatar"
-            style={{ cursor: isEditing ? 'pointer' : 'default' }}
-            onClick={isEditing ? triggerFileInput : undefined}
+            style={{ cursor: (isEditing && isOwnProfile) ? 'pointer' : 'default' }}
+            onClick={(isEditing && isOwnProfile) ? triggerFileInput : undefined}
           />
 
           <div className="avatar-container">
-          {isEditing && (
+          {(isEditing && isOwnProfile) && (
             <div className="avatar-wrapper" style={{ position: 'relative' }}>
               <input
                 type="file"
@@ -175,14 +179,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         </div>
         </div>
 
-        {!isEditing ? (
+        {(!isEditing || !isOwnProfile) ? (
           <div className="user-profile-info">
             <div className="username-back-wrapper">
               <h2 className="user-profile-name">{username}</h2>
               <button
-                onClick={() => navigate('/home')}
+                onClick={handleBackClick}
                 className="button-back"
-                aria-label="Back to home"
+                aria-label="Back"
               >
                 ← Back
               </button>
@@ -210,9 +214,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             <div className="username-back-wrapper">
               <h2 className="user-profile-name">Edit Profile</h2>
               <button
-                onClick={() => navigate('/home')}
+                onClick={handleBackClick}
                 className="button-back"
-                aria-label="Back to home"
+                aria-label="Back"
               >
                 ← Back
               </button>
@@ -283,7 +287,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
       <hr className="divider" />
 
-      <h3 className="posts-header">{isOwnProfile ? 'Your Posts' : `${initialUsername}'s Posts`}</h3>
+      <h3 className="posts-header">
+        {isOwnProfile ? 'Your Posts' : `${initialUsername}'s Posts`}
+      </h3>
       <div className="posts-container">
         {posts.length === 0 ? (
           <p className="no-posts">
@@ -297,6 +303,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             console.log(post)
             return (
               <Post
+                key={post.id}
                 id={post.id}
                 content={post.content}
                 date={post.date}
