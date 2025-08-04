@@ -194,7 +194,7 @@ postRoutes.post('/like/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
     const success = await PostService.likePost(id, res.locals.user!.id);
     if (!success) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Post not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to like post' });
     }
     res.status(HTTP_STATUS.CREATED).end();
   } catch (error) {
@@ -204,15 +204,15 @@ postRoutes.post('/like/:id', requireAuth, async (req, res) => {
 });
 
 /**
- * @route DELETE api/posts/unlike/:id
+ * @route DELETE api/posts/like/:id
  * @description Unlike a post by its ID
  */
-postRoutes.delete('/unlike/:id', requireAuth, async (req, res) => {
+postRoutes.delete('/like/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const success = await PostService.unlikePost(id, res.locals.user!.id);
     if (!success) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Post not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to unlike post' });
     }
     res.status(HTTP_STATUS.OK).end();
   } catch (error) {
