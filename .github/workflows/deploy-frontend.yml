@@ -46,7 +46,7 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          VITE_API_URL: http://16.28.122.209:3000
+          VITE_API_URL: https://mastodon.thups.co.za
           VITE_GOOGLE_CLIENT_ID: 692300555173-m16joirhb27h7cgoh9tnkatrs3af0den.apps.googleusercontent.com
           VITE_GOOGLE_REDIRECT_URI: https://d7uwchvpta0lr.cloudfront.net/auth/callback
       # === Upload to S3 ===
