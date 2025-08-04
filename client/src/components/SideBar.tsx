@@ -28,10 +28,10 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/follows/follow-summary/${user.id}`);
+        const res = await fetch(`/api/users/${user.id}/stats`);
         if (!res.ok) throw new Error("Failed to fetch user stats");
         const data = await res.json();
-        setStats({ followers: data.followerCount || 0, following: data.followingCount || 0 });
+        setStats({ followers: data.followers || 0, following: data.following || 0 });
       } catch (err) {
         console.error("Error fetching stats:", err);
         setStats({ followers: 0, following: 0 });
