@@ -212,6 +212,11 @@ const UserSearch: React.FC = () => {
       
       <div className={`main-content ${sidebarOpen ? 'shifted' : ''}`}>
         <div className="user-search-container">
+          {/* Back Button */}
+          <button className="back-button" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+          
           <h2>Search Users</h2>
           
           {/* Search Input */}
