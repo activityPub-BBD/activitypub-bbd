@@ -42,18 +42,7 @@ const upload = multer({
  */
 postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
-    const fullUrl = `https://${config.domain}${req.originalUrl}`;
-    let requestBody: any = undefined;
-    if (!["GET", "HEAD"].includes(req.method)) {
-      requestBody = req.body ? JSON.stringify(req.body) : undefined;
-    }
-    const fetchRequest = new Request(fullUrl, {
-      method: req.method,
-      headers: req.headers as any,
-      body: requestBody,
-    });
-    const ctx = federation.createContext(fetchRequest, undefined);
-
+    const federationContext = (req as any).federationContext;
     const { caption } = req.body;
 
     if (!caption) {
@@ -81,38 +70,14 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
       caption,
       mediaUrl,
       mediaType,
-    });
+    }, federationContext);
 
     const populatedPost = await PostService.getPostById(post.id);
-
 
     if (!populatedPost) {
       return res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json({ error: "Failed to retrieve created post" });
-    }
-
-    try {
-      const username = populatedPost.author.username;
-      const noteArgs = { identifier: username, id: post.id.toString() };
-
-      const note = await ctx.getObject(Note, noteArgs);
-
-      if (note) {
-        await ctx.sendActivity(
-          { identifier: username },
-          "followers",
-          new Create({
-            id: new URL(`#activity`, note?.id ?? undefined),
-            object: note,
-            actors: note?.attributionIds,
-            tos: note?.toIds,
-            ccs: note?.ccIds,
-          })
-        );
-      }
-    } catch (federationError) {
-      console.error("Failed to send Create(Note) activity:", federationError);
     }
 
     const response: IPostResponse = {
