@@ -19,10 +19,11 @@ const queueCreateNoteActivity = async (
       );
       return;
     }
-    const allFollowers = await FollowService.retrieveFollowing(author.id);
+    const allFollowers = await FollowService.retrieveFollowers(author.id);
     const allFollowersActorIds = allFollowers.map(
       (follower) => follower.actorId
     );
+
     if (allFollowersActorIds.length === 0) {
       logger.info("No followers to send Create activity");
       return;
