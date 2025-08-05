@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getGoogleJwt} from "@services/authService";
 import { requireAuth } from "@middleware/auth";
 import { HTTP_STATUS } from "@utils/httpStatus";
+import type { IUser } from "@models/user";
 
 export const authRoutes = Router();
 
@@ -24,7 +25,7 @@ authRoutes.post('/logout', requireAuth,   async (req, res) => {
  * @description Get current authenticated user's profile
 */
 authRoutes.get('/me', requireAuth, async (req, res) => {
-    const user = res.locals.user;
+    const user: IUser | null = res.locals.user;
     if (!user) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
     }

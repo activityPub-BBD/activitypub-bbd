@@ -103,6 +103,26 @@ const getPostById = async (id: string): Promise<any | null> => {
       .populate('author', 'username displayName avatarUrl');
 }
 
+const getNewestPostFromFollowing = async(followingIds: string[], page = 1, limit = 20): Promise<IPost[]> => {
+  const skip = (page - 1) * limit;
+
+  return await PostModel.find({ author: { $in: followingIds } })
+  .sort({ createdAt: -1 })
+  .skip(skip)
+  .limit(limit)
+  .populate('author', 'username displayName avatarUrl');
+}
+
+const getMostLikedPostFromFollowing = async(followingIds: string[], page = 1, limit = 20): Promise<IPost[]> => {
+  const skip = (page - 1) * limit;
+
+  return await PostModel.find({ author: { $in: followingIds } })
+  .sort({ likesCount: -1 })
+  .skip(skip)
+  .limit(limit)
+  .populate('author', 'username displayName avatarUrl');
+}
+
  const deletePost = async (postId: string, userId: string): Promise<boolean> => {
     const post = await PostModel.findOne({ _id: postId, author: userId });
     if (!post) {
@@ -221,6 +241,8 @@ export const PostService = {
   uploadImage,
   likePost,
   unlikePost,
+  getNewestPostFromFollowing,
+  getMostLikedPostFromFollowing,
   addComment,
   deleteComment,
   getComments
