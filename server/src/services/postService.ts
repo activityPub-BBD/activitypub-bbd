@@ -163,10 +163,13 @@ const likePost = async (postId: string, userId: string, federationContext?: any)
     const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
     if (alreadyLiked) return false;
 
-    // Add user to likes
+    // Atomically add user to likes and increment likesCount
     const result = await PostModel.updateOne(
       { _id: postId },
-      { $push: { likes: objectId } }
+      {
+        $push: { likes: objectId },
+        $inc: { likesCount: 1 },
+      }
     );
 
     if (result.modifiedCount === 0) return false;
@@ -190,10 +193,13 @@ const unlikePost = async (postId: string, userId: string): Promise<boolean> => {
   const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
   if (!alreadyLiked) return false;
 
-  // Remove user from likes
+  // Atomically remove user to likes and decrement likesCount
   const result = await PostModel.updateOne(
     { _id: postId },
-    { $pull: { likes: objectId } }
+    {
+      $pull: { likes: objectId },
+      $inc: { likesCount: -1 }
+    }
   );
 
   return result.modifiedCount > 0;

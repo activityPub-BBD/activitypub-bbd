@@ -4,24 +4,12 @@ import '../styles/Feed.css';
 import { useAuthContext } from '../context/AuthContext';
 import Post from './Post';
 import {useNavigate} from "react-router-dom"
-
-interface Post {
-  id: string;
-  caption: string;
-  mediaUrl: string;
-  mediaType: string;
-  createdAt: string;
-  author: {
-    username: string;
-    displayName: string;
-    avatarUrl: string;
-  };
-}
+import type { IPost } from './UserProfile';
 
 const Feed: React.FC = () => {
   const { jwt, logout } = useAuthContext();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<IPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -107,8 +95,8 @@ const Feed: React.FC = () => {
     }
 
     const frontendPost = {
-      id: newPost.id,
-      caption: newPost.caption,
+      _id: newPost.id,
+      content: newPost.caption,
       mediaUrl: newPost.mediaUrl,
       mediaType: newPost.mediaType,
       createdAt: new Date().toISOString(),
@@ -117,6 +105,8 @@ const Feed: React.FC = () => {
         avatarUrl: newPost.author.avatarUrl,
         username: newPost.author.username
       },
+      likes: [],
+      likesCount: 0
     };
 
     setPosts(prevPosts => [frontendPost, ...prevPosts]);
@@ -125,20 +115,6 @@ const Feed: React.FC = () => {
   const handleSearchClick = () => {
     navigate('/search');
   }
-
-  const formattedPosts = posts.map(post => ({
-    id: post.id,
-    content: post.caption,
-    date: new Date(post.createdAt).toLocaleDateString(),
-    mediaUrl: post.mediaUrl,
-    mediaType: post.mediaType,
-    author: {
-      displayName: post.author.displayName,
-      avatarUrl: post.author.avatarUrl,
-      username: post.author.username
-    }
-  }));
-
   return (
     <div className="feed-container" ref={feedRef} style={{ overflowY: 'auto', height: '100vh' }}>
       {/* Header */}
@@ -157,15 +133,17 @@ const Feed: React.FC = () => {
       {/* Main Feed */}
       <main className="feed">
         <div className="posts-container">
-          {formattedPosts.map(post => (
+          {posts.map(post => (
             <Post
-              key={post.id}
-              id={post.id}
+              key={post._id}
+              _id={post._id}
               content={post.content}
-              date={post.date}
+              createdAt={post.createdAt}
               mediaType={post.mediaType}
               mediaUrl={post.mediaUrl}
               author={post.author}
+              likes={post.likes}
+              likesCount={post.likesCount}
             />
           ))}
           {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
