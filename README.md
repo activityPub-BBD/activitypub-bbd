@@ -1,19 +1,75 @@
-# 🗄️ Chirp Database Schema (MongoDB)
+# Chirp 🐦
 
-Chirp uses MongoDB with Mongoose to manage users, posts, and ActivityPub actor data. Below are the schemas and how they relate to each other.
+**Chirp** is a federated social media app inspired by Mastodon and powered by [Fedify](https://github.com/modern-activitypub/fedify). It allows users to create local accounts, publish posts, and follow remote ActivityPub actors. Chirp integrates **MongoDB** (via Mongoose) for core user and content data, and **Neo4j** to efficiently manage and query social graph relationships like followers and mutuals.
 
 ---
 
-## 📌 Test fedify
+## 📚 Features
 
-```bash
-npm i
-npm run dev
+- Federated post sharing and retrieval using ActivityPub
+- Follows and unfollows tracked via **Neo4j**
+- Local user authentication (e.g. Google login)
+- Media posting with support for images and video
+- Mutual/follower suggestions via graph traversal
+- Fedify-based ActivityPub protocol implementation
+
+---
+
+## 🧱 Tech Stack
+
+| Layer              | Technology                  |
+|--------------------|------------------------------|
+| Database           | MongoDB + Neo4j              |
+| Federated Protocol | Fedify (ActivityPub)         |
+| Backend            | Node.js + Express            |
+| ORM/ODM            | Mongoose (MongoDB)           |
+| Graph DB           | Neo4j (Social Graph)         |
+
+---
+
+## 🗃️ MongoDB Models
+
+### 🔐 Key
+
+Stores public/private key pairs per user.
+
+```ts
+type: 'RSASSA-PKCS1-v1_5' | 'Ed25519';
+privateKey: string;  // JWK JSON string
+publicKey: string;
+userId: ObjectId;    // ref: 'User'
 ```
-Open new terminal and it should return the dummy user
-```bash
-fedify lookup http://localhost:8000/users/cindi
+
+### 🔐 User
+
+```ts
+googleId?: string;   // for local auth
+domain: string;
+username: string;
+actorId: string;     // ActivityPub actor ID
+avatarUrl?: string;
+bio?: string;
+inboxUrl, outboxUrl: string;
+followersUrl, followingUrl: string;
+isLocal: boolean;
+createdAt: Date;
 ```
+
+### 📝 Post
+
+```ts
+author: ObjectId;     // ref: 'User'
+caption: string;
+mediaUrl: string;
+mediaType: 'image/jpeg' | 'image/png' | 'video/mp4' | ...;
+activityPubUri: string; // unique
+likes: ObjectId[];
+likesCount: number;
+```
+
+### 🔗 Neo4j Graph Queries
+
+Chirp uses Neo4j to represent and query user relationships (follows, followers, mutuals).
 
 ## API ROUTES
 
@@ -158,67 +214,8 @@ Get suggested mutual connections for the authenticated user
 | Collection | Purpose                                         |
 |------------|-------------------------------------------------|
 | `users`    | Stores user profile and Fediverse actor info    |
+| `keys`     | Stores user keypairs for ActivityPub signing    |
 | `posts`    | Stores text, image, or video posts from users   |
 | `follows`  | Stores relationships between users (follows)    |
 
 ---
-
-## 👤 User Schema
-
-**Collection:** `users`
-
-Each document represents a single authenticated user.  
-On first login via Google, a user is created and a Fedify actor is assigned.
-
-```js
-{
-  _id: ObjectId,
-  googleId: String,             // Google OAuth ID (unique)
-  email: string,
-  username: string,       
-  domain: string,               // Instance domain
-  actorId: string,              // Full ActivityPub actor URI
-  handle: string,               //@johndoe@example.com
-  displayName: string
-  avatarUrl?: String,           // Optional user profile image URL
-  bio?: string,                 // Optional user bio
-  inboxUrl: String,             // Inbox endpoint for ActivityPub
-  outboxUrl: String,            // Outbox endpoint for ActivityPub
-  isLocal: boolean,             // Local vs remote user
-  createdAt: Date,
-}
-```
-
-## 👤 Post Schema
-
-**Collection:** `posts`
-
-```js
-{
-  _id: ObjectId,
-  author: ObjectId,             // Reference to User
-  caption: string,              // Post caption
-  mediaUrl: string,             // S3 image URL
-  mediaType: string,            // image/jpeg, image/png, image/webp
-  uri: string,                  // ActivityPub object URI (unique)
-  likes: ObjectId[],            // Array of user IDs who liked
-  likesCount: number,        
-  createdAt: Date,
-}
-```
-
-## 👤 Follow Schema
-
-**Collection:** `follow`
-
-```js
-{
-  _id: ObjectId,
-  follower: ObjectId,         // Reference to User who is following
-  followee: ObjectId,         // Reference to User being followed
-  followerActorId: String,    // URI of the follower's actor
-  followeeActorId: String,    // URI of the followee's actor
-  inboxUrl: String,           // Inbox of the followee (for sending 'Follow' activity)
-  accepted: Boolean,          // Whether the follow was accepted (true = follow back or approved)
-  createdAt: Date,
-}
