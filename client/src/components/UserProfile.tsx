@@ -13,7 +13,7 @@ export interface IUser {
 }
 export interface IPost {
   _id: string;
-  content: string;
+  caption: string;
   createdAt: string;
   mediaUrl: string;
   mediaType: string;
@@ -383,7 +383,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               <Post
                 key={post._id}
                 _id={post._id}
-                content={post.content}
+                caption={post.caption}
                 createdAt={post.createdAt}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}

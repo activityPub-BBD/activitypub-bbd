@@ -6,7 +6,7 @@ import type { IPost } from "./UserProfile";
 export const Post = ({
   _id,
   author,
-  content,
+  caption,
   createdAt,
   mediaUrl,
   mediaType,
@@ -86,7 +86,7 @@ export const Post = ({
       )}
 
       {/* Content */}
-      <p className="post-content">{content}</p>
+      <p className="post-content">{caption}</p>
 
       {/* Metadata */}
       <div

@@ -96,7 +96,7 @@ const Feed: React.FC = () => {
 
     const frontendPost = {
       _id: newPost.id,
-      content: newPost.caption,
+      caption: newPost.caption,
       mediaUrl: newPost.mediaUrl,
       mediaType: newPost.mediaType,
       createdAt: new Date().toISOString(),
@@ -137,7 +137,7 @@ const Feed: React.FC = () => {
             <Post
               key={post._id}
               _id={post._id}
-              content={post.content}
+              caption={post.caption}
               createdAt={post.createdAt}
               mediaType={post.mediaType}
               mediaUrl={post.mediaUrl}
