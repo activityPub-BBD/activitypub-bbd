@@ -4,11 +4,11 @@ import type { ICreatePostData } from 'types/post';
 import { config } from '@config/config';
 import { uploadImageToS3 } from "./s3Service";
 import { retrieveDb } from "@db/mongo";
-import { registerModels } from "@models/index";
+import { registerModels, type ICommentWithAuthor, type IUser } from "@models/index";
 
 
 const db = await retrieveDb(config.dbName);         
-const {Post: PostModel} = registerModels(db);
+const {Post: PostModel, User: UserModel} = registerModels(db);
 
 const createPost = async (postData: ICreatePostData): Promise<IPost> => {
     const protocol = config.domain.includes('localhost') ? 'http' : 'https';
@@ -153,7 +153,7 @@ const addComment = async (postId: string, userId: string, comment: string): Prom
   const objectId = new mongoose.Types.ObjectId(userId);
   const result = await PostModel.updateOne(
     { _id: postId },
-    { $push: { comments: { author: objectId, content: comment, createdAt: new Date().toISOString() } } }
+    { $push: { comments: { _id: new mongoose.Types.ObjectId(), author: objectId, content: comment, createdAt: new Date().toISOString() } } }
   );
   return result.modifiedCount > 0;
 };
@@ -166,6 +166,39 @@ const deleteComment = async (postId: string, commentId: string, authorId: string
   return result.modifiedCount > 0;
 };
 
+const getComments = async (
+  postId: string,
+  page = 1,
+  limit = 20
+) => {
+  const skip = (page - 1) * limit;
+
+  const post = await PostModel.findById(postId)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  if (!post) return [];
+
+  const commentsWithAuthors = (await Promise.all(
+    post.comments.map(async (comment) => {
+      const author = await UserModel.findById(comment.author).select('-googleId').lean();
+
+      if (!author) return undefined;
+
+      return {
+        ...author,
+        commentId: comment._id,
+        commentContent: comment.content,
+        commentCreatedAt: comment.createdAt,
+        commentAuthorId: comment.author,
+      };
+    })
+  )).filter((commentsWithAuthors) => commentsWithAuthors !== undefined);
+
+  return commentsWithAuthors;
+};
+
 export const PostService = {
   createPost,
   getPostById,
@@ -176,5 +209,6 @@ export const PostService = {
   likePost,
   unlikePost,
   addComment,
-  deleteComment
+  deleteComment,
+  getComments
 }

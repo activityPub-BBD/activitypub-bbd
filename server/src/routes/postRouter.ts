@@ -7,6 +7,7 @@ import type { IPostResponse } from 'types/post';
 import { federation } from "@federation/index";
 import { Create, Note } from "@fedify/fedify";
 import { config } from "@config/config";
+import type { IUser } from '@models/user';
 
 export const postRoutes = Router();
 
@@ -222,6 +223,23 @@ postRoutes.delete('/like/:id', requireAuth, async (req, res) => {
 });
 
 /**
+ * @route GET api/posts/comments/:id
+ * @description Retrieve comments for a post (optionally paginated)
+ */
+postRoutes.get('/comments/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const comments = await PostService.getComments(id, page, limit);
+    res.status(HTTP_STATUS.OK).json(comments);
+  } catch (error) {
+    console.error('Get comments error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch comments' });
+  }
+});
+
+/**
  * @route POST api/posts/comments/:id
  * @description Create a comment on a post
  */
@@ -229,7 +247,8 @@ postRoutes.post('/comments/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { comment } = req.body;
-    const success = await PostService.addComment(id, res.locals.user!.id, comment);
+    const user: IUser | null = res.locals.user;
+    const success = await PostService.addComment(id, user!.id, comment);
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to add comment' });
     }
@@ -247,7 +266,8 @@ postRoutes.post('/comments/:id', requireAuth, async (req, res) => {
 postRoutes.delete('/comments/:id/:commentId', requireAuth, async (req, res) => {
   try {
     const { id, commentId } = req.params;
-    const success = await PostService.deleteComment(id, commentId, res.locals.user!.id);
+    const user: IUser | null = res.locals.user;
+    const success = await PostService.deleteComment(id, commentId, user!.id);
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to delete comment' });
     }

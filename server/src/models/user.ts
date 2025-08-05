@@ -19,6 +19,13 @@ export interface IUser extends Document {
   location?: string;
 }
 
+export interface ICommentWithAuthor extends IUser {
+  commentId: Types.ObjectId;
+  commentContent: string;
+  commentCreatedAt: Date;
+  commentAuthorId: Types.ObjectId;
+}
+
 export const userSchema = new Schema<IUser>({
   googleId: {
     type: String,
