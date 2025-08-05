@@ -208,14 +208,3 @@ Get suggested mutual connections for the authenticated user
   }
 ]
 ```
-
-## 📌 Overview
-
-| Collection | Purpose                                         |
-|------------|-------------------------------------------------|
-| `users`    | Stores user profile and Fediverse actor info    |
-| `keys`     | Stores user keypairs for ActivityPub signing    |
-| `posts`    | Stores text, image, or video posts from users   |
-| `follows`  | Stores relationships between users (follows)    |
-
----
