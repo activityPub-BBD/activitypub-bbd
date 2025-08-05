@@ -1,6 +1,7 @@
-import React, { useState, useRef, type ChangeEvent } from 'react';
+import React, { useState, useRef, type ChangeEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import { followService } from '../services/followService';
 import '../styles/UserProfile.css';
 import Post from './Post';
 
@@ -23,6 +24,8 @@ interface UserProfileProps {
   initialAvatarUrl: string;
   initialLocation: string;
   posts: IPost[];
+  isOwnProfile?: boolean;
+  profileUserId?: string;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -30,10 +33,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   initialBio,
   initialAvatarUrl,
   initialLocation = '',
-  posts
+  posts,
+  isOwnProfile,
+  profileUserId
 }) => {
   const navigate = useNavigate();
-  const { jwt, setUser, logout } = useAuthContext();
+  const { jwt, setUser, logout, user } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);
@@ -42,6 +47,64 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
+  // Follow/unfollow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  // Check follow status when component mounts or when profileUserId changes
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!jwt || !profileUserId || isOwnProfile || !user?.id) {
+        return;
+      }
+
+      try {
+        const following = await followService.checkFollowStatus(profileUserId, jwt);
+        setIsFollowing(following);
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      }
+    };
+
+    checkFollowStatus();
+  }, [jwt, profileUserId, isOwnProfile, user?.id]);
+
+  const handleFollow = async () => {
+    if (!jwt || !profileUserId || isOwnProfile) {
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      const success = await followService.followUser(profileUserId, jwt);
+      if (success) {
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error('Error following user:', error);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!jwt || !profileUserId || isOwnProfile) {
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      const success = await followService.unfollowUser(profileUserId, jwt);
+      if (success) {
+        setIsFollowing(false);
+      }
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
   
   const handleSave = async () => {
     if (!jwt) {
@@ -53,7 +116,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     setError('');
 
   try {
-      // Update profile - send everything including base64 avatar if it's new
       const updateResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         method: 'PUT',
         headers: {
@@ -64,7 +126,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           displayName: username,
           bio: bio,
           location: location,
-          avatarUrl: avatarUrl, // This will be base64 if user uploaded new image
+          avatarUrl: avatarUrl,
         }),
       });
 
@@ -83,8 +145,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         setError('');
       } else {
         const errorData = await updateResponse.json();
-        
-        // Handle token expiration
+
         if (updateResponse.status === 401) {
           setError('Your session has expired. Please sign in again.');
           logout();
@@ -119,7 +180,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         return;
       }
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setError('Please select an image file');
         return;
@@ -134,9 +194,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
     }
   };
 
-  // Trigger file input click
   const triggerFileInput = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleBackClick = () => {
+    if (isOwnProfile) {
+      navigate('/home');
+    } else {
+      navigate(-1);
+    }
   };
 
   return (
@@ -147,12 +214,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             src={avatarUrl || '/no-avatar.jpg'}
             alt="Avatar"
             className="user-profile-avatar"
-            style={{ cursor: isEditing ? 'pointer' : 'default' }}
-            onClick={isEditing ? triggerFileInput : undefined}
+            style={{ cursor: (isEditing && isOwnProfile) ? 'pointer' : 'default' }}
+            onClick={(isEditing && isOwnProfile) ? triggerFileInput : undefined}
           />
 
           <div className="avatar-container">
-          {isEditing && (
+          {(isEditing && isOwnProfile) && (
             <div className="avatar-wrapper" style={{ position: 'relative' }}>
               <input
                 type="file"
@@ -172,14 +239,14 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         </div>
         </div>
 
-        {!isEditing ? (
+        {(!isEditing || !isOwnProfile) ? (
           <div className="user-profile-info">
             <div className="username-back-wrapper">
               <h2 className="user-profile-name">{username}</h2>
               <button
-                onClick={() => navigate('/home')}
+                onClick={handleBackClick}
                 className="button-back"
-                aria-label="Back to home"
+                aria-label="Back"
               >
                 ← Back
               </button>
@@ -196,18 +263,30 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               )}
             </div>
 
-            <button onClick={() => setIsEditing(true)} className="button-edit">
-              Edit Profile
-            </button>
+            {isOwnProfile && (
+              <button onClick={() => setIsEditing(true)} className="button-edit">
+                Edit Profile
+              </button>
+            )}
+            
+            {!isOwnProfile && (
+              <button 
+                onClick={isFollowing ? handleUnfollow : handleFollow}
+                disabled={followLoading}
+                className={`button-follow ${isFollowing ? 'button-unfollow' : 'button-follow'}`}
+              >
+                {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
+              </button>
+            )}
           </div>
         ) : (
           <div className="user-profile-info">
             <div className="username-back-wrapper">
               <h2 className="user-profile-name">Edit Profile</h2>
               <button
-                onClick={() => navigate('/home')}
+                onClick={handleBackClick}
                 className="button-back"
-                aria-label="Back to home"
+                aria-label="Back"
               >
                 ← Back
               </button>
@@ -278,15 +357,23 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
       <hr className="divider" />
 
-      <h3 className="posts-header">Your Posts</h3>
+      <h3 className="posts-header">
+        {isOwnProfile ? 'Your Posts' : `${initialUsername}'s Posts`}
+      </h3>
       <div className="posts-container">
         {posts.length === 0 ? (
-          <p className="no-posts">No posts yet. Create your first post!</p>
+          <p className="no-posts">
+            {isOwnProfile 
+              ? 'No posts yet. Create your first post!' 
+              : `${initialUsername} hasn't posted anything yet.`
+            }
+          </p>
         ) : (
           posts.map(post => {
             console.log(post)
             return (
               <Post
+                key={post.id}
                 id={post.id}
                 content={post.content}
                 date={post.date}

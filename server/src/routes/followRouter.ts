@@ -2,6 +2,8 @@ import { requireAuth } from "@middleware/auth";
 import { Router } from "express";
 import { FollowService } from "@services/followService";
 import { HTTP_STATUS } from "@utils/httpStatus";
+import { UserService } from "@services/userService";
+import { Follow, Undo } from "@fedify/fedify";
 
 /**
  * Express router for handling follow-related routes.
@@ -47,27 +49,65 @@ followRoutes.get("/follow-summary", requireAuth, async (req, res) => {
 });
 
 /**
- * @route POST /follow/:oid/:accepted
- * @description Follow or accept follow for a specific user.
+ * @route POST /follow/:oid
+ * @description Follow a specific user.
  * @param {string} oid - Object ID of the target user.
- * @param {string} accepted - Boolean string ('true' or 'false') indicating whether the follow is accepted.
  * @requires Authentication
  * @returns {void|Object} 201 Created or error message.
  */
-followRoutes.post("/follow/:oid/:accepted", requireAuth, async (req, res) => {
+followRoutes.post("/follow/:oid", requireAuth, async (req, res) => {
     try {
-        const accepted = req.params.accepted === 'true';
         const oid = req.params.oid;
 
         if (!res.locals.user?.id) {
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         }
 
-        if (!oid || !req.params.accepted) {
+        if (!oid) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
         }
 
-        const follow = await FollowService.followUser(res.locals.user.id, oid, accepted);
+        // Get the target user to check if they are local or remote
+        const targetUser = await UserService.getUserByObjectId(oid);
+        
+        if (!targetUser) {
+            return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
+        }
+
+        // If target user is remote, we need to send a federated follow activity
+        if (!targetUser.isLocal) {
+            const federationContext = (req as any).federationContext;
+            if (!federationContext) {
+                return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Federation context not available' });
+            }
+
+            // Get the current user
+            const currentUser = await UserService.getUserByObjectId(res.locals.user.id);
+            if (!currentUser) {
+                return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Current user not found' });
+            }
+
+            try {
+                const actor = await federationContext.lookupObject(targetUser.actorId);
+                if (actor) {
+                    await federationContext.sendActivity(
+                        { identifier: currentUser.username },
+                        actor,
+                        new Follow({
+                            actor: federationContext.getActorUri(currentUser.username),
+                            object: actor.id,
+                            to: actor.id,
+                        }),
+                    );
+                    console.log(`Sent federated follow activity from ${currentUser.username} to ${targetUser.username}`);
+                }
+            } catch (federationError) {
+                console.error('Federation error:', federationError);
+                // Still create the local follow relationship even if federation fails
+            }
+        }
+
+        const follow = await FollowService.followUser(res.locals.user.id, oid, true);
         if (!follow) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to follow user' });
         }
@@ -92,7 +132,53 @@ followRoutes.delete("/unfollow/:oid", requireAuth, async (req, res) => {
             return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
         } else if (!oid) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
-        } else{
+        } else {
+            // Get the target user to check if they are local or remote
+            const targetUser = await UserService.getUserByObjectId(oid);
+            
+            if (!targetUser) {
+                return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
+            }
+
+            // If target user is remote, we need to send a federated undo activity
+            if (!targetUser.isLocal) {
+                const federationContext = (req as any).federationContext;
+                if (!federationContext) {
+                    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Federation context not available' });
+                }
+
+                // Get the current user
+                const currentUser = await UserService.getUserByObjectId(res.locals.user.id);
+                if (!currentUser) {
+                    return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Current user not found' });
+                }
+
+                try {
+                    const actor = await federationContext.lookupObject(targetUser.actorId);
+                    if (actor) {
+                        const previousFollow = new Follow({
+                            actor: federationContext.getActorUri(currentUser.username),
+                            object: actor.id,
+                            to: actor.id,
+                        });
+                        
+                        await federationContext.sendActivity(
+                            { identifier: currentUser.username },
+                            actor,
+                            new Undo({
+                                actor: federationContext.getActorUri(currentUser.username),
+                                object: previousFollow,
+                                to: actor.id,
+                            }),
+                        );
+                        console.log(`Sent federated undo activity from ${currentUser.username} to ${targetUser.username}`);
+                    }
+                } catch (federationError) {
+                    console.error('Federation error:', federationError);
+                    // Still unfollow locally even if federation fails
+                }
+            }
+
             const unfollow = await FollowService.unfollowUser(res.locals.user.id, oid);
             if (!unfollow) {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to unfollow user' });
@@ -228,6 +314,31 @@ followRoutes.get("/suggested-mutuals", requireAuth, async (req, res) => {
         res.status(HTTP_STATUS.OK).json(suggestedMutuals);
     } catch (error) {
         console.error('Error retrieving suggested mutuals:', error);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * @route GET /is-following/:oid
+ * @description Check if the authenticated user is following a specific user.
+ * @param {string} oid - Object ID of the target user.
+ * @requires Authentication
+ * @returns {Object} JSON with isFollowing boolean or error.
+ */
+followRoutes.get("/is-following/:oid", requireAuth, async (req, res) => {
+    try {
+        const oid = req.params.oid;
+        if (!res.locals.user?.id) {
+            return res.status(HTTP_STATUS.UNAUTHORIZED).json({ error: 'Not authenticated' });
+        }
+        if (!oid) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Missing required parameters' });
+        }
+        
+        const isFollowing = await FollowService.isFollowing(res.locals.user.id, oid);
+        res.status(HTTP_STATUS.OK).json({ isFollowing });
+    } catch (error) {
+        console.error('Error checking follow status:', error);
         res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
     }
 });

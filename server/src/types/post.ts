@@ -5,6 +5,7 @@ export interface ICreatePostData {
   caption: string;
   mediaUrl?: string;
   mediaType?: string;
+  activityPubUri?: string;
 }
 
 export interface IPostUser {

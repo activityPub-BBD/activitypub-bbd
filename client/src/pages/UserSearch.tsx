@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SideBar from '../components/SideBar';
 import '../styles/Home.css';
 import '../styles/SideBar.css';
@@ -23,6 +24,7 @@ const UserSearch: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const { user } = useAuthContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedSearches = localStorage.getItem("recentSearches");
@@ -112,9 +114,16 @@ const UserSearch: React.FC = () => {
     localStorage.setItem("recentSearches", JSON.stringify(newSearches));
   };
 
-  const handleUserClick = (username: string) => {
-    addToRecentSearches(username);
+  const handleUserClick = (user: SearchUser) => {
+    addToRecentSearches(user.username);
     setQuery("");
+    
+    // For remote users, use the full username@domain format
+    const usernameForNavigation = user.isRemote && user.domain 
+      ? `${user.username}@${user.domain}`
+      : user.username;
+    
+    navigate(`/user/${usernameForNavigation}`);
   };
 
   return (
@@ -158,7 +167,7 @@ const UserSearch: React.FC = () => {
               <li
                 className="search-user-card"
                 key={user.id}
-                onClick={() => handleUserClick(user.username)}
+                onClick={() => handleUserClick(user)}
                 tabIndex={0}
                 style={{ cursor: 'pointer' }}
               >

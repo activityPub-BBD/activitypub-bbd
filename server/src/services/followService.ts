@@ -26,25 +26,25 @@ export async function getFollowStats(id: string): Promise<{id: string;followingC
 }
 
 export async function followUser(followerId: string, followingId: string, accepted: boolean): Promise<boolean> {
-    const driver = await retrieveNeo4jDriver();
-    const result = await driver.executeQuery(
-        `
-        MATCH (A:Person {_id: $followerId}), (B:Person {_id: $followingId})
-        MERGE (A)-[R:Follows]->(B)
-        ON CREATE SET
-            R.accepted = $accepted,
-            R.createdAt = $createdAt
-        RETURN R;
-        `,
-        { 
-            followerId,
-            followingId,
-            accepted,
-            createdAt: neo4j.types.DateTime.fromStandardDate(new Date()),
-         }
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+      `
+      MATCH (A:Person {_id: $followerId}), (B:Person {_id: $followingId})
+      MERGE (A)-[R:Follows]->(B)
+      ON CREATE SET
+          R.accepted = $accepted,
+          R.createdAt = $createdAt
+      RETURN R;
+      `,
+      {
+        followerId,
+        followingId,
+        accepted,
+        createdAt: neo4j.types.DateTime.fromStandardDate(new Date()),
+      }
     );
-
     return result.records.length > 0;
+  
 }
 
 export async function unfollowUser(followerId: string, followingId: string): Promise<boolean> {
@@ -201,4 +201,17 @@ export async function retrieveSuggestedMutuals(
   return suggestedMutuals;
 }
 
-export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals };
+export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    MATCH (A:Person {_id: $followerId})-[R:Follows]->(B:Person {_id: $followingId})
+    RETURN count(R) > 0 AS isFollowing
+    `,
+    { followerId, followingId }
+  );
+
+  return result.records[0].get('isFollowing') as boolean;
+}
+
+export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals, isFollowing };
