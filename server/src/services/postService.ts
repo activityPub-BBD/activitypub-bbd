@@ -45,6 +45,10 @@ const getPostById = async (id: string): Promise<any | null> => {
   return await PostModel.findById(id).populate('author', 'username displayName avatarUrl');
 }
 
+const getPostByActivityId = async (id: string): Promise<any | null> => {
+  return await PostModel.findOne({ activityPubUri: id });
+}
+
  const getUserPosts = async (
    userId: string,
    page = 1,
@@ -151,17 +155,29 @@ const uploadImage = async (
 };
 
 const likePost = async (postId: string, userId: string): Promise<boolean> => {
-  const objectId = new mongoose.Types.ObjectId(userId);
+    const objectId = new mongoose.Types.ObjectId(userId);
+    const post = await PostModel.findById(postId);
+    if (!post) return false;
 
-  // Check if user already liked the post
-  const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
-  if (alreadyLiked) return false;
+    // Check if user already liked the post
+    const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
+    if (alreadyLiked) return false;
 
-  // Add user to likes
-  const result = await PostModel.updateOne(
-    { _id: postId },
-    { $push: { likes: objectId } }
-  );
+    // Add user to likes
+    const result = await PostModel.updateOne(
+      { _id: postId },
+      { $push: { likes: objectId } }
+    );
+
+    if (result.modifiedCount === 0) return false;
+
+   //Send Like activity to remote user 
+  const localUser = await UserService.getUserByObjectId(userId);
+  const postAuthor = await UserService.getUserByObjectId(post.author.toString());
+  // Only send to remote actors
+  if (!postAuthor?.isLocal) {
+    //TODO activity service like
+  }
 
   return result.modifiedCount > 0;
 };
@@ -235,6 +251,7 @@ const getComments = async (
 export const PostService = {
   createPost,
   getPostById,
+  getPostByActivityId,
   getUserPosts,
   getFeedPosts,
   deletePost,
