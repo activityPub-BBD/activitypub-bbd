@@ -154,7 +154,7 @@ const uploadImage = async (
   }
 };
 
-const likePost = async (postId: string, userId: string): Promise<boolean> => {
+const likePost = async (postId: string, userId: string, federationContext?: any): Promise<boolean> => {
     const objectId = new mongoose.Types.ObjectId(userId);
     const post = await PostModel.findById(postId);
     if (!post) return false;
@@ -175,10 +175,11 @@ const likePost = async (postId: string, userId: string): Promise<boolean> => {
   const localUser = await UserService.getUserByObjectId(userId);
   const postAuthor = await UserService.getUserByObjectId(post.author.toString());
   // Only send to remote actors
-  if (!postAuthor?.isLocal) {
-    //TODO activity service like
-  }
+  if (!postAuthor?.isLocal && localUser && postAuthor) {
+    // queue activity
+    await ActivityService.queueLikeActivity(post, localUser, postAuthor, federationContext);
 
+  }
   return result.modifiedCount > 0;
 };
 
