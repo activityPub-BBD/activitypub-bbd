@@ -4,6 +4,7 @@ import { integrateFederation } from "@fedify/express";
 import { getLogger } from "@logtape/logtape";
 import { federation }  from "@federation/index";
 import {authRoutes, postRoutes, userRoutes, followRoutes} from "@routes/index"
+import { attachFederationContext } from "@middleware/federation";
 
 const logger = getLogger("server");
 
@@ -26,9 +27,9 @@ app.use(express.urlencoded({ extended: true }));
 
 //ROUTES
 app.use('/api/auth', authRoutes);
-app.use('/api/posts', postRoutes);
+app.use('/api/posts', attachFederationContext, postRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/follows', followRoutes);
+app.use('/api/follows', attachFederationContext, followRoutes);
 
 //FEDIFY
 app.use(integrateFederation(federation, (req: express.Request) => {

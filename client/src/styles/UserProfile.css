@@ -98,11 +98,53 @@
   font-weight: 600;
   font-size: 15px;
   border-radius: 20px;
+}
+
+/* Follow/Unfollow Button */
+.button-follow {
+  margin-top: 16px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 20px;
   border: 1.5px solid #1d9bf0;
-  background-color: white;
-  color: #1d9bf0;
+  background-color: #1d9bf0;
+  color: white;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.button-follow:hover {
+  background-color: #1a8cd8;
+  border-color: #1a8cd8;
+}
+
+.button-follow:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button-unfollow {
+  margin-top: 16px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 20px;
+  border: 1.5px solid #536471;
+  background-color: white;
+  color: #536471;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-unfollow:hover {
+  background-color: #f7f9fa;
+  border-color: #536471;
+}
+
+.button-unfollow:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .button-edit:hover {

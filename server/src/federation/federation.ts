@@ -11,12 +11,11 @@ import {
   PUBLIC_COLLECTION,
   isActor,
   Endpoints,
-  
-} from "@fedify/fedify";
+  MemoryKvStore,
+  InProcessMessageQueue,
+  Document} from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
-import { RedisKvStore, RedisMessageQueue} from "@fedify/redis";
 import { Temporal } from "@js-temporal/polyfill";
-import { ObjectId } from "mongodb";
 import { UserService } from "@services/userService";
 import { KeyService } from "@services/keyService";
 import { PostService } from "@services/postService";
@@ -28,8 +27,8 @@ const logger = getLogger("server");
 const redisClient = await retrieveRedisClient();
 
 export const federation = createFederation({
-  kv: new RedisKvStore(redisClient),
-  queue: new RedisMessageQueue(() => redisClient.duplicate()),
+  kv: new MemoryKvStore(),
+  queue: new InProcessMessageQueue()
 });
 
 //setup local actor
@@ -72,6 +71,7 @@ federation
     });
   })
   .setKeyPairsDispatcher(async (ctx, identifier) => {
+    logger.debug(`Key pairs dispatcher called for: ${identifier}`);
     const user = await UserService.getUserByUsername(identifier);
     if (user == null) return [];
 
@@ -118,6 +118,16 @@ federation
 
     // Check if the follower exists in our database, if not create them
     let followerUser = await UserService.getUserByActorId(follower.id.href);
+    let icon = await follower.getIcon()
+    let avatarUrl
+
+    if (icon) {
+      avatarUrl = icon.url?.href?.toString()
+    } else {
+      avatarUrl = ""
+      logger.debug("NO ICON FOUND")
+    }
+
     if (!followerUser) {
       // Extract username and domain from the follower's actor ID
       const followerUrl = new URL(follower.id.href);
@@ -136,7 +146,7 @@ federation
         followersUrl: follower.followersId?.href || "",
         followingUrl: follower.followingId?.href || "",
         bio: follower.summary?.toString() || "",
-        avatarUrl: "",
+        avatarUrl: avatarUrl,
       });
 
       logger.info("== Before addig user to graph ==");
@@ -213,6 +223,99 @@ federation
     logger.info(
       `Removed ${unfollowerUser.displayName} as follower of ${unfollowedUser.displayName}`
     );
+  })
+  .on(Create, async (ctx, create) => {
+    const object = await create.getObject();
+    if (!(object instanceof Note)) return;
+    const actor = create.actorId;
+    if (actor == null) return;
+    const author = await object.getAttribution();
+    if (!isActor(author) || author.id?.href !== actor.href) return;
+    
+    // add user to db if DNE or just find them if they do exist
+    let postUser = await UserService.getUserByActorId(author.id.href);
+    let icon = await author.getIcon()
+    let avatarUrl
+
+    if (icon) {
+      avatarUrl = icon.url?.href?.toString()
+    } else {
+      avatarUrl = ""
+      logger.debug("NO ICON FOUND")
+    }
+    if (!postUser) {
+      // Extract username and domain from the follower's actor ID
+      const postUserUrl = new URL(author.id.href);
+      const postUserPath = postUserUrl.pathname;
+      const postUserUsername = postUserPath.split("/").pop() || "unknown";
+      const postUserDomain = postUserUrl.hostname;
+
+      // Create the remote user
+      postUser = await UserService.createRemoteUser({
+        actorId: author.id.href,
+        username: postUserUsername,
+        domain: postUserDomain,
+        displayName: author.name?.toString() || postUserUsername,
+        inboxUrl: author.inboxId!.href,
+        outboxUrl: author.outboxId?.href || "",
+        followersUrl: author.followersId?.href || "",
+        followingUrl: author.followingId?.href || "",
+        bio: author.summary?.toString() || "",
+        avatarUrl: avatarUrl,
+      });
+
+      logger.info("== Before addig user to graph ==");
+
+      // Add the user to the graph db
+      const success = await UserService.addUserToGraphDb(postUser);
+      if (!success) {
+        logger.warn(
+          `Failed to add user to graph db: ${postUser.displayName}`
+        );
+      }
+      logger.info(
+        `Created new remote user: ${postUser.displayName} from ${postUserDomain}`
+      );
+    }
+
+    if (postUser == null) return;
+    if (object.id == null) return;
+    const content = object.content?.toString();
+    const attachments = object.getAttachments();
+    
+    // Save the post to MongoDB
+    try {
+      let mediaUrl: string | undefined;
+      let mediaType: string | undefined;
+      
+      if (attachments) {
+        for await (const attachment of attachments) {
+          if (attachment instanceof Image) {
+            mediaUrl = attachment.url?.href?.toString();
+            mediaType = attachment.mediaType || undefined;
+            break; 
+          }
+          if (attachment instanceof Document) {
+            mediaUrl = attachment.url?.href?.toString();
+            mediaType = attachment.mediaType || undefined;
+            break; // just accomodatin mastodon since it uses documents for images, videos, etc
+          }
+        }
+      }
+
+      const postData = {
+        authorId: postUser._id.toString(),
+        caption: content || "",
+        mediaUrl: mediaUrl,
+        mediaType: mediaType,
+        activityPubUri: object.id.href
+      };
+      
+      const savedPost = await PostService.createPost(postData);
+      logger.info(`Saved remote post to database: ${savedPost._id} from ${postUser.displayName}`);
+    } catch (error) {
+      logger.error(`Failed to save remote post to database: ${error}`);
+    }
   });
 
 //setup local actor's outbox
@@ -342,7 +445,15 @@ federation.setFollowingDispatcher(
       nextCursor: null,
     };
   }
-);
+)
+.setCounter(async (ctx, identifier) => {
+    // count followers in db
+    const user = await UserService.getUserByUsername(identifier);
+    if (!user) return 0;
+
+    const stats = await FollowService.getFollowStats(user._id.toString());
+    return stats.followingCount;
+  });
 
 // Posts
 federation.setObjectDispatcher(Note, "/posts/{id}", async (ctx, values) => {

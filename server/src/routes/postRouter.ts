@@ -44,19 +44,7 @@ const upload = multer({
  */
 postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
-    const user: IUser | null = res.locals.user;
-    const fullUrl = `https://${config.domain}${req.originalUrl}`;
-    let requestBody: any = undefined;
-    if (!["GET", "HEAD"].includes(req.method)) {
-      requestBody = req.body ? JSON.stringify(req.body) : undefined;
-    }
-    const fetchRequest = new Request(fullUrl, {
-      method: req.method,
-      headers: req.headers as any,
-      body: requestBody,
-    });
-    const ctx = federation.createContext(fetchRequest, undefined);
-
+    const federationContext = (req as any).federationContext;
     const { caption } = req.body;
 
     if (!caption) {
@@ -84,38 +72,14 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
       caption,
       mediaUrl,
       mediaType,
-    });
+    }, federationContext);
 
     const populatedPost = await PostService.getPostById(post.id);
-
 
     if (!populatedPost) {
       return res
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json({ error: "Failed to retrieve created post" });
-    }
-
-    try {
-      const username = populatedPost.author.username;
-      const noteArgs = { identifier: username, id: post.id.toString() };
-
-      const note = await ctx.getObject(Note, noteArgs);
-
-      if (note) {
-        await ctx.sendActivity(
-          { identifier: username },
-          "followers",
-          new Create({
-            id: new URL(`#activity`, note?.id ?? undefined),
-            object: note,
-            actors: note?.attributionIds,
-            tos: note?.toIds,
-            ccs: note?.ccIds,
-          })
-        );
-      }
-    } catch (federationError) {
-      console.error("Failed to send Create(Note) activity:", federationError);
     }
 
     const response: IPostResponse = {
@@ -277,6 +241,62 @@ postRoutes.delete('/like/:id', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Unlike post error:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to unlike post' });
+  }
+});
+
+/**
+ * @route GET api/posts/comments/:id
+ * @description Retrieve comments for a post (optionally paginated)
+ */
+postRoutes.get('/comments/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const comments = await PostService.getComments(id, page, limit);
+    res.status(HTTP_STATUS.OK).json(comments);
+  } catch (error) {
+    console.error('Get comments error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to fetch comments' });
+  }
+});
+
+/**
+ * @route POST api/posts/comments/:id
+ * @description Create a comment on a post
+ */
+postRoutes.post('/comments/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+    const user: IUser | null = res.locals.user;
+    const success = await PostService.addComment(id, user!.id, comment);
+    if (!success) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to add comment' });
+    }
+    res.status(HTTP_STATUS.CREATED).end();
+  } catch (error) {
+    console.error('Add comment error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to add comment' });
+  }
+});
+
+/**
+ * @route DELETE api/posts/comments/:id/:commentId
+ * @description Delete a comment on a post
+ */
+postRoutes.delete('/comments/:id/:commentId', requireAuth, async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const user: IUser | null = res.locals.user;
+    const success = await PostService.deleteComment(id, commentId, user!.id);
+    if (!success) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to delete comment' });
+    }
+    res.status(HTTP_STATUS.OK).end();
+  } catch (error) {
+    console.error('Delete comment error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to delete comment' });
   }
 });
 
