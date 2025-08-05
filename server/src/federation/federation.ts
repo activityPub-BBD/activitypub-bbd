@@ -12,7 +12,8 @@ import {
   isActor,
   Endpoints,
   MemoryKvStore,
-  InProcessMessageQueue} from "@fedify/fedify";
+  InProcessMessageQueue,
+  Document} from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
 import { Temporal } from "@js-temporal/polyfill";
 import { UserService } from "@services/userService";
@@ -70,6 +71,7 @@ federation
     });
   })
   .setKeyPairsDispatcher(async (ctx, identifier) => {
+    logger.debug(`Key pairs dispatcher called for: ${identifier}`);
     const user = await UserService.getUserByUsername(identifier);
     if (user == null) return [];
 
@@ -280,11 +282,40 @@ federation
     if (object.id == null) return;
     const content = object.content?.toString();
     const attachments = object.getAttachments();
-    logger.debug('POSTS')
-    logger.debug(content)
-    logger.debug(attachments) 
-
     
+    // Save the post to MongoDB
+    try {
+      let mediaUrl: string | undefined;
+      let mediaType: string | undefined;
+      
+      if (attachments) {
+        for await (const attachment of attachments) {
+          if (attachment instanceof Image) {
+            mediaUrl = attachment.url?.href?.toString();
+            mediaType = attachment.mediaType || undefined;
+            break; 
+          }
+          if (attachment instanceof Document) {
+            mediaUrl = attachment.url?.href?.toString();
+            mediaType = attachment.mediaType || undefined;
+            break; // just accomodatin mastodon since it uses documents for images, videos, etc
+          }
+        }
+      }
+
+      const postData = {
+        authorId: postUser._id.toString(),
+        caption: content || "",
+        mediaUrl: mediaUrl,
+        mediaType: mediaType,
+        activityPubUri: object.id.href
+      };
+      
+      const savedPost = await PostService.createPost(postData);
+      logger.info(`Saved remote post to database: ${savedPost._id} from ${postUser.displayName}`);
+    } catch (error) {
+      logger.error(`Failed to save remote post to database: ${error}`);
+    }
   });
 
 //setup local actor's outbox

@@ -29,7 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', attachFederationContext, postRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/follows', followRoutes);
+app.use('/api/follows', attachFederationContext, followRoutes);
 
 //FEDIFY
 app.use(integrateFederation(federation, (req: express.Request) => {

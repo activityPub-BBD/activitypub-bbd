@@ -304,19 +304,6 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
 
-    // For remote users, return empty posts since we don't have their posts locally
-    if (!user.isLocal) {
-      res.status(HTTP_STATUS.OK).json({
-        items: [],
-        totalCount: 0,
-        page: page,
-        limit: limit,
-        nextCursor: null
-      });
-      return;
-    }
-
-    // Get posts by user ID, paginated (only for local users)
     const posts = await PostService.getUserPosts(user._id.toString(), page, limit);
     console.log(posts)
     res.status(HTTP_STATUS.OK).json(posts);

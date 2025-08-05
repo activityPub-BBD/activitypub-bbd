@@ -201,4 +201,17 @@ export async function retrieveSuggestedMutuals(
   return suggestedMutuals;
 }
 
-export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals };
+export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    MATCH (A:Person {_id: $followerId})-[R:Follows]->(B:Person {_id: $followingId})
+    RETURN count(R) > 0 AS isFollowing
+    `,
+    { followerId, followingId }
+  );
+
+  return result.records[0].get('isFollowing') as boolean;
+}
+
+export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals, isFollowing };

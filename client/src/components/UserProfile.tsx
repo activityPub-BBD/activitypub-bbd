@@ -1,6 +1,7 @@
-import React, { useState, useRef, type ChangeEvent } from 'react';
+import React, { useState, useRef, type ChangeEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import { followService } from '../services/followService';
 import '../styles/UserProfile.css';
 import Post from './Post';
 
@@ -33,10 +34,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   initialAvatarUrl,
   initialLocation = '',
   posts,
-  isOwnProfile
+  isOwnProfile,
+  profileUserId
 }) => {
   const navigate = useNavigate();
-  const { jwt, setUser, logout } = useAuthContext();
+  const { jwt, setUser, logout, user } = useAuthContext();
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(initialUsername);
   const [bio, setBio] = useState(initialBio);
@@ -45,6 +47,64 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  
+  // Follow/unfollow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  // Check follow status when component mounts or when profileUserId changes
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!jwt || !profileUserId || isOwnProfile || !user?.id) {
+        return;
+      }
+
+      try {
+        const following = await followService.checkFollowStatus(profileUserId, jwt);
+        setIsFollowing(following);
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      }
+    };
+
+    checkFollowStatus();
+  }, [jwt, profileUserId, isOwnProfile, user?.id]);
+
+  const handleFollow = async () => {
+    if (!jwt || !profileUserId || isOwnProfile) {
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      const success = await followService.followUser(profileUserId, jwt);
+      if (success) {
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error('Error following user:', error);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!jwt || !profileUserId || isOwnProfile) {
+      return;
+    }
+
+    setFollowLoading(true);
+    try {
+      const success = await followService.unfollowUser(profileUserId, jwt);
+      if (success) {
+        setIsFollowing(false);
+      }
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
   
   const handleSave = async () => {
     if (!jwt) {
@@ -206,6 +266,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             {isOwnProfile && (
               <button onClick={() => setIsEditing(true)} className="button-edit">
                 Edit Profile
+              </button>
+            )}
+            
+            {!isOwnProfile && (
+              <button 
+                onClick={isFollowing ? handleUnfollow : handleFollow}
+                disabled={followLoading}
+                className={`button-follow ${isFollowing ? 'button-unfollow' : 'button-follow'}`}
+              >
+                {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
               </button>
             )}
           </div>
