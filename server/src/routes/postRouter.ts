@@ -46,6 +46,7 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
     const federationContext = (req as any).federationContext;
     const { caption } = req.body;
+    const user: IUser | null = res.locals.user;
 
     if (!caption) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Caption is required' });

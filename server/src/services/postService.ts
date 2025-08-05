@@ -242,7 +242,7 @@ export const PostService = {
   likePost,
   unlikePost,
   getNewestPostFromFollowing,
-  getMostLikedPostFromFollowing
+  getMostLikedPostFromFollowing,
   addComment,
   deleteComment,
   getComments
