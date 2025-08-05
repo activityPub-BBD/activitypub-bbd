@@ -11,6 +11,12 @@ export interface IPost<TAuthor = Types.ObjectId> extends Document {
   likes: Types.ObjectId[];
   likesCount: number;
   createdAt: Date;
+  comments: {
+    _id: Types.ObjectId;
+    author: TAuthor;
+    content: string;
+    createdAt: Date;
+  }[];
 }
 
 export const postSchema = new Schema<IPost>({
@@ -50,7 +56,26 @@ export const postSchema = new Schema<IPost>({
   createdAt: {
     type: Date,
     required: true
-  }
+  },
+  comments: [{
+    _id: {
+      type: Schema.Types.ObjectId,
+      required: true
+    },
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    content: {
+      type: String,
+      required: true
+    },
+    createdAt: {
+      type: Date,
+      required: true
+    }
+  }]
 });
 
 export function getPostModel(conn: mongoose.Connection): Model<IPost> {
