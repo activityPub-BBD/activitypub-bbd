@@ -281,8 +281,7 @@ federation
     const content = object.content?.toString();
     const attachments = object.getAttachments();
     logger.debug('POSTS')
-    logger.debug(content)
-    logger.debug(attachments) 
+
 
     
   });
