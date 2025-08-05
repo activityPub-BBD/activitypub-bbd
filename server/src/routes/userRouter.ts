@@ -127,7 +127,7 @@ userRoutes.get('/search', requireAuth, async (req, res) => {
 userRoutes.get('/me', requireAuth, async (req, res) => {
   try {
     // The user should already be available from the auth middleware
-    const user = res.locals.user;
+    const user: IUser | null = res.locals.user;
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }

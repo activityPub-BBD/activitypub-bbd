@@ -4,6 +4,7 @@ import { HTTP_STATUS } from "@utils/index";
 import { config } from '@config/config';
 import type { IGoogleIdTokenPayload } from 'types/auth';
 import { UserService } from './userService';
+import type { IUser } from '@models/user';
 
 
 const JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
@@ -131,6 +132,7 @@ export async function getGoogleJwt(req: Request, res: Response) {
 export async function updateUsername(req: Request, res: Response) {
   try {
     const { newUsername } = req.body;
+    const user: IUser | null = res.locals.user;
 
     if (!newUsername) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
@@ -159,13 +161,13 @@ export async function updateUsername(req: Request, res: Response) {
     // Find user first to verify they exist
     // For local users, we can use googleId, but we should also support other lookup methods
     let existingUser = null;
-    if (res.locals.user?.googleId) {
-      existingUser = await UserService.getUserByGoogleId(res.locals.user.googleId);
+    if (user?.googleId) {
+      existingUser = await UserService.getUserByGoogleId(user.googleId);
     }
     
     // If not found by googleId, try by username (for cases where googleId might not be set)
-    if (!existingUser && res.locals.user?.username) {
-      existingUser = await UserService.getUserByUsername(res.locals.user.username);
+    if (!existingUser && user?.username) {
+      existingUser = await UserService.getUserByUsername(user.username);
     }
 
     if (!existingUser) {

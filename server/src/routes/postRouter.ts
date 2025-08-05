@@ -7,6 +7,8 @@ import type { IPostResponse } from 'types/post';
 import { federation } from "@federation/index";
 import { Create, Note } from "@fedify/fedify";
 import { config } from "@config/config";
+import { FollowService } from '@services/followService';
+import type { IUser } from '@models/user';
 
 export const postRoutes = Router();
 
@@ -42,6 +44,7 @@ const upload = multer({
  */
 postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
   try {
+    const user: IUser | null = res.locals.user;
     const fullUrl = `https://${config.domain}${req.originalUrl}`;
     let requestBody: any = undefined;
     if (!["GET", "HEAD"].includes(req.method)) {
@@ -70,14 +73,14 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
       mediaUrl = await PostService.uploadImage(
         req.file.buffer,
         req.file.mimetype,
-        res.locals.user!.id
+        user!._id.toString()
       );
       mediaType = req.file.mimetype;
     }
     
 
     const post = await PostService.createPost({
-      authorId: res.locals.user!.id,
+      authorId: user!._id.toString(),
       caption,
       mediaUrl,
       mediaType,
@@ -144,12 +147,13 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
  */
 postRoutes.post('/feed', requireAuth, async (req, res) => {
   try {
+    const user: IUser | null = res.locals.user;
     const  { ownFeed } = req.body;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
     const posts = ownFeed ?
-      await PostService.getFeedPosts(res.locals.user!.id, page, limit) :
+      await PostService.getFeedPosts(user!._id.toString(), page, limit) :
       await PostService.getFeedPosts('', page, limit);
 
     res.json({
@@ -170,10 +174,13 @@ postRoutes.post('/feed', requireAuth, async (req, res) => {
  */
 postRoutes.get('/following', requireAuth, async (req, res) => {
   try {
+    const user: IUser | null = res.locals.user;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
-    const posts = await PostService.getNewestPostFromFollowing(res.locals.user!.id, page, limit);
+    const following = await FollowService.retrieveFollowing(user!._id.toString());
+
+    const posts = await PostService.getNewestPostFromFollowing(following.map((f) => f.id), page, limit);
 
     res.json({
       posts: posts,
@@ -193,10 +200,13 @@ postRoutes.get('/following', requireAuth, async (req, res) => {
  */
 postRoutes.get('/following/trending', requireAuth, async (req, res) => {
   try {
+    const user: IUser | null = res.locals.user;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
 
-    const posts = await PostService.getMostLikedPostFromFollowing(res.locals.user!.following, page, limit);
+    const following = await FollowService.retrieveFollowing(user!._id.toString());
+
+    const posts = await PostService.getMostLikedPostFromFollowing(following.map((f) => f.id), page, limit);
 
     res.json({
       posts: posts,
@@ -217,8 +227,9 @@ postRoutes.get('/following/trending', requireAuth, async (req, res) => {
 postRoutes.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const user: IUser | null = res.locals.user;
 
-    const success = await PostService.deletePost(id, res.locals.user!.id);
+    const success = await PostService.deletePost(id, user!._id.toString());
 
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Post not found' });
@@ -238,7 +249,8 @@ postRoutes.delete('/:id', requireAuth, async (req, res) => {
 postRoutes.post('/like/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const success = await PostService.likePost(id, res.locals.user!.id);
+    const user: IUser | null = res.locals.user;
+    const success = await PostService.likePost(id, user!._id.toString());
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to like post' });
     }
@@ -256,7 +268,8 @@ postRoutes.post('/like/:id', requireAuth, async (req, res) => {
 postRoutes.delete('/like/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const success = await PostService.unlikePost(id, res.locals.user!.id);
+    const user: IUser | null = res.locals.user;
+    const success = await PostService.unlikePost(id, user!._id.toString());
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to unlike post' });
     }
