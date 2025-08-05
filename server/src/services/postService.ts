@@ -16,7 +16,9 @@ const createPost = async (postData: ICreatePostData, federationContext?: any): P
     const protocol = config.domain.includes('localhost') ? 'http' : 'https';
     const baseURL = `${protocol}://${config.domain}`;
     const postId = new mongoose.Types.ObjectId();
-    const activityPubUri = `${baseURL}/posts/${postId}`;
+    
+    const activityPubUri = postData.activityPubUri || `${baseURL}/posts/${postId}`;
+    
     const savedPost = await PostModel.create({
         _id: postId,
         author: postData.authorId,
