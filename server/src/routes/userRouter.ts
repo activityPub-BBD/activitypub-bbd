@@ -86,6 +86,8 @@ const handleFederationLookup = async (req: any, query: string) => {
       if (!localUser) {
         const actorData = createActorData(remoteUser, query);
         localUser = await UserService.createRemoteUser(actorData);
+        //add user to graph db
+        await UserService.addUserToGraphDb(localUser);
       }
       
       return localUser;
@@ -111,6 +113,8 @@ const handleUsernameFederationLookup = async (req: any, username: string) => {
       if (!user) {
         const actorData = createActorData(remoteUser, username);
         user = await UserService.createRemoteUser(actorData);
+        //add user to graph db
+        await UserService.addUserToGraphDb(user);
       }
       
       return user;
