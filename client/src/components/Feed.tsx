@@ -135,7 +135,6 @@ const Feed: React.FC = () => {
         <div className="posts-container">
           {posts.map(post => (
             <Post
-              key={post._id}
               _id={post._id}
               caption={post.caption}
               createdAt={post.createdAt}

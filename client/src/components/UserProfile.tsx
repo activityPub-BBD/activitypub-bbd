@@ -23,7 +23,7 @@ export interface IPost {
     username: string,
   }
   likesCount: number,
-  likes: IUser[]
+  likes: string[]
 }
 
 interface UserProfileProps {

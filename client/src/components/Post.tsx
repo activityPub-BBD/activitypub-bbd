@@ -25,9 +25,7 @@ export const Post = ({
   comments = []
 }: IPost & { comments?: Comment[] }) => {
   const { user: authedUser, jwt } = useAuthContext();
-  const [isLiked, setIsLiked] = useState(
-    likes.some(likeUserId => likeUserId === authedUser?.id)
-  );
+  const [isLiked, setIsLiked] = useState(false);
   const [count, setCount] = useState(likesCount);
   const [loading, setLoading] = useState(false);
 
@@ -65,6 +63,13 @@ export const Post = ({
 
     fetchCommentCount();
   }, [_id, jwt]);
+
+  useEffect(() => {
+    if (authedUser) {
+      setIsLiked(likes.some(likeUserId => likeUserId === authedUser.id));
+    }
+  }, [authedUser, likes]);
+
 
   const handleLikeToggle = async () => {
     if (loading) return;
@@ -195,6 +200,7 @@ export const Post = ({
   const formattedDate = new Date(createdAt).toLocaleString();
   const likeText = count === 0 ? "No likes yet" : `${count} ${count === 1 ? "like" : "likes"}`;
 
+
   return (
     <div key={_id} className="post-item">
       {/* Author Info */}
@@ -268,7 +274,9 @@ export const Post = ({
           <span style={{ fontSize: '1.1rem' }}>
             {isLiked ? '❤️' : '🤍'}
           </span>
-          <span>{count}</span>
+          <span style={{ fontSize: '1.1rem' }}>
+            {likeText}
+          </span>
         </button>
 
         {/* Comment Button */}
