@@ -18,6 +18,10 @@ resource "aws_api_gateway_method" "proxy" {
   resource_id   = aws_api_gateway_resource.proxy.id
   http_method   = "ANY"
   authorization = "NONE"
+  
+  request_parameters = {
+    "method.request.path.proxy" = true
+  }
 }
 
 resource "aws_api_gateway_method" "proxy_root" {
@@ -35,6 +39,10 @@ resource "aws_api_gateway_integration" "proxy" {
   integration_http_method = "ANY"
   type                    = "HTTP_PROXY"
   uri                     = "http://${aws_eip.group_5_mastodon_ec2_eip.public_ip}:3000/{proxy}"
+  
+  request_parameters = {
+    "integration.request.path.proxy" = "method.request.path.proxy"
+  }
 }
 
 resource "aws_api_gateway_integration" "proxy_root" {
