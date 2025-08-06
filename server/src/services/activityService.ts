@@ -81,27 +81,47 @@ const queueLikeActivity = async (
   remoteAuthor: IUser,
   federationContext?: any
 ): Promise<void> => {
-  
-    const postUri = post.activityPubUri;
-    const likeActivity = new Like({
-      actor: new URL(localUser.actorId),
-      object: new URL(postUri),
-      to: new URL(remoteAuthor.actorId),
-    });
-    
-    const actor = await federationContext.getActorById(remoteAuthor.actorId);
-    if (actor) {
-          logger.debug(
-      `Found remote actor for Like activity delivery queued to ${actor.getActorUri(remoteAuthor.username)}`
-    );
+
+    try {
+    if (!federationContext) {
+      logger.warn(
+        `No federation context available for post ${post.activityPubUri}`
+      );
+      return;
     }
-    federationContext.sendActivity({ identifier: localUser.username, actor, likeActivity  });
+  
+    if (!post) {
+      logger.info("No remote post to send Like activity");
+      return;
+    }
+
+    const actor = await federationContext.lookupObject(remoteAuthor.actorId);
+    if (!actor) {
+             logger.debug(
+      `No actor found to send Like activity`
+    );
+    return;
+    }
+     logger.debug(
+      `Found remote actor for Like activity delivery queued to ${remoteAuthor.username}}`
+    );
+
+    const likeActivity = new Like({
+      actor: federationContext.getActorUri(localUser.username),
+      object: actor.id,
+      to: actor.id,
+    });
+
+    federationContext.sendActivity({ identifier: localUser.username }, actor, likeActivity);
 
     logger.info(
-      `Like activity delivery queued to ${remoteAuthor.username}`
+      `Like activity delivery queued to ${remoteAuthor.username}'s post`
     );
 
-
+  } catch (error) {
+    logger.error("Failed to queue like activity:", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
 };
 
