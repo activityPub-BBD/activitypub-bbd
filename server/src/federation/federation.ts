@@ -14,7 +14,9 @@ import {
   MemoryKvStore,
   InProcessMessageQueue,
   Document,
-  Like} from "@fedify/fedify";
+  Like,
+  Delete,
+  Group} from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
 import { Temporal } from "@js-temporal/polyfill";
 import { UserService } from "@services/userService";
@@ -22,6 +24,7 @@ import { KeyService } from "@services/keyService";
 import { PostService } from "@services/postService";
 import { FollowService } from "@services/followService";
 import { retrieveRedisClient } from "@db/redis";
+import type { IPost } from "@models/post";
 
 const logger = getLogger("server");
 
@@ -414,7 +417,50 @@ federation
         logger.info(`${likingUser.displayName} already liked post ${post._id}`);
     }
     
-  });
+  })
+  .on(Delete, async (ctx, del) => {
+    logger.info("== Received Delete activity ==");
+
+    const object = await del.getObject();
+
+    if (!object) {
+      logger.warn("Delete activity missing object");
+      return;
+    }
+
+    // Handle deletion of a Note (post)
+    if (object instanceof Note) {
+      const activityId = object.id?.href;
+      if (!activityId) return;
+
+      const post: IPost = await PostService.getPostByActivityId(activityId);
+      if (!post) {
+        logger.warn(`No post found for deleted activity ID: ${activityId}`);
+        return;
+      }
+
+      await PostService.deletePost(post.id, post.author.toString());
+      logger.info(`Deleted remote post ${post._id} from ${activityId}`);
+      return;
+    }
+
+    // Handle deletion of an Actor (user/account)
+    if (object instanceof Person || object instanceof Group) {
+      const actorId = typeof object === "string" ? object : object.id?.href;
+      if (!actorId) return;
+
+      const user = await UserService.getUserByActorId(actorId);
+      if (!user) {
+        logger.warn(`Could not find user for deleted actor ID: ${actorId}`);
+        return;
+      }
+      //TODO: REMOVE USER AND THEIR FOLLOW RELATIONSHIPS
+      logger.info(`Deleted remote user ${user.displayName} and still need to clean up graph`);
+      return;
+    }
+
+    logger.warn("Unhandled Delete object type", { object });
+});
 
 //setup local actor's outbox
 federation
