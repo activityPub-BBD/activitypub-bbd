@@ -124,6 +124,7 @@ const queueLikeActivity = async (
     });
 
 };
+}
 
 export const ActivityService = {
     queueCreateNoteActivity,
