@@ -214,8 +214,9 @@ postRoutes.delete('/:id', requireAuth, async (req, res) => {
 postRoutes.post('/like/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    const federationContext = (req as any).federationContext;
     const user: IUser | null = res.locals.user;
-    const success = await PostService.likePost(id, user!._id.toString());
+    const success = await PostService.likePost(id, user!._id.toString(), federationContext);
     if (!success) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'Unable to like post' });
     }
