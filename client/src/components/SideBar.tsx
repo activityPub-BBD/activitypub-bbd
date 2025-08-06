@@ -4,8 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
 
 interface SidebarProps {
-  displayName?: string;
-  avatarUrl?: string;
   followers?: number;
   following?: number;
   isOpen: boolean;
@@ -13,8 +11,6 @@ interface SidebarProps {
 }
 
 const SideBar: React.FC<SidebarProps> = React.memo(({
-  displayName = "User",
-  avatarUrl,
   isOpen,
   onToggle,
 }) => {
@@ -65,17 +61,17 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
           <div className="sidebar-user">
             <img
               className="sidebar-avatar"
-              src={avatarUrl}
+              src={user?.avatarUrl}
               onClick={() =>
                 navigate("/profile", {
                   state: {
-                    displayName: displayName,
-                    avatarUrl: avatarUrl,
+                    displayName: user?.displayName || user?.username || "User",
+                    avatarUrl: user?.avatarUrl || "https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png",
                   },
                 })
               }
             />
-            <div className="sidebar-username">{displayName}</div>
+            <div className="sidebar-username">{user?.displayName || user?.username || "User"}</div>
           </div>
           {!loading && (
             <div className="sidebar-stats">
