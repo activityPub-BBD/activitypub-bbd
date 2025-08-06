@@ -286,19 +286,19 @@ federation
     
     // Save the post to MongoDB
     try {
-      let mediaUrl: string | undefined;
-      let mediaType: string | undefined;
+      let mediaUrl: string = "";
+      let mediaType: string = "";
       
       if (attachments) {
         for await (const attachment of attachments) {
           if (attachment instanceof Image) {
-            mediaUrl = attachment.url?.href?.toString();
-            mediaType = attachment.mediaType || undefined;
+            mediaUrl = attachment.url?.href?.toString() || "";
+            mediaType = attachment.mediaType || "";
             break; 
           }
           if (attachment instanceof Document) {
-            mediaUrl = attachment.url?.href?.toString();
-            mediaType = attachment.mediaType || undefined;
+            mediaUrl = attachment.url?.href?.toString() || "";
+            mediaType = attachment.mediaType || "";
             break; // just accomodatin mastodon since it uses documents for images, videos, etc
           }
         }
