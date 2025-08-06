@@ -16,13 +16,32 @@ interface SearchUser {
   actorId?: string;
 }
 
+interface SearchPost {
+  _id: string;
+  caption: string;
+  mediaUrl: string;
+  mediaType: string;
+  createdAt: string;
+  likesCount: number;
+  author: {
+    username: string;
+    displayName: string;
+    avatarUrl: string;
+  };
+}
+
+type SearchMode = 'users' | 'posts';
+
 const UserSearch: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
+  const [searchMode, setSearchMode] = useState<SearchMode>('users');
+  const [userResults, setUserResults] = useState<SearchUser[]>([]);
+  const [postResults, setPostResults] = useState<SearchPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const { user } = useAuthContext();
   const navigate = useNavigate();
 
@@ -41,23 +60,50 @@ const UserSearch: React.FC = () => {
     setQuery(value);
     setError(null);
 
-    // Only auto-search when input is empty (to show first 5 users)
-    // struggled with live searching, so this is a compromise
     if (value.trim() === "") {
-      searchUsers("");
+      setHasSearched(false);
+      if (searchMode === 'users') {
+        searchUsers("");
+      } else {
+        setPostResults([]);
+      }
     }
   };
 
   const handleSearch = () => {
+    setHasSearched(true);
+    
     if (query.trim() !== "") {
       addToRecentSearches(query);
     }
-    searchUsers(query);
+    
+    if (searchMode === 'users') {
+      searchUsers(query);
+    } else {
+      searchPosts(query);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSearch();
+    }
+  };
+
+  const handleModeChange = (mode: SearchMode) => {
+    setSearchMode(mode);
+    setError(null);
+    setHasSearched(false); 
+
+    if (mode === 'users') {
+      setPostResults([]);
+      searchUsers(query);
+    } else {
+      setUserResults([]);
+      if (query.trim()) {
+        setHasSearched(true); 
+        searchPosts(query);
+      }
     }
   };
 
@@ -92,12 +138,54 @@ const UserSearch: React.FC = () => {
       }
 
       const data = await response.json();
-      setSearchResults(data);
-      setLoading(false);
+      setUserResults(data);
     } catch (err) {
-      console.error("Search error:", err);
+      console.error("User search error:", err);
       setError(err instanceof Error ? err.message : "Failed to search users");
-      setSearchResults([]);
+      setUserResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchPosts = async (searchQuery: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("jwt");
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      if (!searchQuery.trim()) {
+        setPostResults([]);
+        setLoading(false);
+        return;
+      }
+
+      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const response = await fetch(
+        `${apiUrl}/api/posts/search?q=${encodeURIComponent(searchQuery)}&page=1&limit=20`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to search posts");
+      }
+
+      const data = await response.json();
+      setPostResults(data);
+    } catch (err) {
+      console.error("Post search error:", err);
+      setError(err instanceof Error ? err.message : "Failed to search posts");
+      setPostResults([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -126,21 +214,50 @@ const UserSearch: React.FC = () => {
     navigate(`/user/${usernameForNavigation}`);
   };
 
+  const handlePostClick = (post: SearchPost) => {
+    // will have implement post detail view or scroll to post in feed
+    // For now navigate to the author's profile
+    navigate(`/user/${post.author.username}`);
+  };
+
   return (
     <div className={`home-layout ${sidebarOpen ? 'sidebar-open' : ''}`}>
       <SideBar
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
-        displayName={user?.displayName || 'User'}
-        avatarUrl={user?.avatarUrl}
       />
       <div className="search-feed">
-        <h2 className="search-title">Search Users</h2>
+
+        <button className="back-button" onClick={() => navigate(-1)}>
+          ← Back
+        </button>
+        
+        <h2 className="search-title">Search</h2>
+
+        <div className="search-tabs">
+          <button
+            className={`search-tab ${searchMode === 'users' ? 'active' : ''}`}
+            onClick={() => handleModeChange('users')}
+          >
+            👥 Users
+          </button>
+          <button
+            className={`search-tab ${searchMode === 'posts' ? 'active' : ''}`}
+            onClick={() => handleModeChange('posts')}
+          >
+            📝 Posts
+          </button>
+        </div>
+
         <div className="search-container">
           <input
             className="search-input"
             type="text"
-            placeholder="Search for users... (try @username@domain for remote users)"
+            placeholder={
+              searchMode === 'users' 
+                ? "Search for users... (try @username@domain for remote users)"
+                : "Search posts by caption..."
+            }
             value={query}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
@@ -159,46 +276,101 @@ const UserSearch: React.FC = () => {
         {loading && <div className="search-loading">Searching...</div>}
 
         {/* Search Results */}
-        <ul className="search-results">
-          {!loading && searchResults.length === 0 ? (
-            <li className="no-results">No users found.</li>
-          ) : (
-            searchResults.map((user) => (
-              <li
-                className="search-user-card"
-                key={user.id}
-                onClick={() => handleUserClick(user)}
-                tabIndex={0}
-                style={{ cursor: 'pointer' }}
-              >
-                <img
-                  className="search-avatar"
-                  src={user.avatarUrl || "/no-avatar.jpg"}
-                  alt={user.username}
-                />
-                <div className="search-user-info">
-                  <span className="search-username">
-                    {user.username}
-                    {user.domain && (
-                      <span
-                        className={`domain-indicator ${
-                          user.isRemote ? "remote" : "local"
-                        }`}
-                      >
-                        @{user.domain}
+        <div className="search-results">
+          {searchMode === 'users' ? (
+            <ul className="search-results">
+              {!loading && userResults.length === 0 ? (
+                <li className="no-results">No users found.</li>
+              ) : (
+                userResults.map((user) => (
+                  <li
+                    className="search-user-card"
+                    key={user.id}
+                    onClick={() => handleUserClick(user)}
+                    tabIndex={0}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <img
+                      className="search-avatar"
+                      src={user.avatarUrl || "/no-avatar.jpg"}
+                      alt={user.username}
+                    />
+                    <div className="search-user-info">
+                      <span className="search-username">
+                        {user.username}
+                        {user.domain && (
+                          <span
+                            className={`domain-indicator ${
+                              user.isRemote ? "remote" : "local"
+                            }`}
+                          >
+                            @{user.domain}
+                          </span>
+                        )}
                       </span>
+                      <span className="search-display-name">
+                        {user.displayName}
+                      </span>
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+          ) : (
+            /* Post Results */
+            <div className="post-results">
+              {!loading && postResults.length === 0 && hasSearched && query ? (
+                <div className="no-results">No posts found for "{query}"</div>
+              ) : (
+                postResults.map((post) => (
+                  <div
+                    key={post._id}
+                    className="search-post-card"
+                    onClick={() => handlePostClick(post)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="post-header">
+                      <div className="post-user-info">
+                        <img
+                          src={post.author.avatarUrl || "/no-avatar.jpg"}
+                          alt={post.author.displayName}
+                          className="post-author-avatar"
+                        />
+                        <div className="post-author-info">
+                          <span className="post-author-name">{post.author.displayName}</span>
+                          <span className="post-author-username">@{post.author.username}</span>
+                        </div>
+                      </div>
+                      <span className="post-date">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    {post.mediaUrl && (
+                      <div className="post-media">
+                        {post.mediaType?.startsWith('video/') ? (
+                          <video src={post.mediaUrl} className="post-image" />
+                        ) : (
+                          <img src={post.mediaUrl} alt="Post media" className="post-image" />
+                        )}
+                      </div>
                     )}
-                  </span>
-                  <span className="search-display-name">
-                    {user.displayName}
-                  </span>
-                </div>
-              </li>
-            ))
+                    
+                    <div className="post-caption">
+                      {post.caption}
+                    </div>
+                    
+                    <div className="post-stats">
+                      <span>❤️ {post.likesCount}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           )}
-        </ul>
+        </div>
 
-        {recentSearches.length > 0 && searchResults.length > 0 && (
+        {recentSearches.length > 0 && (
           <div className="recent-searches">
             <h3>Recent Searches</h3>
             <ul>
@@ -213,11 +385,6 @@ const UserSearch: React.FC = () => {
               ))}
             </ul>
           </div>
-        )}
-
-        {/* Show message when no results and not loading */}
-        {!loading && searchResults.length === 0 && query && (
-          <div className="no-results">No users found for "{query}"</div>
         )}
       </div>
     </div>

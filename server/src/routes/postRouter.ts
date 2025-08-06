@@ -302,4 +302,19 @@ postRoutes.delete('/comments/:id/:commentId', requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * @route GET api/posts/search
+ * @description Search posts by caption content
+ */
+postRoutes.get('/search', requireAuth, async (req, res) => {
+  try {
+    const { q, page = 1, limit = 20 } = req.query;
+    const posts = await PostService.searchPosts(q as string, parseInt(page as string), parseInt(limit as string));
+    res.json(posts);
+  } catch (error) {
+    console.error('Search posts error:', error);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to search posts' });
+  }
+});
+
 export default postRoutes;
