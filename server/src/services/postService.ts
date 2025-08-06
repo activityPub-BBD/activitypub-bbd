@@ -255,6 +255,22 @@ const getComments = async (
   return commentsWithAuthors;
 };
 
+const searchPosts = async (query: string, page = 1, limit = 20): Promise<IPost[]> => {
+  const skip = (page - 1) * limit;
+
+  if (!query || query.trim() === '') {
+    return [];
+  }
+
+  return await PostModel.find({
+    caption: { $regex: query, $options: 'i' } 
+  })
+  .sort({ createdAt: -1 })
+  .skip(skip)
+  .limit(limit)
+  .populate('author', 'username displayName avatarUrl');
+};
+
 export const PostService = {
   createPost,
   getPostById,
@@ -269,5 +285,6 @@ export const PostService = {
   getMostLikedPostFromFollowing,
   addComment,
   deleteComment,
-  getComments
+  getComments,
+  searchPosts
 }
