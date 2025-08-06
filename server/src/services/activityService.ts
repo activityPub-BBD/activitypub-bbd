@@ -95,8 +95,8 @@ const queueLikeActivity = async (
       return;
     }
 
-    const actor = await federationContext.lookupObject(remoteAuthor.actorId);
-    if (!actor) {
+    const remoteActor = await federationContext.lookupObject(remoteAuthor.actorId);
+    if (!remoteActor) {
              logger.debug(
       `No actor found to send Like activity`
     );
@@ -108,11 +108,11 @@ const queueLikeActivity = async (
 
     const likeActivity = new Like({
       actor: federationContext.getActorUri(localUser.username),
-      object: actor.id,
-      to: actor.id,
+      object: new URL(post.activityPubUri),
+      to: remoteActor.id,
     });
 
-    federationContext.sendActivity({ identifier: localUser.username }, actor, likeActivity);
+    federationContext.sendActivity({ identifier: localUser.username }, remoteActor, likeActivity);
 
     logger.info(
       `Like activity delivery queued to ${remoteAuthor.username}'s post`
