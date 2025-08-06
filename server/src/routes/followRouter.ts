@@ -109,8 +109,11 @@ followRoutes.post("/follow/:oid", requireAuth, async (req, res) => {
                 // Still create the local follow relationship even if federation fails
             }
         }
-
+        
         const follow = await FollowService.followUser(user!.id, oid, true);
+        console.log('FollowID: ', user.id)
+        console.log('FolloweeID', oid);
+        console.log(`Result ${follow}`);
         if (!follow) {
             return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'Failed to follow user' });
         }
