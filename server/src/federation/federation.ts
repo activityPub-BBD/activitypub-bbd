@@ -167,6 +167,8 @@ federation
     logger.info("== Before addig follow relationship to graph ==");
     
     // Add the follower to the following user's followers list
+    logger.debug("FOLLOWID: ", followerUser.id)
+    logger.debug("FOLLOWEEID: ", followingUser.id)
     await FollowService.followUser(
       followerUser._id.toString(),
       followingUser._id.toString(),
