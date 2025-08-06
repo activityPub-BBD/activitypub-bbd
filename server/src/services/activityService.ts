@@ -94,32 +94,28 @@ const queueLikeActivity = async (
       logger.info("No remote post to send Like activity");
       return;
     }
-    const postUri = post.activityPubUri;
 
-    logger.debug("===REMOTE AUTHOR===")
-    logger.debug(remoteAuthor)
-    logger.debug("==localUser==")
-    logger.debug(localUser.actorId);
-    logger.debug(await federationContext)
-
-    const likeActivity = new Like({
-      actor: new URL(localUser.actorId),
-      object: new URL(postUri),
-      to: new URL(remoteAuthor.actorId),
-    });
-    
-    
     const actor = await federationContext.lookupObject(remoteAuthor.actorId);
-    if (actor) {
-          logger.debug(
+    if (!actor) {
+             logger.debug(
+      `No actor found to send Like activity`
+    );
+    return;
+    }
+     logger.debug(
       `Found remote actor for Like activity delivery queued to ${remoteAuthor.username}}`
     );
-    }
-    
+
+    const likeActivity = new Like({
+      actor: federationContext.getActorUri(localUser.username),
+      object: actor.id,
+      to: actor.id,
+    });
+
     federationContext.sendActivity({ identifier: localUser.username }, actor, likeActivity);
 
     logger.info(
-      `Like activity delivery queued to ${remoteAuthor.username}`
+      `Like activity delivery queued to ${remoteAuthor.username}'s post`
     );
 
   } catch (error) {
