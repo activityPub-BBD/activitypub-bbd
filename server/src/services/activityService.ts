@@ -106,9 +106,12 @@ const queueLikeActivity = async (
       `Found remote actor for Like activity delivery queued to ${remoteAuthor.username}}`
     );
 
+    logger.debug("POST TO LIKE")
+    logger.debug(post.activityPubUri)
+
     const likeActivity = new Like({
       actor: federationContext.getActorUri(localUser.username),
-      object: actor.id,
+      object: federationContext.getActorUri(post.activityPubUri),
       to: actor.id,
     });
 
