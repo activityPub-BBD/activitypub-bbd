@@ -76,7 +76,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onPostCreated }) => {
       if (selectedFile) {
         formData.append("image", selectedFile);
       }
-
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/posts`, {
         method: "POST",
         body: formData,

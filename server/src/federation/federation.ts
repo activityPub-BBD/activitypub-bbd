@@ -13,7 +13,8 @@ import {
   Endpoints,
   MemoryKvStore,
   InProcessMessageQueue,
-  Document} from "@fedify/fedify";
+  Document,
+  Like} from "@fedify/fedify";
 import { getLogger } from "@logtape/logtape";
 import { Temporal } from "@js-temporal/polyfill";
 import { UserService } from "@services/userService";
@@ -316,6 +317,103 @@ federation
     } catch (error) {
       logger.error(`Failed to save remote post to database: ${error}`);
     }
+  })
+  .on(Accept, async (ctx, accept) => {
+    logger.info("== Received Accept activity ==");
+    const object = await accept.getObject();
+    if (!(object instanceof Follow)) {
+      logger.warn("Accept object is not a Follow activity");
+      return;
+    }
+
+    const followerActor = object.actorId?.href;
+    const followeeActor = object.objectId;
+
+    if (!followerActor || !followeeActor) {
+      logger.warn("Follow activity is missing actor or object");
+      return;
+    }
+    // We assume the local user is the actor who originally sent the Follow
+    const localUser = await UserService.getUserByActorId(followerActor);
+    const remoteUser = await UserService.getUserByActorId(followeeActor.href);
+
+    if (!localUser || !remoteUser) {
+      logger.warn("Could not find users in database for Accept: ", {
+        followerActor,
+        followeeActor: followeeActor.href,
+      });
+      return;
+    }
+    logger.info(
+      `Follow request from ${localUser.displayName} to ${remoteUser.displayName} has been accepted.`
+    );
+  })
+  .on(Like, async (ctx, like) => {
+    logger.info("== Received Like activity ==");
+    if (like.objectId == null) {
+      logger.debug("The Like object does not have an object: {like}", {
+        like,
+      });
+      return;
+    }
+    const object = ctx.parseUri(like.objectId);
+    if (object == null) {
+      logger.debug("The Like object's object is not an actor: {like}", {
+        like,
+      });
+      return;
+    }
+
+    const actor = await like.getActor();
+    if (actor?.id == null || actor.inboxId == null) {
+      logger.debug("The Like object does not have an actor: {like}", {
+        like,
+      });
+      return;
+    }
+
+    // Find the post locally
+    const post = await PostService.getPostByActivityId(like.objectId.toString());
+    if (!post) {
+      logger.warn("Post not found for Like activity");
+      return;
+    }
+
+    // Ensure the actor is in DB
+    let likingUser = await UserService.getUserByActorId(actor.id.href);
+    if (!likingUser) {
+      const actorUrl = new URL(actor.id.href);
+      const username = actorUrl.pathname.split("/").pop() || "unknown";
+      let avatar = await actor.getIcon();
+      let avatarUrl
+      if (avatar && avatar.url) {
+          avatarUrl = avatar.url.href?.toString()
+      }
+      
+      likingUser = await UserService.createRemoteUser({
+        actorId: actor.id.href,
+        username,
+        domain: actorUrl.hostname,
+        displayName: actor.name?.toString() || username,
+        inboxUrl: actor.inboxId?.href || "",
+        outboxUrl: actor.outboxId?.href || "",
+        followersUrl: actor.followersId?.href || "",
+        followingUrl: actor.followingId?.href || "",
+        bio: actor.summary?.toString() || "",
+        avatarUrl: avatarUrl || "",
+      });
+
+      await UserService.addUserToGraphDb(likingUser);
+    }
+
+    let isLikedPost = await PostService.likePost(post.id, likingUser.id);
+    // Add to local post likes
+    if (isLikedPost) {
+        logger.info(`${likingUser.displayName} liked post ${post._id}`);
+    } else {
+        logger.info(`${likingUser.displayName} already liked post ${post._id}`);
+    }
+    
   });
 
 //setup local actor's outbox

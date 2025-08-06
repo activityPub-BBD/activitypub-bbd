@@ -1,21 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { UserProfile } from "../components/UserProfile";
+import { UserProfile, type IPost } from "../components/UserProfile";
 import { useAuthContext } from "../context/AuthContext";
 import { useState, useEffect } from "react";
-
-interface Post {
-    _id: string;
-    caption: string;
-    mediaUrl: string;
-    mediaType: string;
-    createdAt: string;
-    author: {
-        _id: string;
-        displayName: string;
-        avatarUrl: string;
-        username: string;
-    };
-}
 
 interface User {
     id: string;
@@ -32,7 +18,7 @@ const Profile = () => {
     const { user, jwt, logout } = useAuthContext();
     const navigate = useNavigate();
     const { username: urlUsername } = useParams<{ username: string }>();
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [posts, setPosts] = useState<IPost[]>([]);
     const [profileUser, setProfileUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -161,20 +147,6 @@ const Profile = () => {
         fetchUserData();
     }, [targetUsername, jwt, logout, navigate, isOwnProfile, user]);
 
-    // Convert posts to the format expected by UserProfile component
-    const formattedPosts = posts.map(post => ({
-        id: post._id,
-        content: post.caption,
-        date: new Date(post.createdAt).toLocaleDateString(),
-        mediaUrl: post.mediaUrl,
-        mediaType: post.mediaType,
-        author: {
-            displayName: post.author?.displayName || '',
-            avatarUrl: post.author?.avatarUrl || '',
-            username: post.author?.username || ''
-        }
-    }));
-
     if (loading) {
         return (
             <div style={{ 
@@ -220,7 +192,7 @@ const Profile = () => {
             initialBio={profileUser.bio || "Tell us about yourself!"}
             initialLocation={profileUser.location || ''}
             initialAvatarUrl={profileUser.avatarUrl || "https://cdn.jsdelivr.net/gh/alohe/memojis/png/vibrent_4.png"}
-            posts={formattedPosts}
+            posts={posts}
             isOwnProfile={isOwnProfile}
             profileUserId={profileUser.id}
         />

@@ -5,10 +5,16 @@ import { followService } from '../services/followService';
 import '../styles/UserProfile.css';
 import Post from './Post';
 
-export interface IPost {
+export interface IUser {
   id: string;
-  content: string;
-  date: string;
+  displayName: string;
+  avatarUrl: string;
+  username: string;
+}
+export interface IPost {
+  _id: string;
+  caption: string;
+  createdAt: string;
   mediaUrl: string;
   mediaType: string;
   author: {           
@@ -16,6 +22,8 @@ export interface IPost {
     displayName: string,
     username: string,
   }
+  likesCount: number,
+  likes: IUser[]
 }
 
 interface UserProfileProps {
@@ -373,13 +381,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             console.log(post)
             return (
               <Post
-                key={post.id}
-                id={post.id}
-                content={post.content}
-                date={post.date}
+                key={post._id}
+                _id={post._id}
+                caption={post.caption}
+                createdAt={post.createdAt}
                 mediaType={post.mediaType}
                 mediaUrl={post.mediaUrl}
                 author={post.author}
+                likes={post.likes}
+                likesCount={post.likesCount}
               />
             );})
         )}

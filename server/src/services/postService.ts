@@ -45,6 +45,10 @@ const getPostById = async (id: string): Promise<any | null> => {
   return await PostModel.findById(id).populate('author', 'username displayName avatarUrl');
 }
 
+const getPostByActivityId = async (id: string): Promise<any | null> => {
+  return await PostModel.findOne({ activityPubUri: id });
+}
+
  const getUserPosts = async (
    userId: string,
    page = 1,
@@ -150,19 +154,35 @@ const uploadImage = async (
   }
 };
 
-const likePost = async (postId: string, userId: string): Promise<boolean> => {
-  const objectId = new mongoose.Types.ObjectId(userId);
+const likePost = async (postId: string, userId: string, federationContext?: any): Promise<boolean> => {
+    const objectId = new mongoose.Types.ObjectId(userId);
+    const post = await PostModel.findById(postId);
+    if (!post) return false;
 
-  // Check if user already liked the post
-  const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
-  if (alreadyLiked) return false;
+    // Check if user already liked the post
+    const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
+    if (alreadyLiked) return false;
 
-  // Add user to likes
-  const result = await PostModel.updateOne(
-    { _id: postId },
-    { $push: { likes: objectId } }
-  );
+    // Atomically add user to likes and increment likesCount
+    const result = await PostModel.updateOne(
+      { _id: postId },
+      {
+        $push: { likes: objectId },
+        $inc: { likesCount: 1 },
+      }
+    );
 
+    if (result.modifiedCount === 0) return false;
+
+   //Send Like activity to remote user 
+  const localUser = await UserService.getUserByObjectId(userId);
+  const postAuthor = await UserService.getUserByObjectId(post.author.toString());
+  // Only send to remote actors
+  if (!postAuthor?.isLocal && localUser && postAuthor) {
+    // queue activity
+    await ActivityService.queueLikeActivity(post, localUser, postAuthor, federationContext);
+
+  }
   return result.modifiedCount > 0;
 };
 
@@ -173,10 +193,13 @@ const unlikePost = async (postId: string, userId: string): Promise<boolean> => {
   const alreadyLiked = await PostModel.exists({ _id: postId, likes: objectId });
   if (!alreadyLiked) return false;
 
-  // Remove user from likes
+  // Atomically remove user to likes and decrement likesCount
   const result = await PostModel.updateOne(
     { _id: postId },
-    { $pull: { likes: objectId } }
+    {
+      $pull: { likes: objectId },
+      $inc: { likesCount: -1 }
+    }
   );
 
   return result.modifiedCount > 0;
@@ -235,6 +258,7 @@ const getComments = async (
 export const PostService = {
   createPost,
   getPostById,
+  getPostByActivityId,
   getUserPosts,
   getFeedPosts,
   deletePost,
