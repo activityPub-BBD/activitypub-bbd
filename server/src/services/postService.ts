@@ -271,6 +271,16 @@ const searchPosts = async (query: string, page = 1, limit = 20): Promise<IPost[]
   .populate('author', 'username displayName avatarUrl');
 };
 
+const findPostsByIds = async (postIds: string[], page = 1, limit = 20): Promise<IPost[]> => {
+  const skip = (page - 1) * limit;
+
+  return await PostModel.find({ _id: { $in: postIds } })
+  .sort({ createdAt: -1 })
+  .skip(skip)
+  .limit(limit)
+  .populate('author', 'username displayName avatarUrl');
+};
+
 export const PostService = {
   createPost,
   getPostById,
@@ -286,5 +296,6 @@ export const PostService = {
   addComment,
   deleteComment,
   getComments,
-  searchPosts
+  searchPosts,
+  findPostsByIds
 }

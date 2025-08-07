@@ -265,6 +265,9 @@ jobs:
           echo "REDIS_PORT=$(aws ssm get-parameter --name '/dbconfig/redis/port' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
           echo "REDIS_USERNAME=$(aws ssm get-parameter --name '/dbconfig/redis/username' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
           echo "REDIS_PASSWORD=$(aws ssm get-parameter --name '/dbconfig/redis/password' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "QDRANT_API_KEY=$(aws ssm get-parameter --name '/dbconfig/qdrant/api_key' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "QDRANT_URL=$(aws ssm get-parameter --name '/dbconfig/qdrant/url' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
+          echo "QDRANT_COLLECTION_NAME=$(aws ssm get-parameter --name '/dbconfig/qdrant/collection_name' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
       # === Install Dependencies ===
       - name: Install Root Dependencies
         run: npm install
