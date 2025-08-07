@@ -126,6 +126,32 @@ const handleUsernameFederationLookup = async (req: any, username: string) => {
 };
 
 /**
+ * Handles federation lookup by actor id
+ */
+const handleActorIdFederationLookup = async (req: any, actorId: string) => {
+  try {
+    const ctx = createFederationContext(req);
+    const remoteUser = await ctx.lookupObject(actorId);
+    
+    if (remoteUser && isActor(remoteUser) && remoteUser.id) {
+      let user = await UserService.getUserByActorId(remoteUser.id.toString());
+      
+      if (!user) {
+        const actorData = createActorData(remoteUser, actorId);
+        user = await UserService.createRemoteUser(actorData);
+        //add user to graph db
+        await UserService.addUserToGraphDb(user);
+      }
+      
+      return user;
+    }
+  } catch (federationError) {
+    console.error('Fedify lookup error:', federationError);
+  }
+  return null;
+};
+
+/**
  * Standard error response handler
  */
 const handleError = (res: any, error: any, message: string) => {
@@ -268,18 +294,31 @@ userRoutes.get('/:username', requireAuth, async (req, res) => {
   try {
     const { username } = req.params;
     
-    // First try to get the user as a local user
-    let user = await UserService.getUserByUsername(username, config.domain);
-    
-    // If not found locally and username contains @, try to lookup as remote user
-    if (!user && username.includes('@')) {
+    let user = await UserService.getUserByUsernameAndDomain(username, config.domain);
+
+    if (user) {
+      // already found user locally by username and domain
+    } else if (username.includes('@')) {
+      // attempt remote federation lookup with the full username
       user = await handleUsernameFederationLookup(req, username);
+    } else {
+      // try local user lookup by username only
+      const localUser = await UserService.getUserByUsername(username);
+      if (!localUser) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
+      }
+
+      // try federation lookup with constructed full handle
+      user = await handleUsernameFederationLookup(req, `@${localUser.username}@${localUser.domain}`);
+      if (!user) {
+        user = await handleActorIdFederationLookup(req, localUser.actorId);
+      }
     }
-    
+
     if (!user) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
     }
-    
+
     res.json(mapUserToProfileResponse(user));
   } catch (error) {
     handleError(res, error, 'Error retrieving user profile:');
@@ -298,7 +337,7 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
 
-    let user = await UserService.getUserByUsername(username, config.domain);
+    let user = await UserService.getUserByUsernameAndDomain(username, config.domain);
     
     if (!user && username.includes('@')) {
       user = await handleUsernameFederationLookup(req, username);

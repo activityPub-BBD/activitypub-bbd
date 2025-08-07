@@ -15,10 +15,14 @@ const getUserByObjectId = async (userId: string): Promise<IUser | null> => {
     return await UserModel.findById(userId);
 }
 
-const getUserByUsername = async (username: string, domain?: string): Promise<IUser | null> => {
-    // For ActivityPub, we need to check username + domain combination
-    const targetDomain = domain || config.domain;
-    return await UserModel.findOne({ username, domain: targetDomain });
+const getUserByUsername = async (username: string): Promise<IUser | null> => {
+  return await UserModel.findOne({ username });
+}
+
+const getUserByUsernameAndDomain = async (username: string, domain?: string): Promise<IUser | null> => {
+  // For ActivityPub, we need to check username + domain combination
+  const targetDomain = domain || config.domain;
+    return await UserModel.findOne({ username, domain });
 }
 
 const getUserByActorId = async (actorId: string): Promise<IUser | null> => {
@@ -175,7 +179,8 @@ export const UserService = {
     updateUser,
     searchUsers,
     getFirstUsers,
-    addUserToGraphDb
+    addUserToGraphDb,
+    getUserByUsernameAndDomain
 }
 
 
