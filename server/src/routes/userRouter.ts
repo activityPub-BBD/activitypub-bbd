@@ -339,8 +339,23 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
 
     let user = await UserService.getUserByUsernameAndDomain(username, config.domain);
     
-    if (!user && username.includes('@')) {
+    if (user) {
+      // already found user locally by username and domain
+    } else if (username.includes('@')) {
+      // attempt remote federation lookup with the full username
       user = await handleUsernameFederationLookup(req, username);
+    } else {
+      // try local user lookup by username only
+      const localUser = await UserService.getUserByUsername(username);
+      if (!localUser) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({ error: 'User not found' });
+      }
+
+      // try federation lookup with constructed full handle
+      user = await handleUsernameFederationLookup(req, `@${localUser.username}@${localUser.domain}`);
+      if (!user) {
+        user = await handleActorIdFederationLookup(req, localUser.actorId);
+      }
     }
 
     if (!user) {
@@ -348,7 +363,6 @@ userRoutes.get('/:username/posts', requireAuth, async (req, res) => {
     }
 
     const posts = await PostService.getUserPosts(user._id.toString(), page, limit);
-    console.log(posts)
     res.status(HTTP_STATUS.OK).json(posts);
   } catch (error) {
     handleError(res, error, 'Error fetching user posts:');
