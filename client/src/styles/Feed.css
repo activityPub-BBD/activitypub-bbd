@@ -2,14 +2,15 @@
   min-height: 100vh;
   height: 100%;
   flex-grow: 1;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-/* Header */
 .feed-header {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* Center the logo */
   height: 60px;
   background-color: white;
   border-bottom: 1px solid #dbdbdb;
@@ -17,23 +18,8 @@
   user-select: none;
   z-index: 1000;
   background: linear-gradient(135deg, #e6f2ff, #ffffff);
-}
-
-.create-post-btn {
-  background: #0095f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-left: auto;
-}
-
-.create-post-btn:hover {
-  background: #0084d6;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .feed-header .logo {
@@ -41,82 +27,129 @@
   font-weight: 400;
   color: #262626;
   font-family: 'Billabong', cursive;
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
   cursor: default;
   user-select: none;
+  flex-shrink: 0;
+  /* Remove absolute positioning to let it center naturally */
 }
 
-.header-actions {
+.header-buttons {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
-.search-bar {
-  background: #efefef;
-  border-radius: 8px;
+.search-btn {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
   padding: 8px 16px;
-  width: 268px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
-.search-bar input {
+.search-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.create-post-btn {
+  background: #1da1f2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.create-post-btn:hover {
+  background: #1681c4;
+  transform: translateY(-1px);
+}
+
+.feed-tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #dbdbdb;
+  position: static;
+  z-index: 999;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.feed-tab {
+  flex: 1;
+  max-width: 275px;
+  padding: 16px 0;
   background: none;
   border: none;
-  outline: none;
   font-size: 14px;
-  width: 100%;
+  font-weight: 600;
+  color: #8e8e8e;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.feed-tab:hover {
   color: #262626;
 }
 
-.search-bar input::placeholder {
-  color: #8e8e8e;
+.feed-tab.active {
+  color: #262626;
 }
 
-.header-icons {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.feed-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #262626;
 }
 
-.icon {
-  font-size: 24px;
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.icon:hover {
-  transform: scale(1.1);
-}
-
-
-
-/* Main Feed */
 .feed {
   flex: 1;
   overflow-y: auto;
   display: flex;
   justify-content: center;
-  gap: 64px;
   padding: 20px;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .posts-container {
-  width: 550px;
-   min-height: 85vh;
-  height: 100%;         
+  width: 100%;
+  max-width: 550px;
+  min-height: 85vh;
+  height: 100%;
 }
 
-/* Post Styles */
 .post {
   background: white;
   border: 1px solid #dbdbdb;
   border-radius: 8px;
   margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .post-header {
@@ -124,12 +157,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
+  box-sizing: border-box;
 }
 
 .post-user-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex: 1;
 }
 
 .user-avatar {
@@ -137,12 +173,16 @@
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .username {
   font-weight: 600;
   font-size: 14px;
   color: #262626;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-options {
@@ -152,6 +192,7 @@
   font-size: 16px;
   color: #262626;
   padding: 8px;
+  flex-shrink: 0;
 }
 
 .post-image-container {
@@ -175,11 +216,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
+  box-sizing: border-box;
 }
 
 .action-buttons {
   display: flex;
   gap: 16px;
+  align-items: center;
 }
 
 .action-btn,
@@ -190,6 +233,9 @@
   font-size: 20px;
   padding: 8px;
   transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:hover,
@@ -209,6 +255,7 @@
 
 .post-info {
   padding: 0 16px 16px;
+  box-sizing: border-box;
 }
 
 .likes-count {
@@ -221,6 +268,8 @@
   font-size: 14px;
   line-height: 18px;
   margin-bottom: 8px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .post-caption .username {
@@ -237,315 +286,434 @@
   text-transform: uppercase;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 293px;
-  position: sticky;
-  top: 90px;
-  height: fit-content;
-}
-
-.sidebar-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.sidebar-user img {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-username {
-  font-weight: 600;
-  font-size: 14px;
-  color: #262626;
-}
-
-.user-fullname {
-  font-size: 14px;
+.empty-feed {
+  text-align: center;
+  padding: 40px 20px;
   color: #8e8e8e;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-.switch-btn {
-  background: none;
-  border: none;
-  color: #0095f6;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
+/* === REMOVE HAMBURGER MENU COMPLETELY === */
+.hamburger {
+  display: none !important; /* Force hide hamburger menu */
 }
 
-.suggestions {
-  margin-bottom: 32px;
+/* === BOTTOM TAB BAR (Instagram Style) === */
+.bottom-tab-bar {
+  display: none; /* Hidden on desktop */
 }
 
-.suggestions-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.suggestions-header span {
-  font-weight: 600;
-  font-size: 14px;
-  color: #8e8e8e;
-}
-
-.see-all {
-  background: none;
-  border: none;
-  color: #262626;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.suggestion {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.suggestion img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.suggestion-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.suggestion-username {
-  font-weight: 600;
-  font-size: 14px;
-  color: #262626;
-}
-
-.suggestion-reason {
-  font-size: 12px;
-  color: #8e8e8e;
-}
-
-.follow-btn {
-  background: none;
-  border: none;
-  color: #0095f6;
-  font-weight: 600;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.footer-links {
-  margin-top: 32px;
-}
-
-.links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin-bottom: 16px;
-}
-
-.links a {
-  color: #c7c7c7;
-  text-decoration: none;
-  font-size: 11px;
-  line-height: 13px;
-}
-
-.links a:hover {
-  text-decoration: underline;
-}
-
-.copyright {
-  color: #c7c7c7;
-  font-size: 11px;
-  line-height: 13px;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .feed {
-    gap: 32px;
+/* === MOBILE STYLES === */
+@media (max-width: 768px) {
+  /* Show desktop header buttons on mobile (Create and Search stay on top) */
+  .header-buttons {
+    display: flex;
   }
   
-  .sidebar {
-    width: 260px;
+  /* Adjust feed container for bottom tab bar */
+  .feed-container {
+    padding-bottom: 70px; /* Make space for bottom tab bar */
   }
-}
-
-@media (max-width: 768px) {
-  .feed {
+  
+  /* Bottom Tab Bar */
+  .bottom-tab-bar {
+    display: flex !important; /* Force display on mobile */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: white;
+    border-top: 1px solid #dbdbdb;
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .bottom-tab {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0;
-    padding: 20px 8px;
+    justify-content: center;
+    flex: 1;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: #262626;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .bottom-tab:hover,
+  .bottom-tab.active {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: scale(1.02);
+  }
+  
+  .bottom-tab-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+  
+  .bottom-tab-label {
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  
+  .bottom-tab.active .bottom-tab-icon {
+    color: #1da1f2;
+  }
+  
+  .bottom-tab.active .bottom-tab-label {
+    color: #1da1f2;
+    font-weight: 600;
+  }
+  
+  /* Mobile header adjustments */
+  .feed-header {
+    padding: 12px 16px;
+    height: 56px;
+    justify-content: space-between; /* Space between logo and buttons */
+  }
+  
+  .feed-header .logo {
+    font-size: 28px; /* Slightly smaller on mobile but still visible */
+  }
+  
+  .header-buttons {
+    gap: 8px;
+  }
+  
+  .search-btn,
+  .create-post-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .feed-tabs {
+    top: 56px;
+  }
+  
+  .feed-tab {
+    font-size: 13px;
+    padding: 14px 0;
+  }
+  
+  .feed {
+    padding: 12px 8px;
   }
   
   .posts-container {
+    max-width: 100%;
     width: 100%;
-    max-width: 470px;
-    height: 100vh;
   }
   
-  .sidebar {
-    display: none;
+  .post {
+    margin-bottom: 16px;
+    border-radius: 12px;
   }
   
-  .header-actions {
-    gap: 16px;
+  .post-header {
+    padding: 12px 16px;
   }
   
-  .search-bar {
-    width: 200px;
+  .post-actions {
+    padding: 6px 16px;
   }
   
-  
-  .header-icons {
+  .action-buttons {
     gap: 12px;
+  }
+  
+  .action-btn,
+  .save-btn {
+    font-size: 18px;
+    padding: 6px;
+  }
+  
+  .post-info {
+    padding: 0 16px 12px;
+  }
+  
+  .empty-feed {
+    padding: 30px 16px;
+    font-size: 15px;
   }
 }
 
 @media (max-width: 480px) {
+  .feed-container {
+    padding-bottom: 65px;
+  }
+  
+  .bottom-tab-bar {
+    height: 55px;
+    padding: 0 8px;
+  }
+  
+  .bottom-tab {
+    padding: 6px 2px;
+    min-height: 40px;
+  }
+  
+  .bottom-tab-icon {
+    font-size: 18px;
+  }
+  
+  .bottom-tab-label {
+    font-size: 8px;
+  }
+  
   .feed-header {
-    padding: 12px 16px;
+    padding: 8px 12px;
+    height: 52px;
+    justify-content: space-between; /* Space between logo and buttons */
   }
   
-  .search-bar {
-    display: none;
+  .feed-header .logo {
+    font-size: 26px; /* Ensure it fits properly */
   }
   
-  .posts-container {
-    width: 100%;
+  .header-buttons {
+    gap: 6px;
+  }
+  
+  .search-btn,
+  .create-post-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .search-btn {
+    min-width: auto;
+  }
+  
+  .feed-tabs {
+    top: 52px;
+  }
+  
+  .feed-tab {
+    font-size: 12px;
+    padding: 12px 0;
+  }
+  
+  .feed {
+    padding: 8px 4px;
   }
   
   .post {
     border-radius: 0;
     border-left: none;
     border-right: none;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
-}
-
-  .search-btn,
-  .create-post-btn {
-    padding: 6px 12px;
+  
+  .post-header {
+    padding: 10px 12px;
+  }
+  
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .username {
     font-size: 13px;
   }
-
-.header-buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
+  
+  .post-actions {
+    padding: 4px 12px;
+  }
+  
+  .action-buttons {
+    gap: 8px;
+  }
+  
+  .action-btn,
+  .save-btn {
+    font-size: 16px;
+    padding: 4px;
+  }
+  
+  .post-info {
+    padding: 0 12px 10px;
+  }
+  
+  .likes-count {
+    font-size: 13px;
+  }
+  
+  .post-caption {
+    font-size: 13px;
+    line-height: 16px;
+  }
+  
+  .post-time {
+    font-size: 11px;
+  }
+  
+  .empty-feed {
+    padding: 24px 12px;
+    font-size: 14px;
+  }
 }
 
-.search-btn {
-  background: #f8f9fa;
-  color: #495057;
-  border: 1px solid #dbdbdb;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.search-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-  transform: translateY(-1px);
-}
-
-.search-btn {
-  background: #f8f9fa;
-  color: #495057;
-  border: 1px solid #dee2e6;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.search-btn:active {
-  transform: translateY(0);
-  background: #dee2e6;
-}
-
-.create-post-btn {
-  background: #1da1f2;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.create-post-btn:active {
-  transform: translateY(0);
-  background: #1681c4;
-}
-
-@media (max-width: 768px) {
+@media (max-width: 320px) {
+  .feed-container {
+    padding-bottom: 60px;
+  }
+  
+  .bottom-tab-bar {
+    height: 50px;
+    padding: 0 6px;
+  }
+  
+  .bottom-tab {
+    padding: 4px 1px;
+    min-height: 36px;
+  }
+  
+  .bottom-tab-icon {
+    font-size: 16px;
+  }
+  
+  .bottom-tab-label {
+    font-size: 7px;
+  }
+  
   .feed-header {
-    padding: 0.75rem 1rem;
+    padding: 6px 8px;
+    height: 48px;
+    justify-content: space-between; /* Keep space between logo and buttons */
+  }
+  
+  .feed-header .logo {
+    font-size: 22px; /* Smaller but still readable */
   }
   
   .header-buttons {
-    gap: 0.5rem;
+    gap: 4px;
   }
   
   .search-btn,
   .create-post-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
+    padding: 4px 8px;
+    font-size: 11px;
   }
   
-  .search-btn {
-    font-size: 1rem;
+  .feed-tabs {
+    top: 48px;
+  }
+  
+  .feed-tab {
+    font-size: 11px;
+    padding: 10px 0;
+  }
+  
+  .feed {
+    padding: 6px 2px;
+  }
+  
+  .post-header {
+    padding: 8px 10px;
+  }
+  
+  .user-avatar {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .username {
+    font-size: 12px;
+  }
+  
+  .post-actions {
+    padding: 3px 10px;
+  }
+  
+  .action-buttons {
+    gap: 6px;
+  }
+  
+  .action-btn,
+  .save-btn {
+    font-size: 14px;
+    padding: 3px;
+  }
+  
+  .post-info {
+    padding: 0 10px 8px;
+  }
+  
+  .likes-count {
+    font-size: 12px;
+  }
+  
+  .post-caption {
+    font-size: 12px;
+    line-height: 15px;
+  }
+  
+  .post-time {
+    font-size: 10px;
   }
 }
 
-@media (max-width: 480px) {
-  .search-btn {
-    padding: 0.4rem 0.6rem;
-    min-width: auto;
+/* Landscape orientation adjustments */
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 768px) {
+  .bottom-tab-bar {
+    height: 45px;
   }
   
-  .create-post-btn {
-    padding: 0.4rem 0.8rem;
+  .bottom-tab {
+    min-height: 35px;
+    padding: 4px 2px;
   }
+  
+  .bottom-tab-icon {
+    font-size: 18px;
+  }
+  
+  .bottom-tab-label {
+    font-size: 8px;
+  }
+  
+  .feed-container {
+    padding-bottom: 50px;
+  }
+  
+  .feed-header {
+    height: 48px;
+  }
+  
+  .feed-header .logo {
+    font-size: 24px;
+  }
+  
+  .feed-tabs {
+    top: 48px;
+  }
+  
+  .feed-tab {
+    padding: 8px 0;
+    font-size: 12px;
+  }
+}
 
-  .header-buttons {
-    flex-direction: row;
-    gap: 0.4rem;
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .post-image {
+    image-rendering: -webkit-optimize-contrast;
   }
 }

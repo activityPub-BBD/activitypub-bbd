@@ -6,6 +6,8 @@ import Post from './Post';
 import {useNavigate} from "react-router-dom"
 import type { IPost } from './UserProfile';
 
+type FeedType = 'following' | 'global';
+
 const Feed: React.FC = () => {
   const { jwt, logout } = useAuthContext();
   const navigate = useNavigate();
@@ -15,34 +17,60 @@ const Feed: React.FC = () => {
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [currentFeed, setCurrentFeed] = useState<FeedType>('global');
 
   const feedRef = useRef<HTMLDivElement>(null);
 
-  // Fetch posts for given page
-  const fetchPosts = useCallback(async (pageToLoad: number) => {
+  // Reset feed when switching between following/global
+  const switchFeed = (feedType: FeedType) => {
+    if (feedType === currentFeed) return;
+    
+    setCurrentFeed(feedType);
+    setPosts([]);
+    setPage(1);
+    setHasMore(true);
+    setError('');
+  };
+
+  // Fetch posts for given page and feed type
+  const fetchPosts = useCallback(async (pageToLoad: number, feedType: FeedType) => {
     if (!jwt) return;
 
     setLoading(true);
     try {
-      const ownFeed = false;
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/posts/feed?page=${pageToLoad}&limit=20`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ ownFeed }),
-          headers: {
-            'Authorization': `Bearer ${jwt}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      let response;
+      
+      if (feedType === 'following') {
+        response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/posts/following?page=${pageToLoad}&limit=20`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${jwt}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      } else {
+        const ownFeed = false;
+        response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/posts/feed?page=${pageToLoad}&limit=20`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ ownFeed }),
+            headers: {
+              'Authorization': `Bearer ${jwt}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+      }
 
       if (response.ok) {
         const data = await response.json();
-        // Handle token expiration
-        setPosts(prev => [...prev, ...(data.posts || [])]);
+        
+        setPosts(prev => pageToLoad === 1 ? (data.posts || []) : [...prev, ...(data.posts || [])]);
 
-        // If returned posts are less than limit, no more pages
         if ((data.posts?.length ?? 0) < 20) {
           setHasMore(false);
         }
@@ -59,16 +87,14 @@ const Feed: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [jwt]);
+  }, [jwt, logout, navigate]);
 
-  // On component mount and page change, load posts
   useEffect(() => {
     if (hasMore) {
-      fetchPosts(page);
+      fetchPosts(page, currentFeed);
     }
-  }, [page, fetchPosts, hasMore]);
+  }, [page, fetchPosts, hasMore, currentFeed]);
 
-  // Scroll handler to detect near bottom
   const handleScroll = () => {
     if (loading || !hasMore || !feedRef.current) return;
 
@@ -78,7 +104,6 @@ const Feed: React.FC = () => {
     }
   };
 
-  // Attach scroll listener
   useEffect(() => {
     const feedEl = feedRef.current;
     if (!feedEl) return;
@@ -86,7 +111,6 @@ const Feed: React.FC = () => {
     return () => feedEl.removeEventListener('scroll', handleScroll);
   }, [loading, hasMore]);
 
-  // Handle new post created
   const handlePostCreated = (newPost: any) => {
     if (!newPost.mediaUrl) {
       console.warn('Post creation failed: Media is required');
@@ -115,50 +139,120 @@ const Feed: React.FC = () => {
   const handleSearchClick = () => {
     navigate('/search');
   }
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  }
+
+   const handleFollowersClick = () => {
+    navigate('/follower-tab');
+  }
+
+  const handleFollowingClick = () => {
+    navigate('/following-tab');
+  }
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  }
+
   return (
-    <div className="feed-container" ref={feedRef} style={{ overflowY: 'auto', height: '100vh' }}>
-      {/* Header */}
-      <div className="feed-header">
-        <img src="chirp-landing-logo.png" className="logo" alt="Chirp Logo" width={65} />
-        <div className="header-buttons">
-          <button className="search-btn" onClick={handleSearchClick}>
-            🔍 Search
+    <>
+      <div className="feed-container" ref={feedRef} style={{ overflowY: 'auto', height: '100vh' }}>
+        {/* Header */}
+        <div className="feed-header">
+          <img src="chirp-landing-logo.png" className="logo" alt="Chirp Logo" width={65} />
+          <div className="header-buttons">
+            <button className="search-btn" onClick={handleSearchClick}>
+              🔍 Search
+            </button>
+            <button className="create-post-btn" onClick={() => setShowCreatePost(true)}>
+              + Create Post
+            </button>
+          </div>
+        </div>
+
+        {/* Feed Tabs */}
+        <div className="feed-tabs">
+          <button 
+            className={`feed-tab ${currentFeed === 'global' ? 'active' : ''}`}
+            onClick={() => switchFeed('global')}
+          >
+            Global
           </button>
-          <button className="create-post-btn" onClick={() => setShowCreatePost(true)}>
-            + Create Post
+          <button 
+            className={`feed-tab ${currentFeed === 'following' ? 'active' : ''}`}
+            onClick={() => switchFeed('following')}
+          >
+            Following
           </button>
         </div>
+
+        {/* Main Feed */}
+        <main className="feed">
+          <div className="posts-container">
+            {posts.length === 0 && !loading && (
+              <div className="empty-feed">
+                {currentFeed === 'following' 
+                  ? "No posts from people you follow yet. Try following some users!" 
+                  : "No posts available."
+                }
+              </div>
+            )}
+            
+            {posts.map(post => (
+              <Post
+                key={post._id}
+                _id={post._id}
+                caption={post.caption}
+                createdAt={post.createdAt}
+                mediaType={post.mediaType}
+                mediaUrl={post.mediaUrl}
+                author={post.author}
+                likes={post.likes}
+                likesCount={post.likesCount}
+              />
+            ))}
+            {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
+            {!hasMore && posts.length > 0 && <div style={{ textAlign: 'center', padding: '1rem' }}>No more posts.</div>}
+            {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
+          </div>
+        </main>
+
+        {/* Create Post Modal */}
+        {showCreatePost && (
+          <CreatePost
+            onClose={() => setShowCreatePost(false)}
+            onPostCreated={handlePostCreated}
+          />
+        )}
       </div>
 
-      {/* Main Feed */}
-      <main className="feed">
-        <div className="posts-container">
-          {posts.map(post => (
-            <Post
-              _id={post._id}
-              caption={post.caption}
-              createdAt={post.createdAt}
-              mediaType={post.mediaType}
-              mediaUrl={post.mediaUrl}
-              author={post.author}
-              likes={post.likes}
-              likesCount={post.likesCount}
-            />
-          ))}
-          {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
-          {!hasMore && <div style={{ textAlign: 'center', padding: '1rem' }}>No more posts.</div>}
-          {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
-        </div>
-      </main>
-
-      {/* Create Post Modal */}
-      {showCreatePost && (
-        <CreatePost
-          onClose={() => setShowCreatePost(false)}
-          onPostCreated={handlePostCreated}
-        />
-      )}
-    </div>
+      {/* Bottom Tab Bar (Mobile Only)*/}
+      <div className="bottom-tab-bar">
+        <button className="bottom-tab active">
+          <div className="bottom-tab-icon">🏠</div>
+          <div className="bottom-tab-label">Home</div>
+        </button>
+        <button className="bottom-tab" onClick={handleFollowersClick}>
+          <div className="bottom-tab-icon">👥</div>
+          <div className="bottom-tab-label">Followers</div>
+        </button>
+        <button className="bottom-tab" onClick={handleFollowingClick}>
+          <div className="bottom-tab-icon">➡️</div>
+          <div className="bottom-tab-label">Following</div>
+        </button>
+          <button className="bottom-tab" onClick={handleProfileClick}>
+          <div className="bottom-tab-icon">👤</div>
+          <div className="bottom-tab-label">Profile</div>
+        </button>
+         <button className="bottom-tab logout-tab" onClick={handleLogout}>
+          <div className="bottom-tab-icon">🚪</div>
+          <div className="bottom-tab-label">Logout</div>
+        </button>
+      </div>
+    </>
   );
 };
 
