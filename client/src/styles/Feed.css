@@ -10,7 +10,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center; /* Center the logo */
+  justify-content: center;
   height: 60px;
   background-color: white;
   border-bottom: 1px solid #dbdbdb;
@@ -30,7 +30,6 @@
   cursor: default;
   user-select: none;
   flex-shrink: 0;
-  /* Remove absolute positioning to let it center naturally */
 }
 
 .header-buttons {
@@ -294,31 +293,27 @@
   line-height: 1.5;
 }
 
-/* === REMOVE HAMBURGER MENU COMPLETELY === */
+
 .hamburger {
-  display: none !important; /* Force hide hamburger menu */
+  display: none !important;
 }
 
-/* === BOTTOM TAB BAR (Instagram Style) === */
 .bottom-tab-bar {
-  display: none; /* Hidden on desktop */
+  display: none;
 }
 
-/* === MOBILE STYLES === */
 @media (max-width: 768px) {
-  /* Show desktop header buttons on mobile (Create and Search stay on top) */
   .header-buttons {
     display: flex;
   }
   
-  /* Adjust feed container for bottom tab bar */
   .feed-container {
-    padding-bottom: 70px; /* Make space for bottom tab bar */
+    padding-bottom: 70px; 
   }
   
   /* Bottom Tab Bar */
   .bottom-tab-bar {
-    display: flex !important; /* Force display on mobile */
+    display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -380,15 +375,14 @@
     font-weight: 600;
   }
   
-  /* Mobile header adjustments */
   .feed-header {
     padding: 12px 16px;
     height: 56px;
-    justify-content: space-between; /* Space between logo and buttons */
+    justify-content: space-between;
   }
   
   .feed-header .logo {
-    font-size: 28px; /* Slightly smaller on mobile but still visible */
+    font-size: 28px;
   }
   
   .header-buttons {
@@ -478,11 +472,11 @@
   .feed-header {
     padding: 8px 12px;
     height: 52px;
-    justify-content: space-between; /* Space between logo and buttons */
+    justify-content: space-between;
   }
   
   .feed-header .logo {
-    font-size: 26px; /* Ensure it fits properly */
+    font-size: 26px;
   }
   
   .header-buttons {
@@ -595,11 +589,11 @@
   .feed-header {
     padding: 6px 8px;
     height: 48px;
-    justify-content: space-between; /* Keep space between logo and buttons */
+    justify-content: space-between; 
   }
   
   .feed-header .logo {
-    font-size: 22px; /* Smaller but still readable */
+    font-size: 22px;
   }
   
   .header-buttons {
