@@ -42,6 +42,7 @@ const mapUserToProfileResponse = (user: any) => ({
  */
 const createFederationContext = (req: any) => {
   const fullUrl = `https://${config.domain}${req.originalUrl}`;
+  logger.debug(fullUrl);
   let requestBody: any = undefined;
   if (!["GET", "HEAD"].includes(req.method)) {
     requestBody = req.body ? JSON.stringify(req.body) : undefined;
