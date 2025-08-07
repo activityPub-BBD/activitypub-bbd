@@ -342,6 +342,9 @@ jobs:
             REDIS_PORT=$REDIS_PORT
             REDIS_USERNAME=$REDIS_USERNAME
             REDIS_PASSWORD=$REDIS_PASSWORD
+            QDRANT_API_KEY=$QDRANT_API_KEY
+            QDRANT_URL=$QDRANT_URL
+            QDRANT_COLLECTION_NAME=$QDRANT_COLLECTION_NAME
             EOF
             # Restart the app with PM2
             pm2 stop mastodon || true
