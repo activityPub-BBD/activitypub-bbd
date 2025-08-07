@@ -358,13 +358,6 @@ federation
       });
       return;
     }
-    const object = ctx.parseUri(like.objectId);
-    if (object == null) {
-      logger.debug("The Like object's object is not an actor: {like}", {
-        like,
-      });
-      return;
-    }
 
     const actor = await like.getActor();
     if (actor?.id == null || actor.inboxId == null) {
