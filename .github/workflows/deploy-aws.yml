@@ -17,6 +17,7 @@ jobs:
   terraform:
     name: "Manage AWS Resources"
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'terraform/') || contains(github.event.head_commit.added, 'terraform/') || contains(github.event.head_commit.removed, 'terraform/')
     outputs:
       ec2host: ${{ steps.tf_outputs.outputs.ec2host }}
     defaults:
