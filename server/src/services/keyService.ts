@@ -47,6 +47,7 @@ const generateAndStoreKeyPair = async (userId: string, keyType: "RSASSA-PKCS1-v1
 };
 
 const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
+    logger.warn("FIND KEY PAIRS FOR USER ENTERED")
     const keys = await getKeysByUserId(userId);
     const keyMap = Object.fromEntries(
         keys.map((key) => [key.type, key])
@@ -57,11 +58,11 @@ const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
     // For each of the two key formats that the actor supports, check if they have a key pair
     for (const keyType of ["RSASSA-PKCS1-v1_5", "Ed25519"] as const) {
         if (keyMap[keyType] == null) {
-            logger.debug(`User ${userId} does not have ${keyType} key; creating one...`);
+            logger.warn(`User ${userId} does not have ${keyType} key; creating one...`);
             const pair = await generateAndStoreKeyPair(userId, keyType);
             pairs.push(pair);
         } else {
-            logger.debug(`User ${userId} does have ${keyType} key`);
+            logger.warn(`User ${userId} does have ${keyType} key`);
             
             pairs.push({
                 privateKey: await importJwk(
@@ -75,7 +76,8 @@ const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
             });
         }
     }
-     logger.debug(JSON.stringify(pairs))
+     logger.warn("SENDING PAIRS")
+     logger.warn(JSON.stringify(pairs))
     return pairs;
 };
 
