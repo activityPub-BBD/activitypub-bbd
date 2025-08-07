@@ -88,8 +88,6 @@ const handleFederationLookup = async (req: any, query: string) => {
       let localUser = await UserService.getUserByActorId(remoteUser.id.toString());
       
       if (!localUser) {
-        logger.debug("ACTOR NOT LOCAL")
-        logger.debug(JSON.stringify(remoteUser))
         const actorData = createActorData(remoteUser, query);
         localUser = await UserService.createRemoteUser(actorData);
         //add user to graph db
@@ -118,7 +116,7 @@ const handleUsernameFederationLookup = async (req: any, username: string) => {
       
       if (!user) {
         logger.debug('User is not local. Creating actor...');
-        logger.debug(JSON.stringify(remoteUser));
+        console.log(remoteUser)
         const actorData = createActorData(remoteUser, username);
         user = await UserService.createRemoteUser(actorData);
         //add user to graph db
