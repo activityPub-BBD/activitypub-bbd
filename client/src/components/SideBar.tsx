@@ -71,14 +71,14 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
                 })
               }
             />
-            <div className="sidebar-username">{user?.displayName || user?.username || "User"}</div>
+            <div className="sidebar-username" onClick={() => navigate("/profile")} style={{ cursor: "pointer" }}>{user?.displayName || user?.username || "User"}</div>
           </div>
           {!loading && (
             <div className="sidebar-stats">
-              <div>
+              <div onClick={() => navigate("/follower-tab")} style={{ cursor: "pointer" }}>
                 <span className="count"> {stats.followers}</span>Followers
               </div>
-              <div>
+              <div onClick={() => navigate("/following-tab")} style={{ cursor: "pointer" }}>
                 <span className="count"> {stats.following}</span>Following
               </div>
             </div>
