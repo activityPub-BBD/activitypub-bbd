@@ -4,7 +4,6 @@ import SideBar from '../components/SideBar';
 import '../styles/Home.css';
 import '../styles/SideBar.css';
 import '../styles/UserSearch.css';
-import { useAuthContext } from '../context/AuthContext';
 
 interface SearchUser {
   id: string;
@@ -42,7 +41,6 @@ const UserSearch: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const { user } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {

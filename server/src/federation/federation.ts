@@ -29,7 +29,8 @@ const redisClient = await retrieveRedisClient();
 
 export const federation = createFederation({
   kv: new MemoryKvStore(),
-  queue: new InProcessMessageQueue()
+  queue: new InProcessMessageQueue(),
+  origin: 'https://mastodon.thups.co.za'
 });
 
 //setup local actor
@@ -46,6 +47,7 @@ federation
     logger.info(`User found: ${user.displayName}`);
 
     const keys = await ctx.getActorKeyPairs(identifier);
+    
 
     return new Person({
       id: ctx.getActorUri(identifier),
@@ -67,7 +69,7 @@ federation
       endpoints: new Endpoints({
         sharedInbox: ctx.getInboxUri(),
       }),
-      publicKey: keys[0].cryptographicKey,
+      publicKeys: [keys[0].cryptographicKey, keys[1].cryptographicKey],
       assertionMethods: keys.map((key) => key.multikey),
     });
   })
@@ -75,7 +77,7 @@ federation
     logger.debug(`Key pairs dispatcher called for: ${identifier}`);
     const user = await UserService.getUserByUsername(identifier);
     if (user == null) return [];
-
+    logger.debug(`Key pairs function called for: ${identifier}`);
     return await KeyService.getKeyPairsForUser(user._id.toString());
   });
 
