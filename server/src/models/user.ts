@@ -11,9 +11,9 @@ export interface IUser extends Document {
   bio?: string;
   avatarUrl?: string;
   inboxUrl: string;
-  outboxUrl: string;
-  followersUrl: string;
-  followingUrl: string;
+  outboxUrl?: string;
+  followersUrl?: string;
+  followingUrl?: string;
   isLocal: boolean;
   createdAt: Date;
   location?: string;
@@ -63,12 +63,15 @@ export const userSchema = new Schema<IUser>({
   },
   outboxUrl: {
     type: String,
+    required: false
   },
   followersUrl: {
     type: String,
+    required: false
   },
   followingUrl: {
     type: String,
+    required: false
   },
   isLocal: {
     type: Boolean,

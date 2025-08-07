@@ -351,7 +351,7 @@ federation
     );
   })
   .on(Like, async (ctx, like) => {
-    logger.info("== Received Like activity ==");
+    logger.debug("== Received Like activity ==");
     if (like.objectId == null) {
       logger.debug("The Like object does not have an object: {like}", {
         like,
