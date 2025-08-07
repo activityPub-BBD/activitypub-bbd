@@ -83,6 +83,7 @@ const handleFederationLookup = async (req: any, query: string) => {
     logger.debug("====FEDIFY QUEERY====")
     logger.debug(fedifyQuery)
     const remoteUser = await ctx.lookupObject(fedifyQuery);
+    logger.debug(JSON.stringify(remoteUser));
     
     if (remoteUser && isActor(remoteUser) && remoteUser.id) {
       let localUser = await UserService.getUserByActorId(remoteUser.id.toString());

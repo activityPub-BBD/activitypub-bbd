@@ -63,15 +63,12 @@ export const userSchema = new Schema<IUser>({
   },
   outboxUrl: {
     type: String,
-    required: true
   },
   followersUrl: {
     type: String,
-    required: true
   },
   followingUrl: {
     type: String,
-    required: true
   },
   isLocal: {
     type: Boolean,
