@@ -7,6 +7,14 @@
 
 html {
   font-size: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Responsive font scaling */
+@media (max-width: 1024px) {
+  html {
+    font-size: 96%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -15,9 +23,21 @@ html {
   }
 }
 
-@media (max-width: 450px) {
+@media (max-width: 480px) {
+  html {
+    font-size: 90%;
+  }
+}
+
+@media (max-width: 375px) {
   html {
     font-size: 88%;
+  }
+}
+
+@media (max-width: 320px) {
+  html {
+    font-size: 85%;
   }
 }
 
@@ -25,6 +45,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #fafafa;
   color: #262626;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Container */
@@ -36,34 +58,21 @@ body {
   justify-content: center;
   padding: 2rem;
   gap: 2rem;
-  background:#f2f8ff;;
+  background: #f2f8ff;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
 }
-
-.google-button {
-  display: flex;
-  align-items: center;
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 0.8rem 1.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: box-shadow 0.3s ease;
-}
-
-.google-button img {
-  width: 24px;
-  height: 24px;
-  margin-right: 1rem;
-}
-
 
 /* Showcase Section */
 .showcase-section {
   flex: 1;
   max-width: 380px;
+  min-width: 280px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  padding: 1rem;
 }
 
 .landing-logo {
@@ -71,6 +80,11 @@ body {
   max-width: 300px;
   height: auto;
   object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.landing-logo:hover {
+  transform: scale(1.02);
 }
 
 /* Auth Section */
@@ -81,14 +95,10 @@ body {
   gap: 1rem;
   width: 100%;
   max-width: 350px;
+  min-width: 280px;
 }
 
 .auth-container {
-  background: white;
-  border: 1px solid #dbdbdb;
-  border-radius: 1px;
-  padding: 2.5rem;
-  text-align: center;
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 12px;
@@ -97,6 +107,13 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(6px);
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 .logo-container {
@@ -109,6 +126,7 @@ body {
   color: #262626;
   font-family: 'Billabong', cursive;
   letter-spacing: 1px;
+  line-height: 1.2;
 }
 
 .auth-form-container {
@@ -119,131 +137,434 @@ body {
   transition: all 0.3s ease;
 }
 
+/* Google Auth Button */
+.google-button,
 .google-auth-button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   background: #4267B2;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
+.google-button:hover,
 .google-auth-button:hover {
   background: #365899;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 103, 178, 0.3);
 }
 
+.google-button img,
 .google-icon {
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   flex-shrink: 0;
 }
 
+/* Form Elements */
 .username-prompt {
   font-size: 1.05rem;
   font-weight: 600;
   color: #8e8e8e;
   margin-bottom: 1rem;
-  line-height: 1.25rem;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .username-input {
   background: #fafafa;
   border: 1px solid #dbdbdb;
-  border-radius: 3px;
-  padding: 0.5625rem 0.5rem;
+  border-radius: 6px;
+  padding: 0.75rem;
   font-size: 0.875rem;
   line-height: 1.125rem;
   width: 100%;
   min-height: 44px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .username-input:focus {
   outline: none;
-  border-color: #a8a8a8;
+  border-color: #0095f6;
   background: white;
+  box-shadow: 0 0 0 2px rgba(0, 149, 246, 0.1);
 }
 
 .complete-button {
   background: #0095f6;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem;
   text-align: center;
   width: 100%;
   min-height: 44px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .complete-button:hover {
   background: #1877f2;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 149, 246, 0.3);
 }
 
-/* Responsive Design */
-@media (max-width: 875px) {
+/* Error Message */
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  text-align: left;
+  word-wrap: break-word;
+}
+
+/* Disabled States */
+.google-auth-button:disabled,
+.complete-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .landing-container {
+    padding: 3rem;
+    gap: 3rem;
+  }
+  
+  .showcase-section {
+    max-width: 450px;
+  }
+  
+  .landing-logo {
+    max-width: 380px;
+  }
+  
+  .auth-section {
+    flex: 0 0 400px;
+    max-width: 400px;
+  }
+  
+  .auth-container {
+    padding: 3rem;
+  }
+  
+  .auth-logo {
+    font-size: 2.8rem;
+  }
+}
+
+/* Desktop (1024px - 1199px) */
+@media (max-width: 1199px) and (min-width: 1024px) {
+  .landing-container {
+    padding: 2.5rem;
+    gap: 2.5rem;
+  }
+  
+  .showcase-section {
+    max-width: 350px;
+  }
+  
+  .landing-logo {
+    max-width: 320px;
+  }
+}
+
+/* Tablet Landscape (769px - 1023px) */
+@media (max-width: 1023px) and (min-width: 769px) {
+  .landing-container {
+    padding: 2rem;
+    gap: 2rem;
+  }
+  
+  .showcase-section {
+    max-width: 300px;
+  }
+  
+  .landing-logo {
+    max-width: 280px;
+  }
+  
+  .auth-section {
+    flex: 0 0 320px;
+    max-width: 320px;
+  }
+  
+  .auth-container {
+    padding: 2rem;
+  }
+}
+
+/* Tablet Portrait and Mobile Large (481px - 768px) */
+@media (max-width: 768px) {
   .landing-container {
     flex-direction: column;
-    padding: 1rem;
-    gap: 2rem;
+    padding: 1.5rem;
+    gap: 1.5rem;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .showcase-section {
+    flex: none;
+    width: 100%;
+    max-width: 300px;
+    order: 1;
+    padding: 0;
   }
 
   .auth-section {
     flex: none;
     width: 100%;
     max-width: 350px;
+    min-width: auto;
+    order: 2;
   }
 
   .landing-logo {
     max-width: 260px;
   }
+  
+  .auth-container {
+    padding: 2rem;
+  }
+  
+  .auth-logo {
+    font-size: 2.3rem;
+  }
 }
 
-@media (max-width: 450px) {
-  .auth-container {
+/* Mobile Medium (376px - 480px) */
+@media (max-width: 480px) {
+  .landing-container {
     padding: 1rem;
-    border: none;
-    background: transparent;
+    gap: 1rem;
+  }
+  
+  .showcase-section {
+    max-width: 250px;
+  }
+
+  .auth-section {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .auth-container {
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 0 0.5rem;
   }
 
   .auth-logo {
-    font-size: 2.2rem;
-  }
-
-  .username-prompt {
-    font-size: 0.95rem;
-  }
-
-  .complete-button {
-    padding: 0.6rem;
+    font-size: 2rem;
   }
 
   .landing-logo {
-    max-width: 80vw;
+    max-width: 220px;
+  }
+  
+  .username-prompt {
+    font-size: 1rem;
+  }
+
+  .complete-button,
+  .google-auth-button {
+    padding: 0.65rem;
+    font-size: 0.8rem;
+    min-height: 42px;
+  }
+  
+  .username-input {
+    padding: 0.65rem;
+    min-height: 42px;
   }
 }
 
-.error-message {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+/* Mobile Small (321px - 375px) */
+@media (max-width: 375px) {
+  .landing-container {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .showcase-section {
+    max-width: 200px;
+  }
+
+  .auth-container {
+    padding: 1.25rem;
+    margin: 0 0.25rem;
+    border-radius: 6px;
+  }
+
+  .auth-logo {
+    font-size: 1.8rem;
+  }
+
+  .landing-logo {
+    max-width: 180px;
+  }
+  
+  .username-prompt {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .complete-button,
+  .google-auth-button {
+    padding: 0.6rem;
+    font-size: 0.75rem;
+    min-height: 40px;
+  }
+  
+  .username-input {
+    padding: 0.6rem;
+    min-height: 40px;
+    font-size: 0.8rem;
+  }
+  
+  .error-message {
+    padding: 0.6rem;
+    font-size: 0.8rem;
+  }
 }
 
-.google-auth-button:disabled,
-.complete-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* Mobile Extra Small (below 320px) */
+@media (max-width: 320px) {
+  .landing-container {
+    padding: 0.5rem;
+    gap: 0.5rem;
+    min-height: 100vh;
+  }
+  
+  .showcase-section {
+    max-width: 160px;
+  }
+
+  .auth-container {
+    padding: 1rem;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 4px;
+    margin: 0;
+  }
+
+  .auth-logo {
+    font-size: 1.6rem;
+    letter-spacing: 0.5px;
+  }
+
+  .landing-logo {
+    max-width: 150px;
+  }
+  
+  .username-prompt {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .complete-button,
+  .google-auth-button {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+    min-height: 38px;
+    border-radius: 4px;
+  }
+  
+  .username-input {
+    padding: 0.5rem;
+    min-height: 38px;
+    font-size: 0.75rem;
+    border-radius: 4px;
+  }
+  
+  .error-message {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .auth-form-container {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .logo-container {
+    margin-bottom: 1rem;
+  }
 }
+
+/* Landscape Orientation (Mobile) */
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 768px) {
+  .landing-container {
+    flex-direction: row;
+    padding: 1rem;
+    gap: 1.5rem;
+    min-height: 100vh;
+    align-items: center;
+  }
+  
+  .showcase-section {
+    flex: 0 0 200px;
+    max-width: 200px;
+    order: 1;
+  }
+  
+  .landing-logo {
+    max-width: 180px;
+  }
+  
+  .auth-section {
+    flex: 1;
+    max-width: 300px;
+    order: 2;
+  }
+  
+  .auth-container {
+    padding: 1.5rem;
+  }
+  
+  .auth-logo {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .logo-container {
+    margin-bottom: 1rem;
+  }
+  
+  .auth-form-container {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .landing-logo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
