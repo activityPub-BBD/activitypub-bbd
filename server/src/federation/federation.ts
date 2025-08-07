@@ -47,7 +47,7 @@ federation
     logger.info(`User found: ${user.displayName}`);
 
     const keys = await ctx.getActorKeyPairs(identifier);
-    logger.info("Got keys!");
+    
 
     return new Person({
       id: ctx.getActorUri(identifier),

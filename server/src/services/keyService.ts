@@ -47,7 +47,6 @@ const generateAndStoreKeyPair = async (userId: string, keyType: "RSASSA-PKCS1-v1
 };
 
 const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
-    logger.warn("FIND KEY PAIRS FOR USER ENTERED")
     const keys = await getKeysByUserId(userId);
     const keyMap = Object.fromEntries(
         keys.map((key) => [key.type, key])
@@ -76,8 +75,6 @@ const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
             });
         }
     }
-     logger.warn("SENDING PAIRS")
-     logger.warn(JSON.stringify(pairs))
     return pairs;
 };
 
