@@ -12,8 +12,8 @@ export interface IUser extends Document {
   avatarUrl?: string;
   inboxUrl: string;
   outboxUrl?: string;
-  followersUrl: string;
-  followingUrl: string;
+  followersUrl?: string;
+  followingUrl?: string;
   isLocal: boolean;
   createdAt: Date;
   location?: string;
@@ -67,11 +67,11 @@ export const userSchema = new Schema<IUser>({
   },
   followersUrl: {
     type: String,
-    required: true
+    required: false
   },
   followingUrl: {
     type: String,
-    required: true
+    required: false
   },
   isLocal: {
     type: Boolean,
