@@ -61,6 +61,8 @@ const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
             const pair = await generateAndStoreKeyPair(userId, keyType);
             pairs.push(pair);
         } else {
+            logger.debug(`User ${userId} does have ${keyType} key`);
+            
             pairs.push({
                 privateKey: await importJwk(
                     JSON.parse(keyMap[keyType].privateKey),
@@ -73,7 +75,7 @@ const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
             });
         }
     }
-    
+     logger.debug(pairs)
     return pairs;
 };
 
