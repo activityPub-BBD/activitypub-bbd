@@ -7,10 +7,10 @@ import { UserService } from "@services/userService";
 import { config } from "@config/config";
 import { federation } from "@federation/index";
 import { isActor, type Actor } from "@fedify/fedify";
-
+import { getLogger } from "@logtape/logtape";
 export const userRoutes = Router();
 
-
+const logger = getLogger("server");
 /**
  * Maps a user object to the standard response format
  */
@@ -84,6 +84,7 @@ const handleFederationLookup = async (req: any, query: string) => {
       let localUser = await UserService.getUserByActorId(remoteUser.id.toString());
       
       if (!localUser) {
+        logger.debug()
         const actorData = createActorData(remoteUser, query);
         localUser = await UserService.createRemoteUser(actorData);
         //add user to graph db
@@ -111,6 +112,8 @@ const handleUsernameFederationLookup = async (req: any, username: string) => {
       let user = await UserService.getUserByActorId(remoteUser.id.toString());
       
       if (!user) {
+        logger.debug('User is not local. Creating actor...');
+        logger.debug(JSON.stringify(remoteUser));
         const actorData = createActorData(remoteUser, username);
         user = await UserService.createRemoteUser(actorData);
         //add user to graph db
