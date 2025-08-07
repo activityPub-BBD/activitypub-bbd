@@ -75,7 +75,7 @@ const getKeyPairsForUser = async (userId: string): Promise<CryptoKeyPair[]> => {
             });
         }
     }
-     logger.debug(pairs)
+     logger.debug(JSON.stringify(pairs))
     return pairs;
 };
 
