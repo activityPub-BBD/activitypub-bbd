@@ -312,14 +312,24 @@ postRoutes.delete('/comments/:id/:commentId', requireAuth, async (req, res) => {
 postRoutes.get('/search', requireAuth, async (req, res) => {
   try {
     const { q, page = 1, limit = 20 } = req.query;
-    const results =await findInQdrant(q as string);
-    const posts = await PostService.findPostsByIds(results.map((result) => {
-        const payload = result.payload;
-        return payload ? payload["id"] as string : undefined;
-      }).filter((id) => id !== undefined), 
-      parseInt(page as string), parseInt(limit as string)
-    );
-    res.json(posts.length === 0 ? await PostService.searchPosts(q as string, parseInt(page as string), parseInt(limit as string)) : posts);
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+
+    const results = await findInQdrant(q as string);
+    const filteredResults = results.filter(r => r.score > 0.5);
+
+    const ids = filteredResults
+      .map(r => r.payload?.id as string | undefined)
+      .filter(Boolean) as string[];
+
+    const posts = await PostService.findPostsByIds(ids, pageNum, limitNum);
+
+    if (posts.length === 0) {
+      const fallbackPosts = await PostService.searchPosts(q as string, pageNum, limitNum);
+      return res.json(fallbackPosts);
+    } else{
+      res.json(posts);
+    }
   } catch (error) {
     console.error('Search posts error:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to search posts' });

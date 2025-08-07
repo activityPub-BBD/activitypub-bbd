@@ -274,12 +274,18 @@ const searchPosts = async (query: string, page = 1, limit = 20): Promise<IPost[]
 const findPostsByIds = async (postIds: string[], page = 1, limit = 20): Promise<IPost[]> => {
   const skip = (page - 1) * limit;
 
-  return await PostModel.find({ _id: { $in: postIds } })
-  .sort({ createdAt: -1 })
-  .skip(skip)
-  .limit(limit)
-  .populate('author', 'username displayName avatarUrl');
+  const posts = await PostModel.find({ _id: { $in: postIds } })
+    .skip(skip)
+    .limit(limit)
+    .populate('author', 'username displayName avatarUrl');
+
+  // Sort posts based on the order in postIds
+  const postMap = new Map(posts.map(post => [post._id.toString(), post]));
+  return postIds
+    .map(id => postMap.get(id))
+    .filter(post => post !== undefined);
 };
+
 
 export const PostService = {
   createPost,
