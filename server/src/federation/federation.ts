@@ -67,7 +67,7 @@ federation
       endpoints: new Endpoints({
         sharedInbox: ctx.getInboxUri(),
       }),
-      publicKey: keys[0].cryptographicKey,
+      publicKeys: [keys[0].cryptographicKey, keys[1].cryptographicKey],
       assertionMethods: keys.map((key) => key.multikey),
     });
   })
