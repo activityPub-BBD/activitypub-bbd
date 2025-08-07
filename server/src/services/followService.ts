@@ -161,6 +161,7 @@ export async function retrieveSuggestedMutuals(
     username: string;
     displayName: string;
     avatarUrl?: string;
+    followersCount: number;
   }[]
 > {
   const driver = await retrieveNeo4jDriver();
@@ -176,7 +177,7 @@ export async function retrieveSuggestedMutuals(
             suggested.actorId AS actorId,
             suggested.inboxUrl AS inboxUrl,
             suggested.createdAt AS createdAt,
-            count(follower) AS followers
+            COUNT(follower) AS followers
         ORDER BY followers DESC
         LIMIT 20
         `,
@@ -195,6 +196,7 @@ export async function retrieveSuggestedMutuals(
         displayName: user!.displayName,
         username: user!.username,
         avatarUrl: user!.avatarUrl,
+        followersCount: record.get("followers").toInt()
       };
     })
   );

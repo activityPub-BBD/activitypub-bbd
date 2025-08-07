@@ -91,7 +91,6 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
           <Link to="/follower-tab">Followers</Link>
           <Link to="/following-tab">Following</Link>
           <Link to="/search">Search</Link>
-          <Link to="/notifications">Notifications</Link>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>

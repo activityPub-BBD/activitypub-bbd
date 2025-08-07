@@ -1,4 +1,4 @@
-.notifications-feed {
+.suggested-followers-feed {
   flex: 1;
   padding: 2rem 0;
   background: #fafafa;
@@ -8,7 +8,7 @@
   align-items: center;
 }
 
-.notifications-title {
+.suggested-title {
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 2rem;
@@ -16,7 +16,18 @@
   letter-spacing: -1px;
 }
 
-.notifications-list {
+.suggested-loading,
+.suggested-error {
+  margin-bottom: 1.5rem;
+  color: #8e8e8e;
+  font-size: 1.1rem;
+}
+
+.suggested-error {
+  color: #ed4956;
+}
+
+.suggested-list {
   width: 100%;
   max-width: 500px;
   list-style: none;
@@ -24,7 +35,7 @@
   margin: 0;
 }
 
-.notification-card {
+.suggested-user-card {
   display: flex;
   align-items: center;
   background: #fff;
@@ -32,70 +43,43 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   padding: 1rem 1.5rem;
   margin-bottom: 1.2rem;
-  transition: box-shadow 0.2s;
+  transition: all 0.2s;
+  cursor: pointer;
 }
 
-.notification-card:hover {
+.suggested-user-card:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  background: #f0f0f0;
 }
 
-.follower-avatar {
-  width: 48px;
-  height: 48px;
+.suggested-avatar {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  overflow: hidden;
   margin-right: 1.2rem;
-  flex-shrink: 0;
   border: 2px solid #dbdbdb;
   background: #eee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.follower-avatar img {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
 
-.follower-info {
+.suggested-user-info {
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
 
-.follower-username {
+.suggested-username {
   font-weight: 600;
   color: #262626;
   font-size: 1.1rem;
 }
 
-.follower-action {
+.suggested-user-followers {
   color: #8e8e8e;
   font-size: 0.95rem;
   margin-top: 2px;
 }
 
-/* Optional: Follow Back button styling
-.follow-back-btn {
-  background: #0095f6;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-left: 1rem;
-}
-
-.follow-back-btn:hover {
-  background: #1877f2;
-}
-*/
-
-.no-followers {
+.no-suggestions {
   text-align: center;
   color: #8e8e8e;
   padding: 2rem 0;

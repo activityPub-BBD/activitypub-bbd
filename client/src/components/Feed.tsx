@@ -5,8 +5,9 @@ import { useAuthContext } from '../context/AuthContext';
 import Post from './Post';
 import {useNavigate} from "react-router-dom"
 import type { IPost } from './UserProfile';
+import SuggestedFollows from './SuggestedFollows';
 
-type FeedType = 'following' | 'global';
+type FeedType = 'following' | 'global' | 'suggestions';
 
 const Feed: React.FC = () => {
   const { jwt, logout } = useAuthContext();
@@ -187,37 +188,47 @@ const Feed: React.FC = () => {
           >
             Following
           </button>
+          <button 
+            className={`feed-tab ${currentFeed === 'suggestions' ? 'active' : ''}`}
+            onClick={() => switchFeed('suggestions')}
+          >
+            Suggestions
+          </button>
         </div>
 
         {/* Main Feed */}
         <main className="feed">
-          <div className="posts-container">
-            {posts.length === 0 && !loading && (
-              <div className="empty-feed">
-                {currentFeed === 'following' 
-                  ? "No posts from people you follow yet. Try following some users!" 
-                  : "No posts available."
-                }
-              </div>
-            )}
-            
-            {posts.map(post => (
-              <Post
-                key={post._id}
-                _id={post._id}
-                caption={post.caption}
-                createdAt={post.createdAt}
-                mediaType={post.mediaType}
-                mediaUrl={post.mediaUrl}
-                author={post.author}
-                likes={post.likes}
-                likesCount={post.likesCount}
-              />
-            ))}
-            {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
-            {!hasMore && posts.length > 0 && <div style={{ textAlign: 'center', padding: '1rem' }}>No more posts.</div>}
-            {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
-          </div>
+          { currentFeed === "suggestions" ?
+            <SuggestedFollows />
+            :
+            <div className="posts-container">
+              {posts.length === 0 && !loading && (
+                <div className="empty-feed">
+                  {currentFeed === 'following' 
+                    ? "No posts from people you follow yet. Try following some users!" 
+                    : "No posts available."
+                  }
+                </div>
+              )}
+              
+              {posts.map(post => (
+                <Post
+                  key={post._id}
+                  _id={post._id}
+                  caption={post.caption}
+                  createdAt={post.createdAt}
+                  mediaType={post.mediaType}
+                  mediaUrl={post.mediaUrl}
+                  author={post.author}
+                  likes={post.likes}
+                  likesCount={post.likesCount}
+                />
+              ))}
+              {loading && <div style={{ textAlign: 'center', padding: '1rem' }}>Loading more...</div>}
+              {!hasMore && posts.length > 0 && <div style={{ textAlign: 'center', padding: '1rem' }}>No more posts.</div>}
+              {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
+            </div>
+          }
         </main>
 
         {/* Create Post Modal */}
