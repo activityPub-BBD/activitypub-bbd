@@ -27,6 +27,10 @@ interface Config {
     port: number;
     username: string;
     password: string;
+  };
+  qdrant: {
+    url: string;
+    apiKey: string;
   }
 }
 
@@ -58,6 +62,10 @@ const config: Config = {
     username: process.env.REDIS_USERNAME || "",
     password: process.env.REDIS_PASSWORD || "",
   },
+  qdrant: {
+    url: process.env.QDRANT_URL || "http://localhost:6333",
+    apiKey: process.env.QDRANT_API_KEY || "",
+  }
 };
 
 export {config};

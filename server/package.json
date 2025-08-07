@@ -9,6 +9,7 @@
     "@fedify/redis": "^0.2.0",
     "@js-temporal/polyfill": "^0.5.1",
     "@logtape/logtape": "^0.8.2",
+    "@qdrant/qdrant-js": "^1.15.0",
     "@types/uuid": "^10.0.0",
     "async-mutex": "^0.5.0",
     "copy-webpack-plugin": "^13.0.0",
