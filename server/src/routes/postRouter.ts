@@ -319,7 +319,7 @@ postRoutes.get('/search', requireAuth, async (req, res) => {
       }).filter((id) => id !== undefined), 
       parseInt(page as string), parseInt(limit as string)
     );
-    res.json(posts);
+    res.json(posts.length === 0 ? await PostService.searchPosts(q as string, parseInt(page as string), parseInt(limit as string)) : posts);
   } catch (error) {
     console.error('Search posts error:', error);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Failed to search posts' });
