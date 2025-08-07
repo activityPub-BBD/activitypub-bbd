@@ -42,7 +42,6 @@ const mapUserToProfileResponse = (user: any) => ({
  */
 const createFederationContext = (req: any) => {
   const fullUrl = `https://${config.domain}${req.originalUrl}`;
-  logger.debug(fullUrl);
   let requestBody: any = undefined;
   if (!["GET", "HEAD"].includes(req.method)) {
     requestBody = req.body ? JSON.stringify(req.body) : undefined;
@@ -52,6 +51,8 @@ const createFederationContext = (req: any) => {
     headers: req.headers as any,
     body: requestBody,
   });
+  logger.debug("====FETCH REQUEST====")
+  logger.debug(JSON.stringify(fetchRequest));
   return federation.createContext(fetchRequest, undefined);
 };
 
@@ -79,6 +80,8 @@ const handleFederationLookup = async (req: any, query: string) => {
     const ctx = createFederationContext(req);
     
     const fedifyQuery = `@${query}`;
+    logger.debug("====FEDIFY QUEERY====")
+    logger.debug(fedifyQuery)
     const remoteUser = await ctx.lookupObject(fedifyQuery);
     
     if (remoteUser && isActor(remoteUser) && remoteUser.id) {
