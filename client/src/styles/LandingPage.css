@@ -7,10 +7,9 @@
 
 html {
   font-size: 100%;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
 }
 
-/* Responsive font scaling */
 @media (max-width: 1024px) {
   html {
     font-size: 96%;
@@ -172,7 +171,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Form Elements */
 .username-prompt {
   font-size: 1.05rem;
   font-weight: 600;
@@ -246,7 +244,6 @@ body {
   box-shadow: none;
 }
 
-/* Large Desktop (1200px+) */
 @media (min-width: 1200px) {
   .landing-container {
     padding: 3rem;
@@ -275,7 +272,6 @@ body {
   }
 }
 
-/* Desktop (1024px - 1199px) */
 @media (max-width: 1199px) and (min-width: 1024px) {
   .landing-container {
     padding: 2.5rem;
@@ -291,7 +287,6 @@ body {
   }
 }
 
-/* Tablet Landscape (769px - 1023px) */
 @media (max-width: 1023px) and (min-width: 769px) {
   .landing-container {
     padding: 2rem;
@@ -316,7 +311,6 @@ body {
   }
 }
 
-/* Tablet Portrait and Mobile Large (481px - 768px) */
 @media (max-width: 768px) {
   .landing-container {
     flex-direction: column;
@@ -355,7 +349,6 @@ body {
   }
 }
 
-/* Mobile Medium (376px - 480px) */
 @media (max-width: 480px) {
   .landing-container {
     padding: 1rem;
@@ -402,7 +395,6 @@ body {
   }
 }
 
-/* Mobile Small (321px - 375px) */
 @media (max-width: 375px) {
   .landing-container {
     padding: 0.75rem;
@@ -451,7 +443,6 @@ body {
   }
 }
 
-/* Mobile Extra Small (below 320px) */
 @media (max-width: 320px) {
   .landing-container {
     padding: 0.5rem;
@@ -515,7 +506,6 @@ body {
   }
 }
 
-/* Landscape Orientation (Mobile) */
 @media (max-height: 500px) and (orientation: landscape) and (max-width: 768px) {
   .landing-container {
     flex-direction: row;
