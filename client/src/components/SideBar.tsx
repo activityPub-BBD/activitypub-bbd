@@ -92,7 +92,7 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
           <Link to="/follower-tab" className={location.pathname === "/follower-tab" ? "active" : ""}>Followers</Link>
           <Link to="/following-tab" className={location.pathname === "/following-tab" ? "active" : ""}>Following</Link>
           <Link to="/search" className={location.pathname === "/search" ? "active" : ""}>Search</Link>
-          <Link to="/notifications" className={location.pathname === "/notifications" ? "active" : ""}>Notifications</Link>
+          <Link to="/SuggestedFollowers" className={location.pathname === "/SuggestedFollowers" ? "active" : ""}>Suggested Followers</Link>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
