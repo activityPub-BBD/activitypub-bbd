@@ -68,6 +68,10 @@ resource "aws_api_gateway_stage" "mastodon_stage" {
   deployment_id = aws_api_gateway_deployment.mastodon_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.mastodon_api.id
   stage_name    = "prod"
+  
+  lifecycle {
+    ignore_changes = all
+  }
 }
 
 resource "aws_api_gateway_domain_name" "mastodon_domain" {  
