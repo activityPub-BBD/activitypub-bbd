@@ -87,6 +87,7 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
 
         {/* Navigation */}
         <nav className="nav-links">
+        <Link to="/">Home</Link>
           <Link to="/profile">Profile</Link>
           <Link to="/follower-tab">Followers</Link>
           <Link to="/following-tab">Following</Link>
