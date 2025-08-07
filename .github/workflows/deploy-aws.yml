@@ -298,7 +298,7 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ needs.terraform.outputs.ec2host }}
+          host: "16.28.122.209"
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: API_HOST, DB_NAME, DB_URL, GOOGLE_REDIRECT_URI, DOMAIN, AWS_REGION, S3_MEDIA_BUCKET, NEO4J_DATABASE, NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AURA_INSTANCEID, AURA_INSTANCENAME, REDIS_HOST, REDIS_PORT, REDIS_USERNAME, REDIS_PASSWORD
