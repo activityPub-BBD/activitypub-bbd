@@ -245,7 +245,7 @@ jobs:
 
       - name: Get SSM Parameters + TF Outputs
         run: |
-          EC2_HOST="${{ needs.terraform.outputs.ec2host }}"
+          EC2_HOST="16.28.122.209"
           echo "API_HOST=$EC2_HOST" >> $GITHUB_ENV
           echo "DB_NAME=$(aws ssm get-parameter --name '/dbconfig/db_name' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
           echo "DB_URL=$(aws ssm get-parameter --name '/dbconfig/db_url' --query 'Parameter.Value' --output text)" >> $GITHUB_ENV
