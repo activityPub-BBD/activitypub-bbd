@@ -31,6 +31,7 @@ interface Config {
   qdrant: {
     url: string;
     apiKey: string;
+    collectionName: string;
   }
 }
 
@@ -65,6 +66,7 @@ const config: Config = {
   qdrant: {
     url: process.env.QDRANT_URL || "http://localhost:6333",
     apiKey: process.env.QDRANT_API_KEY || "",
+    collectionName: process.env.QDRANT_COLLECTION_NAME || "movies",
   }
 };
 

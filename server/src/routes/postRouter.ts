@@ -9,6 +9,7 @@ import { Create, Note } from "@fedify/fedify";
 import { config } from "@config/config";
 import { FollowService } from '@services/followService';
 import type { IUser } from '@models/user';
+import { findInQdrant, upsertIntoQdrant } from '@db/qdrant';
 
 export const postRoutes = Router();
 
@@ -82,6 +83,8 @@ postRoutes.post("/", requireAuth, upload.single("image"), async (req, res) => {
         .status(HTTP_STATUS.INTERNAL_SERVER_ERROR)
         .json({ error: "Failed to retrieve created post" });
     }
+
+    await upsertIntoQdrant(populatedPost);
 
     const response: IPostResponse = {
       id: populatedPost.id,
@@ -309,7 +312,13 @@ postRoutes.delete('/comments/:id/:commentId', requireAuth, async (req, res) => {
 postRoutes.get('/search', requireAuth, async (req, res) => {
   try {
     const { q, page = 1, limit = 20 } = req.query;
-    const posts = await PostService.searchPosts(q as string, parseInt(page as string), parseInt(limit as string));
+    const results =await findInQdrant(q as string);
+    const posts = await PostService.findPostsByIds(results.map((result) => {
+        const payload = result.payload;
+        return payload ? payload["id"] as string : undefined;
+      }).filter((id) => id !== undefined), 
+      parseInt(page as string), parseInt(limit as string)
+    );
     res.json(posts);
   } catch (error) {
     console.error('Search posts error:', error);
