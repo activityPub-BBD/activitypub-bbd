@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../styles/SideBar.css";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
 
 interface SidebarProps {
@@ -15,6 +15,7 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
   onToggle,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout, user } = useAuthContext();
   const [stats, setStats] = useState({ followers: 0, following: 0 });
   const [loading, setLoading] = useState(true);
@@ -87,11 +88,11 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
 
         {/* Navigation */}
         <nav className="nav-links">
-          <Link to="/profile">Profile</Link>
-          <Link to="/follower-tab">Followers</Link>
-          <Link to="/following-tab">Following</Link>
-          <Link to="/search">Search</Link>
-          <Link to="/notifications">Notifications</Link>
+          <Link to="/profile" className={location.pathname === "/profile" ? "active" : ""}>Profile</Link>
+          <Link to="/follower-tab" className={location.pathname === "/follower-tab" ? "active" : ""}>Followers</Link>
+          <Link to="/following-tab" className={location.pathname === "/following-tab" ? "active" : ""}>Following</Link>
+          <Link to="/search" className={location.pathname === "/search" ? "active" : ""}>Search</Link>
+          <Link to="/notifications" className={location.pathname === "/notifications" ? "active" : ""}>Notifications</Link>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
