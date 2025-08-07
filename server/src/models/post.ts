@@ -33,11 +33,11 @@ export const postSchema = new Schema<IPost>({
   },
   mediaUrl: {
     type: String,
-    required: true,
+    required: false,
   },
   mediaType: {
     type: String,
-    required: true,
+    required: false,
     enum: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"],
   },
   activityPubUri: {
