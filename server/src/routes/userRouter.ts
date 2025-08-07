@@ -86,8 +86,9 @@ const handleFederationLookup = async (req: any, query: string) => {
     
     if (remoteUser && isActor(remoteUser) && remoteUser.id) {
       let localUser = await UserService.getUserByActorId(remoteUser.id.toString());
-      
+      console.log(remoteUser)
       if (!localUser) {
+        
         const actorData = createActorData(remoteUser, query);
         localUser = await UserService.createRemoteUser(actorData);
         //add user to graph db
