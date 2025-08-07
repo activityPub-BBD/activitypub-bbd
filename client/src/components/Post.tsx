@@ -1,6 +1,7 @@
 import { useAuthContext } from "../context/AuthContext";
 import { useState, useEffect } from "react";
 import type { IPost } from "./UserProfile";
+import { useNavigate } from "react-router-dom";
 
 interface Comment {
   commentId: string;
@@ -28,6 +29,7 @@ export const Post = ({
   const [isLiked, setIsLiked] = useState(false);
   const [count, setCount] = useState(likesCount);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const [postComments, setPostComments] = useState<Comment[]>(comments);
   const [commentCount, setCommentCount] = useState(0);
@@ -197,6 +199,14 @@ export const Post = ({
     setShowComments(!showComments);
   };
 
+  const handleUserClick = (author: {
+    avatarUrl: string;
+    displayName: string;
+    username: string;
+}) => {
+    navigate(`/user/${author.username}`);
+  };
+
   const formattedDate = new Date(createdAt).toLocaleString();
   const likeText = count === 0 ? "No likes yet" : `${count} ${count === 1 ? "like" : "likes"}`;
 
@@ -204,7 +214,7 @@ export const Post = ({
   return (
     <div key={_id} className="post-item">
       {/* Author Info */}
-      <div className="post-author" style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+      <div className="post-author" style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem', cursor: 'pointer' }} onClick={() => handleUserClick(author)}>
         <img
           src={author.avatarUrl || '/no-avatar.jpg'}
           alt={`${author.displayName} avatar`}
