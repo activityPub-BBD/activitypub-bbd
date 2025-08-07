@@ -51,6 +51,22 @@ followRoutes.get("/follow-summary", requireAuth, async (req, res) => {
 });
 
 /**
+ * @route GET /follow/popular
+ * @description Retrieve a list of popular users to follow.
+ * @requires Authentication
+ * @returns {Array<Object>} List of popular users or error.
+ */
+followRoutes.get("/follow/popular", requireAuth, async (req, res) => {
+    try {
+        const popularUsers = await FollowService.retrievePopularUsers();
+        res.status(HTTP_STATUS.OK).json(popularUsers);
+    } catch (error) {
+        console.error('Error retrieving popular users:', error);
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
+    }
+});
+
+/**
  * @route POST /follow/:oid
  * @description Follow a specific user.
  * @param {string} oid - Object ID of the target user.

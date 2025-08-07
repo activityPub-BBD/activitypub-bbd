@@ -214,4 +214,50 @@ export async function isFollowing(followerId: string, followingId: string): Prom
   return result.records[0].get('isFollowing') as boolean;
 }
 
-export const FollowService = { getFollowStats, followUser, unfollowUser, retrieveFollowing, retrieveFollowers, retrieveSuggestedMutuals, isFollowing };
+export async function retrievePopularUsers(){
+  const driver = await retrieveNeo4jDriver();
+  const result = await driver.executeQuery(
+    `
+    MATCH (follower:Person)-[:Follows]->(P:Person)
+    WITH P, COUNT(follower) AS followerCount
+    RETURN 
+      P._id AS id,
+      P.actorId AS actorId,
+      P.inboxUrl AS inboxUrl,
+      P.createdAt AS createdAt,
+      followerCount
+    ORDER BY followerCount DESC
+    LIMIT 20
+    `,
+  );
+
+  const popularUsers = await Promise.all(
+    result.records.map(async (record) => {
+      const actorId = record.get('actorId') as string;
+      const user = await UserService.getUserByActorId(actorId);
+
+      return {
+        id: record.get('id') as string,
+        actorId,
+        inboxUrl: record.get('inboxUrl') as string,
+        createdAt: new Date(record.get('createdAt')).toISOString(),
+        displayName: user!.displayName,
+        username: user!.username,
+        avatarUrl: user!.avatarUrl,
+        followersCount: record.get('followerCount').toInt()
+      };
+    })
+  );
+  return popularUsers;
+}
+
+export const FollowService = { 
+  getFollowStats, 
+  followUser, 
+  unfollowUser, 
+  retrieveFollowing, 
+  retrieveFollowers, 
+  retrieveSuggestedMutuals,
+  isFollowing,
+  retrievePopularUsers
+};
