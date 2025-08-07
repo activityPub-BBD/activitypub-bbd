@@ -79,6 +79,11 @@
   color: #007bff;
 }
 
+/* Active Navigation Link */
+.nav-links a.active {
+  color: #007bff;
+}
+
 /* Hamburger Button */
 .hamburger {
   display: none;
