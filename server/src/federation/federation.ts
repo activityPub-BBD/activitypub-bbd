@@ -474,7 +474,7 @@ federation
           id: new URL(`${noteId}/activity`),
           actor: ctx.getActorUri(identifier),
           object: note,
-          to: new URL("https://www.w3.org/ns/activitystreams#Public"),
+          to: PUBLIC_COLLECTION,
           published: Temporal.Instant.fromEpochMilliseconds(
             new Date(post.createdAt).getTime()
           ),
