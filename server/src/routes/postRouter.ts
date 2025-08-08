@@ -316,7 +316,7 @@ postRoutes.get('/search', requireAuth, async (req, res) => {
     const limitNum = parseInt(limit as string);
 
     const results = await findInQdrant(q as string);
-    const filteredResults = results.filter(r => r.score > 0.5);
+    const filteredResults = results.filter(r => r.score > 0.4);
 
     const ids = filteredResults
       .map(r => r.payload?.id as string | undefined)
