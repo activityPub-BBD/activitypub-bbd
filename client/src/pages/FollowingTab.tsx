@@ -46,6 +46,14 @@ export function FollowingList() {
 
   const goBack = () => navigate(-1);
 
+  const handleUserClick = (author: {
+    avatarUrl: string;
+    displayName: string;
+    username: string;
+  }) => {
+    navigate(`/user/${author.username}`);
+  };
+
   return (
     <div className="following-container">
       <button className="back-button" onClick={goBack}>← Back</button>
@@ -57,7 +65,7 @@ export function FollowingList() {
 
       <ul className="following-list">
         {following.map((user) => (
-          <li key={user.id} className="following-item">
+          <li key={user.id} className="following-item" onClick={() => handleUserClick(user)}>
             <img
               src={user.avatarUrl || "/no-avatar.jpg"}
               alt={`${user.displayName}'s avatar`}

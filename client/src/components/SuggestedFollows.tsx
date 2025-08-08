@@ -70,7 +70,7 @@ const SuggestedFollows: React.FC = () => {
         )}
         {suggested.map((u) => (
         <li className="suggested-user-card" key={u.id} onClick={() => handleUserClick(u)}>
-            <img className="suggested-avatar" src={u.avatarUrl} alt={u.username} />
+            <img className="suggested-avatar" src={u.avatarUrl || '/no-avatar.jpg'} alt={u.username} />
             <div className="suggested-user-info">
             <span className="suggested-username">{u.displayName || u.username}</span>
             <span className="suggested-user-followers">

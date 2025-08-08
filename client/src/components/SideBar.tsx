@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../styles/SideBar.css";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
 
 interface SidebarProps {
@@ -71,14 +71,14 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
                 })
               }
             />
-            <div className="sidebar-username">{user?.displayName || user?.username || "User"}</div>
+            <div className="sidebar-username" onClick={() => navigate("/profile")} style={{ cursor: "pointer" }}>{user?.displayName || user?.username || "User"}</div>
           </div>
           {!loading && (
             <div className="sidebar-stats">
-              <div>
+              <div onClick={() => navigate("/follower-tab")} style={{ cursor: "pointer" }}>
                 <span className="count"> {stats.followers}</span>Followers
               </div>
-              <div>
+              <div onClick={() => navigate("/following-tab")} style={{ cursor: "pointer" }}>
                 <span className="count"> {stats.following}</span>Following
               </div>
             </div>
@@ -87,10 +87,11 @@ const SideBar: React.FC<SidebarProps> = React.memo(({
 
         {/* Navigation */}
         <nav className="nav-links">
-          <Link to="/profile">Profile</Link>
-          <Link to="/follower-tab">Followers</Link>
-          <Link to="/following-tab">Following</Link>
-          <Link to="/search">Search</Link>
+          <NavLink to="/home" className={({ isActive }) => isActive ? "active" : ""}>Home</NavLink>
+          <NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink>
+          <NavLink to="/follower-tab" className={({ isActive }) => isActive ? "active" : ""}>Followers</NavLink>
+          <NavLink to="/following-tab" className={({ isActive }) => isActive ? "active" : ""}>Following</NavLink>
+          <NavLink to="/search" className={({ isActive }) => isActive ? "active" : ""}>Search</NavLink>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>

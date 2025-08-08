@@ -283,6 +283,10 @@
   max-width: 100%;
 }
 
+.post-author {
+  padding: 1rem 1rem;
+}
+
 .post-media {
   width: 100%;
   position: relative;
