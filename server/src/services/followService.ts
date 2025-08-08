@@ -187,20 +187,23 @@ export async function retrieveSuggestedMutuals(
     result.records.map(async (record) => {
       const actorId = record.get("actorId") as string;
       const user = await UserService.getUserByActorId(actorId);
-
-      return {
-        id: record.get("id") as string,
-        actorId,
-        inboxUrl: record.get("inboxUrl") as string,
-        createdAt: new Date(record.get("createdAt")).toISOString(),
-        displayName: user!.displayName,
-        username: user!.username,
-        avatarUrl: user!.avatarUrl,
-        followersCount: record.get("followers").toInt()
-      };
+      if(user === null){
+        return undefined;
+      } else{
+        return {
+          id: record.get("id") as string,
+          actorId,
+          inboxUrl: record.get("inboxUrl") as string,
+          createdAt: new Date(record.get("createdAt")).toISOString(),
+          displayName: user!.displayName,
+          username: user!.username,
+          avatarUrl: user!.avatarUrl,
+          followersCount: record.get("followers").toInt()
+        };
+      }
     })
   );
-  return suggestedMutuals;
+  return suggestedMutuals.filter((user) => user !== undefined);
 }
 
 export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {
@@ -237,20 +240,23 @@ export async function retrievePopularUsers(){
     result.records.map(async (record) => {
       const actorId = record.get('actorId') as string;
       const user = await UserService.getUserByActorId(actorId);
-
-      return {
-        id: record.get('id') as string,
-        actorId,
-        inboxUrl: record.get('inboxUrl') as string,
-        createdAt: new Date(record.get('createdAt')).toISOString(),
-        displayName: user!.displayName,
-        username: user!.username,
-        avatarUrl: user!.avatarUrl,
-        followersCount: record.get('followerCount').toInt()
-      };
+      if(user === null){
+        return undefined;
+      } else{
+        return {
+          id: record.get('id') as string,
+          actorId,
+          inboxUrl: record.get('inboxUrl') as string,
+          createdAt: new Date(record.get('createdAt')).toISOString(),
+          displayName: user!.displayName,
+          username: user!.username,
+          avatarUrl: user!.avatarUrl,
+          followersCount: record.get('followerCount').toInt()
+        };
+      }
     })
   );
-  return popularUsers;
+  return popularUsers.filter((user) => user !== undefined);
 }
 
 export const FollowService = { 
