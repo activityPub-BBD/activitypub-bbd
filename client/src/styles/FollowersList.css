@@ -26,8 +26,13 @@
 .follower-item {
   display: flex;
   align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.2rem;
+  transition: box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
 }
 
 .follower-avatar {
